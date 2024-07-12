@@ -14,7 +14,7 @@ import {
   DeleteProjectResponseType,
 } from '../../types/requests';
 
-const Experiments = () => {
+const Datasets = () => {
   const [projects, setProjects] = useState([defaultProject]);
   const [currentProj, setCurrentProj] = useState(defaultProject);
   const [searchInput, setSearchInput] = useState('');
@@ -71,7 +71,7 @@ const Experiments = () => {
   }, [projects, currentProj.id_project]);
 
   useEffect(() => {
-    navigate(`/dashboard/projects/${currentProj?.id_project}/experiments`);
+    navigate(`/dashboard/organizations/${currentProj?.id_project}/datasets`);
   }, [currentProj.id_project]);
 
   // FIXME: Add experiment name validation
@@ -342,4 +342,4 @@ const Experiments = () => {
   );
 };
 
-export default Experiments;
+export default Datasets;

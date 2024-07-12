@@ -1,5 +1,6 @@
 import { ExperimentType } from './experiment';
 import { TaskType } from './task';
+import { DatasetType } from './dataset';
 
 export type LoginResponseType = {
   message: string;
@@ -115,6 +116,24 @@ export type UpdateTaskInfoResponseType = {
 };
 
 export type DeleteTaskResponseType = {
+  message: string;
+};
+
+export type DatasetsResponseType = {
+  message: string;
+  data: {
+    datasets: Array<DatasetType>;
+  };
+};
+
+export type CreateDatasetResponseType = {
+  message: string;
+  data: {
+    id_dataset: string;
+  };
+};
+
+export type UpdateDatasetNameResponseType = {
   message: string;
 };
 

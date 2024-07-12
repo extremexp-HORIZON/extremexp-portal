@@ -8,10 +8,11 @@ import Login from './containers/Account/Login';
 import Register from './containers/Account/Register';
 import Dashboard from './containers/Dashboard';
 import Experiments from './containers/Dashboard/Experiments';
+import Datasets from './containers/Dashboard/Datasets';
 import Project from './components/dashboard/Experiment';
+import Organization from './components/dashboard/Dataset';
 import Tasks from './containers/Dashboard/Tasks';
 import Category from './components/dashboard/Task';
-import User from './containers/Dashboard/User';
 import Editor from './containers/Editor';
 import Execution from './containers/Execution';
 
@@ -59,8 +60,14 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: '/dashboard/user',
-        element: <User />,
+        path: '/dashboard/organizations',
+        element: <Datasets />,
+        children: [
+          {
+            path: '/dashboard/organizations/:orgID/datasets',
+            element: <Organization />,
+          },
+        ],
       },
     ],
   },

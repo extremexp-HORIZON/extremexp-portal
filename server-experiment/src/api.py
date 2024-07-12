@@ -5,6 +5,7 @@ from projectHandler import projectHandler
 from experimentHandler import experimentHandler
 from categoryHandler import categoryHandler
 from taskHandler import taskHandler
+from datasetHandler import datasetHandler
 from convertorHandler import convertorHandler
 
 app = Flask(__name__)
@@ -304,6 +305,60 @@ def update_task_graphical_model(task_id):
     graphical_model = request.json["graphical_model"]
     taskHandler.update_task_graphical_model(task_id, graphical_model)
     return {"message": "task graphical model updated"}, 200
+
+
+# DATASETS
+@app.route("/exp/projects/<proj_id>/datasets", methods=["GET"])
+@cross_origin()
+def get_datasets(proj_id):
+    datasets = datasetHandler.get_datasets(proj_id)
+    return {
+               "message": "datasets retrieved",
+               "data": {"datasets": datasets},
+           }, 200
+
+
+@app.route("/exp/projects/<proj_id>/datasets/create", methods=["OPTIONS", "POST"])
+@cross_origin()
+def create_dataset(proj_id):
+    dataset_name = request.json["dataset_name"]
+    if datasetHandler.detect_duplicate(proj_id, dataset_name):
+        return {
+                   "error": ERROR_DUPLICATE,
+                   "message": "Dataset name already exists",
+               }, 409
+    res = datasetHandler.create_dataset(
+        g.username, proj_id, dataset_name
+    )
+    return {"message": "Dataset created", "data": {"id_dataset": res}}, 201
+
+
+@app.route(
+    "/exp/projects/<proj_id>/datasets/<dataset_id>/update/name",
+    methods=["OPTIONS", "PUT"],
+)
+@cross_origin()
+def update_dataset_name(proj_id, dataset_id):
+    dataset_name = request.json["dataset_name"]
+    if datasetHandler.detect_duplicate(proj_id, dataset_name):
+        return {
+                   "error": ERROR_DUPLICATE,
+                   "message": "Dataset name already exists",
+               }, 409
+    datasetHandler.update_dataset_name(dataset_id, proj_id, dataset_name)
+    return {"message": "dataset name updated"}, 200
+
+
+@app.route(
+    "/exp/projects/<proj_id>/datasets/<dataset_id>/delete",
+    methods=["OPTIONS", "DELETE"],
+)
+@cross_origin()
+def delete_dataset(proj_id, dataset_id):
+    if not datasetHandler.dataset_exists(dataset_id):
+        return {"message": "this dataset does not exist"}, 404
+    datasetHandler.delete_dataset(dataset_id, proj_id)
+    return {"message": "dataset deleted"}, 204
 
 
 # EXECUTION

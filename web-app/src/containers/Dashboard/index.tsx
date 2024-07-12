@@ -6,11 +6,11 @@ import { logout } from '../../stores/accountStore';
 const Repository = () => {
   const location = useLocation();
   const isExperiments = location.pathname.includes('/projects');
-  const isUser = location.pathname.includes('/user');
   const isTask = location.pathname.includes('/categories');
+  const isDatasets = location.pathname.includes('/organizations');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
-  const userSelectedClass = isUser ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
+  const datasetSelectedClass = isDatasets ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -42,12 +42,12 @@ const Repository = () => {
               <p>Templates</p>
             </div>
           </Link>
-          <Link to={'/dashboard/user'}>
+          <Link to={'/dashboard/organizations'}>
             <div
-              className={`repository__panel__items__item ${userSelectedClass}`}
+                className={`repository__panel__items__item ${datasetSelectedClass}`}
             >
-              <span className="iconfont">&#xe63d;</span>
-              <p>User</p>
+              <span className="iconfont">&#xea2a;</span>
+              <p>Datasets</p>
             </div>
           </Link>
         </div>
