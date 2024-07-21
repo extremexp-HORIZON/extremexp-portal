@@ -8,9 +8,11 @@ const Repository = () => {
   const isExperiments = location.pathname.includes('/projects');
   const isTask = location.pathname.includes('/categories');
   const isDatasets = location.pathname.includes('/organizations');
+  const isProgress = location.pathname.includes('/progress');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
   const datasetSelectedClass = isDatasets ? 'selected' : '';
+  const progressSelectedClass = isProgress ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -48,6 +50,14 @@ const Repository = () => {
             >
               <span className="iconfont">&#xea2a;</span>
               <p>Datasets</p>
+            </div>
+          </Link>
+          <Link to={'/dashboard/progress'}>
+            <div
+                className={`repository__panel__items__item ${progressSelectedClass}`}
+            >
+              <span className="iconfont">&#xe653;</span>
+              <p>Progress</p>
             </div>
           </Link>
         </div>
