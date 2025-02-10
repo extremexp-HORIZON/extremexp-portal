@@ -30,7 +30,7 @@ const Account = () => {
         <div className="account__banner">
           <img src={logo} alt="logo" className="account__banner__logo" />
           <div className="account__banner__title">
-            ExtremeXP Graphical Editor
+            ExtremeXP Portal
           </div>
         </div>
         <div className="account__content">

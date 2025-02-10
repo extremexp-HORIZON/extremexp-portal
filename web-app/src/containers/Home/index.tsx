@@ -21,7 +21,7 @@ const Home = () => {
     <div className="home">
       <div className="home__banner">
         <img src={logo} alt="logo" className="home__banner__logo" />
-        <div className="home__banner__title">ExtremeXP Graphical Editor</div>
+        <div className="home__banner__title">ExtremeXP Portal</div>
       </div>
       <div className="home__start">
         <div className="home__start__button" onClick={handleStart}>
