@@ -6,13 +6,13 @@ In the root folder (i.e. the folder contains `docker-compose.yaml` file):
 
 ```shell
 # make sure docker is installed
-docker-compose up -d
+docker compose up -d
 ```
 
 Or, if you need everything re-built before running:
 
 ```shell
-docker-compose up --build
+docker compose up --build
 ```
 
 To access the app: http://localhost:7001/
