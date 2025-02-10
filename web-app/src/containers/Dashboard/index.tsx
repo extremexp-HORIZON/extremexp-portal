@@ -8,12 +8,10 @@ const Repository = () => {
   const isExperiments = location.pathname.includes('/projects');
   const isTask = location.pathname.includes('/categories');
   const isReusableTask = location.pathname.includes('/reusable_tasks');
-  const isDatasets = location.pathname.includes('/organizations');
   const isProgress = location.pathname.includes('/progress');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
   const reusableTaskSelectedClass = isReusableTask ? 'selected' : '';
-  const datasetSelectedClass = isDatasets ? 'selected' : '';
   const progressSelectedClass = isProgress ? 'selected' : '';
 
   const navigate = useNavigate();
@@ -52,14 +50,6 @@ const Repository = () => {
             >
               <span className="iconfont">&#xe6f2;</span>
               <p>Tasks</p>
-            </div>
-          </Link>
-          <Link to={'/dashboard/organizations'}>
-            <div
-                className={`repository__panel__items__item ${datasetSelectedClass}`}
-            >
-              <span className="iconfont">&#xea2a;</span>
-              <p>Datasets</p>
             </div>
           </Link>
           <Link to={'/dashboard/progress'}>
