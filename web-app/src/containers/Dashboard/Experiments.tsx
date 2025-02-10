@@ -301,7 +301,7 @@ const Experiments = () => {
                   </div>
                   <div className="dashboard__common__right__header__info__delete">
                     <button
-                      title="delete the entire experiment"
+                      title="delete the entire project"
                       onClick={handleOpenPopover}
                     >
                       Delete
