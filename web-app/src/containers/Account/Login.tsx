@@ -17,7 +17,7 @@ const Login = () => {
     if (!username || !password) return message('username or password is empty');
 
     loginRequest({
-      url: `users/login`,
+      url: `extreme_auth/api/v1/person/login`,
       method: 'POST',
       data: {
         username: username,
@@ -25,7 +25,7 @@ const Login = () => {
       },
     })
       .then((response) => {
-        const token = response.data.jwt;
+        const token = response?.access_token;
         if (token) {
           login(username, token);
           navigate('/dashboard/projects');

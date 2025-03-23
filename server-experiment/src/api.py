@@ -24,7 +24,7 @@ def verify_user():
     if request.endpoint in ENDPOINT_WITHOUT_AUTH:
         return None
     # get token from params {'token': 'token'}
-    token = request.args.get("token")
+    token = request.headers.get("Authorization")
     if token is None:
         return {"error": ERROR_FORBIDDEN, "message": "token is not provided"}, 403
     auth_res = userAuthHandler.verify_user(token)
