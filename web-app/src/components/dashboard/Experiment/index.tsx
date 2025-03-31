@@ -150,6 +150,10 @@ const Project = () => {
     navigate(`/editor/experiment/${projID}/${experiment.id_experiment}`);
   };
 
+  const handleAnalyzeExperiment = (experiment: ExperimentType) => {
+    window.open(`https://extreme-viz.pulsar.imsi.athenarc.gr/${experiment.id_experiment}`, '_blank', 'noopener,noreferrer');
+  }
+
   function handleOpenPopover(index: number) {
     setDeleteIndex(index);
     setShowPopover(true);
@@ -272,6 +276,15 @@ const Project = () => {
                     }}
                   >
                     open
+                  </button>
+                  <button
+                    className="analyze_button"
+                    title="analyze experiment"
+                    onClick={() => {
+                      handleAnalyzeExperiment(specification);
+                    }}
+                  >
+                    analyze
                   </button>
                 </div>
               </li>
