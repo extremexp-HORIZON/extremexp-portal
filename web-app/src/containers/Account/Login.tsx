@@ -32,7 +32,7 @@ const Login = () => {
         }
       })
       .catch((error) => {
-        message(error.response.data?.message || 'unknown error');
+        message(error.response.data?.message || 'The username or password is not correct');
       });
   };
 
