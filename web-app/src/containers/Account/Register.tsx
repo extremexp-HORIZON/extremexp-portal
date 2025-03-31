@@ -7,6 +7,8 @@ import { RegisterResponseType } from '../../types/requests';
 const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const { request: registerRequest } = useRequest<RegisterResponseType>();
@@ -14,15 +16,19 @@ const Register = () => {
 
   const handleRegister = () => {
     if (!username || !password) return message('username or password is empty');
+    if (!fullName || fullName.indexOf(" ") === -1) return message('not a valid full name');
+    if (!email || email.indexOf("@") === -1) return message('not a valid email');
 
     if (password !== confirmPassword) return message('passwords do not match');
 
     registerRequest({
-      url: `users/create`,
+      url: `extreme_auth/api/v1/person/register`,
       method: 'POST',
       data: {
         username: username,
         password: password,
+        email: email,
+        name: fullName
       },
     })
       .then((response) => {
@@ -48,12 +54,34 @@ const Register = () => {
     <>
       <div className="login__form">
         <div className="login__form__item">
+          <div className="login__form__item__title"> full name </div>
+          <input
+              id="fullName"
+              className="login__form__item__content"
+              type="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+          />
+        </div>
+        <div className="login__form__item">
+          <div className="login__form__item__title"> email </div>
+          <input
+              id="email"
+              className="login__form__item__content"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="login__form__item">
           <div className="login__form__item__title"> username </div>
           <input
             id="username"
             className="login__form__item__content"
             type="text"
-            placeholder="username"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -64,7 +92,7 @@ const Register = () => {
             id="password"
             className="login__form__item__content"
             type="password"
-            placeholder="password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -75,7 +103,7 @@ const Register = () => {
             id="confirmPassword"
             className="login__form__item__content"
             type="password"
-            placeholder="password"
+            placeholder="Repeat Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             onKeyUp={handleKeyPress}

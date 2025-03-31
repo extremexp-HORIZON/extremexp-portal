@@ -6,49 +6,135 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: admin
     container_name: mongo
     restart: always
-    ports:
-      - '27017:27017'
+    expose:
+      - '27017'
     volumes:
       - ~/mongo/data:/data/db
-
-  auth-service:
-    build: ./server-authentication
-    container_name: auth-service
-    ports:
-      - '5555:5555'
+    networks:
+      - extremexp_network
 
   exp-service:
     build: ./server-experiment
     container_name: exp-service
-    ports:
-      - '5050:5050'
+    expose:
+      - '5050'
     depends_on:
-      - auth-service
-      - emf-cloud-service
+      access-control-service:
+        condition: service_started
+      emf-cloud-service:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      proxy-service:
+        condition: service_started
+    networks:
+      - extremexp_network
 
   emf-cloud-service:
     build: ./server-emf-cloud
     container_name: emf-cloud-service
-    ports:
-      - '8081:8081'
+    expose:
+      - '8081'
+    healthcheck:
+      test: curl --fail http://localhost:8081/api/v2/models || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s    
+    networks:
+      - extremexp_network
 
   web-app:
     build: ./web-app
     container_name: web-app
-    ports:
-      - '7001:7001'
-    depends_on:
-      - auth-service
-      - exp-service
+    expose:
+      - '7001'
+    networks:
+      - extremexp_network
 
   nginx:
     image: nginx:latest
     container_name: nginx-servers
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - '80:80'
     depends_on:
-      - auth-service
+      - web-app
+      - access-control-service
       - exp-service
     restart: always
+    environment:
+      - PROXY_APP_PORT=${PROXY_APP_PORT}
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - extremexp_network
+
+  proxy-service:
+    image: ghcr.io/yagorezende/extremexp-abacproxy:dev
+    container_name: proxy-service
+     # flask requires SIGINT to stop gracefully
+     # (default stop signal from Compose is SIGTERM)
+    stop_signal: SIGINT
+    ports:
+      - ${PROXY_APP_PORT}:${PROXY_APP_PORT}
+    environment:
+      - FLASK_APP_HOST=${PROXY_APP_HOST}
+      - FLASK_APP_PORT=${PROXY_APP_PORT}
+      - FLASK_APP_NAME=${PROXY_APP_NAME}
+      - FLASK_APP_DEBUG=${PROXY_APP_DEBUG}
+      - FLASK_APP_ENV=${PROXY_APP_ENV}
+      - FLASK_APP_SECRET_KEY=${PROXY_APP_SECRET_KEY}
+      - FLASK_APP_DATABASE_URI=${PROXY_APP_DATABASE_URI}
+      - KEYCLOAK_SERVER_URL=${KEYCLOAK_SERVER_URL}
+      - KEYCLOAK_USERNAME=${KEYCLOAK_USERNAME}
+      - KEYCLOAK_USER_PASSWORD=${KEYCLOAK_USER_PASSWORD}
+      - OIDC_OP_AUTHORIZATION_ENDPOINT=${OIDC_OP_AUTHORIZATION_ENDPOINT}
+      - OIDC_OP_ENDSESSION_ENDPOINT=${OIDC_OP_ENDSESSION_ENDPOINT}
+      - OIDC_OP_JWKS_ENDPOINT=${OIDC_OP_JWKS_ENDPOINT}
+      - OIDC_OP_LOGOUT_ENDPOINT=${OIDC_OP_LOGOUT_ENDPOINT}
+      - OIDC_OP_LOGOUT_URL_METHOD=${OIDC_OP_LOGOUT_URL_METHOD}
+      - OIDC_OP_TOKEN_ENDPOINT=${OIDC_OP_TOKEN_ENDPOINT}
+      - OIDC_OP_USER_ENDPOINT=${OIDC_OP_USER_ENDPOINT}
+      - OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+      - OIDC_RP_REALM_ID=${OIDC_RP_REALM_ID}
+      - OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+      - OIDC_RP_SIGN_ALGO=${OIDC_RP_SIGN_ALGO}
+    networks:
+      - extremexp_network
+
+  access-control-service:
+    image: ghcr.io/yagorezende/extremexp_accesscontrol:dev
+    container_name: access-control-service
+    ports:
+      - ${FLASK_AC_APP_PORT}:${FLASK_AC_APP_PORT}
+    expose:
+      - ${FLASK_AC_APP_PORT}
+    environment:
+      - FLASK_AC_APP_HOST=${FLASK_AC_APP_HOST}
+      - FLASK_AC_APP_PORT=${FLASK_AC_APP_PORT}
+      - FLASK_AC_APP_NAME=${FLASK_AC_APP_NAME}
+      - FLASK_AC_APP_DEBUG=${FLASK_AC_APP_DEBUG}
+      - FLASK_AC_APP_ENV=${FLASK_AC_APP_ENV}
+      - FLASK_AC_APP_SECRET_KEY=${FLASK_AC_APP_SECRET_KEY}
+      - FLASK_AC_APP_DATABASE_URI=${FLASK_AC_APP_DATABASE_URI}
+      - KEYCLOAK_SERVER_URL=${KEYCLOAK_SERVER_URL}
+      - KEYCLOAK_USERNAME=${KEYCLOAK_USERNAME}
+      - KEYCLOAK_USER_PASSWORD=${KEYCLOAK_USER_PASSWORD}
+      - OIDC_OP_AUTHORIZATION_ENDPOINT=${OIDC_OP_AUTHORIZATION_ENDPOINT}
+      - OIDC_OP_ENDSESSION_ENDPOINT=${OIDC_OP_ENDSESSION_ENDPOINT}
+      - OIDC_OP_JWKS_ENDPOINT=${OIDC_OP_JWKS_ENDPOINT}
+      - OIDC_OP_LOGOUT_ENDPOINT=${OIDC_OP_LOGOUT_ENDPOINT}
+      - OIDC_OP_LOGOUT_URL_METHOD=${OIDC_OP_LOGOUT_URL_METHOD}
+      - OIDC_OP_TOKEN_ENDPOINT=${OIDC_OP_TOKEN_ENDPOINT}
+      - OIDC_OP_USER_ENDPOINT=${OIDC_OP_USER_ENDPOINT}
+      - OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+      - OIDC_RP_REALM_ID=${OIDC_RP_REALM_ID}
+      - OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+      - OIDC_RP_SIGN_ALGO=${OIDC_RP_SIGN_ALGO}
+    command: python app.py
+    networks:
+      - extremexp_network
+
+networks:
+  extremexp_network:
+    driver: bridge

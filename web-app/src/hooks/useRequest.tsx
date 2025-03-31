@@ -31,14 +31,18 @@ function useRequest<T>(options: AxiosRequestConfig = defaultRequestConfig) {
       setLoaded(false);
 
       const loginToken = useAccountStore.getState().token;
-      const params = loginToken ? { token: loginToken } : {};
-
+      const params = {};
+      const headers =  loginToken ? {
+          'Authorization': `Bearer ${loginToken}`
+      } : {};
+      
       return axios
         .request<T>({
           baseURL: import.meta.env.VITE_API_URL,
           url: requestOptions?.url || '',
           method: requestOptions?.method || options.method,
           signal: controllerRef.current.signal,
+          headers: headers,
           params: { ...params, ...requestOptions?.params },
           data: requestOptions?.data || options.data,
         })

@@ -2,14 +2,32 @@ import { ExperimentType } from './experiment';
 import { TaskType } from './task';
 
 export type LoginResponseType = {
-  message: string;
-  data: {
-    jwt: string;
-  };
+  access_token: string;
+  expires_in: number;
+  refresh_expires_in: number;
+  refresh_token: string;
+  token_type: string;
+  id_token: string;
+  "not-before-policy": number;
+  session_state: string;
+  scope: string;
 };
 
 export type RegisterResponseType = {
-  message: string;
+  id: string,
+  createdTimestamp: number,
+  username: string,
+  enabled: boolean,
+  totp: boolean,
+  emailVerified: boolean,
+  firstName: string,
+  lastName: string,
+  email: string,
+  attributes: object[],
+  disableableCredentialTypes: object[],
+  requiredActions: object[],
+  notBefore: number,
+  access: object[],
 };
 
 export type ProjectsResponseType = {
