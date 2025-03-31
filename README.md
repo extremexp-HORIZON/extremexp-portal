@@ -1,21 +1,16 @@
 # ExtremeXP portal
 
-## Build
+## Build and Run
 
-In the root folder (i.e. the folder contains `docker-compose.yaml` file):
-
-```shell
-# make sure docker is installed
-docker compose up -d
-```
-
-Or, if you need everything re-built before running:
-
-```shell
-docker compose up --build
-```
-
-To access the app: http://localhost:7001/
+1. Make sure that Docker is installed in your system and that the Docker deamon is running.
+2. Copy (or rename) the ".env.example" file into a file called ".env"
+   1. Configure .env  
+3. In the root folder (i.e. the folder contains `docker-compose.yaml` file) issue:
+    ```shell
+    sudo docker compose build # only if you need to rebuild before running
+    sudo docker compose up -d
+    ```
+4. Access the app via http://localhost/
 
 ### Deploy on SSH
 
