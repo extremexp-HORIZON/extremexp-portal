@@ -38,7 +38,7 @@ const Login = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleLogin();
+      handleLogin(); 
     }
   };
 
