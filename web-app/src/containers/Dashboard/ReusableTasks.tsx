@@ -7,7 +7,7 @@ const ReusableTasks = () => {
     <>
       <div className="page dashboard__page">
         <iframe width="100%" height="100%" style={{border:'none'}}
-            src="https://ide.expvis.smartarch.cz/?folder=/home/user/workspace/"
+            src="http://146.124.106.171/?folder=/home/user/workspace"
         ></iframe>
       </div>
     </>
