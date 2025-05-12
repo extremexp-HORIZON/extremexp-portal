@@ -9,10 +9,12 @@ const Repository = () => {
   const isTask = location.pathname.includes('/categories');
   const isReusableTask = location.pathname.includes('/reusable_tasks');
   // const isProgress = location.pathname.includes('/progress');
+  const isIntents = location.pathname.includes('/intents');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
   const reusableTaskSelectedClass = isReusableTask ? 'selected' : '';
   // const progressSelectedClass = isProgress ? 'selected' : '';
+  const intentsSelectedClass = isIntents ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -60,6 +62,14 @@ const Repository = () => {
               <p>Progress</p>
             </div>
           </Link> */}
+        <Link to={'/dashboard/intents'}>
+            <div
+                className={`repository__panel__items__item ${intentsSelectedClass}`}
+            >
+              <span className="iconfont">&#xe653;</span>
+              <p>Intents</p>
+            </div>
+          </Link>
         </div>
         <div className="repository__panel__sign-out">
           <button
