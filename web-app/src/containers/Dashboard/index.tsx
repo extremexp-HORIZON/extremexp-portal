@@ -10,11 +10,13 @@ const Repository = () => {
   const isReusableTask = location.pathname.includes('/reusable_tasks');
   // const isProgress = location.pathname.includes('/progress');
   const isIntents = location.pathname.includes('/intents');
+  const isDDM = location.pathname.includes('/ddm');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
   const reusableTaskSelectedClass = isReusableTask ? 'selected' : '';
   // const progressSelectedClass = isProgress ? 'selected' : '';
   const intentsSelectedClass = isIntents ? 'selected' : '';
+  const ddmSelectedClass = isDDM ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -68,6 +70,14 @@ const Repository = () => {
             >
               <span className="iconfont">&#xe653;</span>
               <p>Intents</p>
+            </div>
+          </Link>
+          <Link to={'/dashboard/ddm'}>
+            <div
+                className={`repository__panel__items__item ${ddmSelectedClass}`}
+            >
+              <span className="iconfont">&#xe653;</span>
+              <p>DDM</p>
             </div>
           </Link>
         </div>
