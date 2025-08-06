@@ -33,7 +33,7 @@ class ExperimentHandler(object):
         documents = self.collection_experiment.find(query)
         return json.loads(json.dumps(documents[0], default=str))
 
-    def create_experiment(self, username, proj_id, exp_name, graphical_model):
+    def create_experiment(self, username, proj_id, exp_name, steps):
         create_time = calendar.timegm(time.gmtime())  # get current time in seconds
         exp_id = username + "-" + exp_name.replace(" ", "") + "-" + str(create_time)
         query = {
@@ -42,7 +42,7 @@ class ExperimentHandler(object):
             "name": exp_name,
             "create_at": create_time,
             "update_at": create_time,
-            "graphical_model": graphical_model,
+            "steps": steps,
         }
         self.collection_experiment.insert_one(query)
 
@@ -77,11 +77,11 @@ class ExperimentHandler(object):
         projectHandler.update_project_update_at(proj_id)
         return True
 
-    def update_experiment_graphical_model(self, exp_id, proj_id, graphical_model):
+    def update_experiment_graphical_model(self, exp_id, proj_id, steps):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": exp_id}
         new_values = {
-            "$set": {"graphical_model": graphical_model, "update_at": update_time}
+            "$set": {"steps": steps, "update_at": update_time}
         }
         self.collection_experiment.update_one(query, new_values)
 
