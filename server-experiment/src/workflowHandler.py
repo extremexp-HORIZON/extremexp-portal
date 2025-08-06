@@ -10,7 +10,7 @@ class WorkflowHandler(object):
     def __init__(self):
         self.client = mongo_client
         self.db = self.client.workflows
-        self.collection_workflow = self.db.experiment
+        self.collection_workflow = self.db.workflow
 
     def get_workflows(self, proj_id):
         query = {"project_id": proj_id}
