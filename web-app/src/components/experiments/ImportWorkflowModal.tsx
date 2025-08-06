@@ -60,33 +60,43 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
               name: workflow.name,
               description: workflow.description || 'No description available',
               createdAt: new Date(workflow.create_at * 1000).toISOString(),
-              steps: orderedNodes.map((node: any) => ({
-                id: node.id,
-                name:
-                  (Array.isArray(node.data?.variants) && node.data.variants[0]?.name) ||
-                  node.data?.name ||
-                  node.type ||
-                  'Unnamed Step',
-                type: node.type || 'unknown',
-                tasks: Array.isArray(node.data?.variants)
-                  ? node.data.variants.map((variant: any) => ({
-                      id: variant.id_task,
-                      name: variant.name,
-                      type: 'algorithm',
-                      implementationRef: variant.implementationRef,
-                      description: variant.description,
-                      hyperParameters: (variant.parameters || []).map((param: any) => ({
-                        name: param.name,
-                        type: param.type === 'integer' ? 'categorical' : 'number',
-                        default: param.values?.[0] || 0,
-                        ...(param.type === 'integer'
-                          ? { options: param.values?.map((v: any) => v.toString()) || [] }
-                          : { range: [Math.min(...(param.values || [0])), Math.max(...(param.values || [0]))] }),
-                      })),
-                      selected: true,
-                    }))
-                  : [],
-              })),
+              steps: orderedNodes
+                .filter((node: any) => {
+                  const nodeType = node.type?.toLowerCase?.();
+                  return nodeType !== 'start' && nodeType !== 'end';
+                })
+                .map((node: any) => ({
+                  id: node.id,
+                  name:
+                    (Array.isArray(node.data?.variants) && node.data.variants[0]?.name) ||
+                    node.data?.name ||
+                    node.type ||
+                    'Unnamed Step',
+                  type: node.type || 'unknown',
+                  tasks: Array.isArray(node.data?.variants)
+                    ? node.data.variants
+                        .filter((variant: any) => {
+                          const vType = variant.type?.toLowerCase?.();
+                          return vType !== 'start' && vType !== 'end';
+                        })
+                        .map((variant: any) => ({
+                          id: variant.id_task,
+                          name: variant.name,
+                          type: 'algorithm',
+                          implementationRef: variant.implementationRef,
+                          description: variant.description,
+                          hyperParameters: (variant.parameters || []).map((param: any) => ({
+                            name: param.name,
+                            type: param.type === 'integer' ? 'categorical' : 'number',
+                            default: param.values?.[0] || 0,
+                            ...(param.type === 'integer'
+                              ? { options: param.values?.map((v: any) => v.toString()) || [] }
+                              : { range: [Math.min(...(param.values || [0])), Math.max(...(param.values || [0]))] }),
+                          })),
+                          selected: true,
+                        }))
+                    : [],
+                })),
             };
           });
           setWorkflows(mappedWorkflows);

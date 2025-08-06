@@ -54,17 +54,37 @@ export function WorkflowStep({
     range?: { min: number; max: number };
   }>>({});
 
-  const handleParameterTypeChange = (taskId: string, paramName: string, paramType: string, type: 'range' | 'enumeration') => {
+  const handleParameterTypeChange = (
+    taskId: string,
+    paramName: string,
+    paramType: string,
+    type: 'range' | 'enumeration'
+  ) => {
     // For integer parameters, force enumeration type
     if (paramType === 'integer') {
       type = 'enumeration';
     }
-    
+
+    // Update the actual param.values in the task object
+    const task = step.tasks.find(t => t.id === taskId);
+    if (task) {
+      const param = task.hyperParameters?.find(p => p.name === paramName);
+      if (param) {
+        if (type === 'enumeration') {
+          param.values = param.values && param.values.length > 0 ? [...param.values] : [0];
+        } else {
+          delete param.values;
+        }
+      }
+    }
+
     setParameterValues(prev => ({
       ...prev,
       [`${taskId}-${paramName}`]: {
         type,
-        values: type === 'enumeration' ? [0] : [],
+        values: type === 'enumeration'
+          ? (param?.values && param.values.length > 0 ? [...param.values] : [0])
+          : [],
         range: type === 'range' ? { min: 0, max: 1 } : undefined
       }
     }));
@@ -91,6 +111,16 @@ export function WorkflowStep({
     setParameterValues(prev => {
       const values = [...(prev[`${taskId}-${paramName}`]?.values || [])];
       values[index] = value;
+
+      // Update the actual param.values in the task object
+      const task = step.tasks.find(t => t.id === taskId);
+      if (task) {
+        const param = task.hyperParameters?.find(p => p.name === paramName);
+        if (param) {
+          param.values = values;
+        }
+      }
+
       return {
         ...prev,
         [`${taskId}-${paramName}`]: {
@@ -102,40 +132,107 @@ export function WorkflowStep({
   };
 
   const addEnumerationValue = (taskId: string, paramName: string) => {
-    setParameterValues(prev => ({
-      ...prev,
-      [`${taskId}-${paramName}`]: {
-        ...prev[`${taskId}-${paramName}`],
-        values: [...(prev[`${taskId}-${paramName}`]?.values || []), 0]
+    setParameterValues(prev => {
+      const oldValues = prev[`${taskId}-${paramName}`]?.values || [];
+      const values = [...oldValues, 0];
+
+      // Update the actual param.values in the task object
+      const task = step.tasks.find(t => t.id === taskId);
+      if (task) {
+        const param = task.hyperParameters?.find(p => p.name === paramName);
+        if (param) {
+          param.values = values;
+        }
       }
-    }));
+
+      return {
+        ...prev,
+        [`${taskId}-${paramName}`]: {
+          ...prev[`${taskId}-${paramName}`],
+          values
+        }
+      };
+    });
   };
 
   const removeEnumerationValue = (taskId: string, paramName: string, index: number) => {
-    setParameterValues(prev => ({
-      ...prev,
-      [`${taskId}-${paramName}`]: {
-        ...prev[`${taskId}-${paramName}`],
-        values: prev[`${taskId}-${paramName}`]?.values.filter((_, i) => i !== index) || []
+    setParameterValues(prev => {
+      const oldValues = prev[`${taskId}-${paramName}`]?.values || [];
+      const values = oldValues.filter((_, i) => i !== index);
+
+      // Update the actual param.values in the task object
+      const task = step.tasks.find(t => t.id === taskId);
+      if (task) {
+        const param = task.hyperParameters?.find(p => p.name === paramName);
+        if (param) {
+          param.values = values;
+        }
       }
-    }));
+
+      return {
+        ...prev,
+        [`${taskId}-${paramName}`]: {
+          ...prev[`${taskId}-${paramName}`],
+          values
+        }
+      };
+    });
   };
+
+  const handleParamValueChange = (taskId: string, paramName: string, newValue: number) => {
+    // Find the task and parameter and update its value
+    const task = step.tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const param = task.hyperParameters?.find(p => p.name === paramName);
+    if (param) {
+      param.value = newValue;
+    }
+  };
+
+  React.useEffect(() => {
+    // Initialize parameterValues from param.values if present
+    const initial: typeof parameterValues = {};
+    step.tasks.forEach(task => {
+      task.hyperParameters?.forEach(param => {
+        const key = `${task.id}-${param.name}`;
+        if (param.values && param.values.length > 0) {
+          initial[key] = {
+            type: 'enumeration',
+            values: [...param.values],
+          };
+        } else if (param.value !== undefined) {
+          initial[key] = {
+            type: 'enumeration',
+            values: [param.value],
+          };
+        } else if (param.default !== undefined) {
+          initial[key] = {
+            type: 'enumeration',
+            values: [param.default],
+          };
+        }
+      });
+    });
+    setParameterValues(initial);
+    // Only run when step changes (e.g., on load)
+    // eslint-disable-next-line
+  }, [step]);
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
       <div className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
         <div className="flex items-center mb-4">
-          <div
+          {/* <div
             {...attributes}
             {...listeners}
             className="cursor-grab hover:text-blue-600 mr-3"
           >
             <GripVertical className="w-5 h-5" />
-          </div>
+          </div> */}
           
           {getStepIcon(step.type)}
           
-          <span className="flex-1 font-medium text-gray-700">{step.name}</span>
+          {/* <span className="flex-1 font-medium text-gray-700">{step.name}</span> */}
 
         </div>
 
@@ -161,6 +258,23 @@ export function WorkflowStep({
                       const paramValue = parameterValues[paramKey];
                       const isInteger = param.type === 'number' || param.type === 'categorical';
                       
+                      React.useEffect(() => {
+                        if (
+                          (isInteger || paramValue?.type === 'enumeration') &&
+                          (!paramValue || !paramValue.values || paramValue.values.length === 0)
+                        ) {
+                          setParameterValues(prev => ({
+                            ...prev,
+                            [`${task.id}-${param.name}`]: {
+                              ...(paramValue || { type: 'enumeration' }),
+                              values: [param.value ?? param.default ?? 0],
+                            },
+                          }));
+                        }
+                        // Only run on mount or when paramValue changes
+                        // eslint-disable-next-line
+                      }, [paramValue]);
+
                       return (
                         <div key={param.name} className="space-y-2">
                           <div className="flex items-center justify-between">
@@ -200,7 +314,10 @@ export function WorkflowStep({
                                   type="number"
                                   className="parameter-input"
                                   value={paramValue?.range?.min ?? param.range?.[0] ?? 0}
-                                  onChange={(e) => handleRangeChange(task.id, param.name, Number(e.target.value), 'min')}
+                                  onChange={(e) => {
+                                    handleRangeChange(task.id, param.name, Number(e.target.value), 'min');
+                                    handleParamValueChange(task.id, param.name, Number(e.target.value));
+                                  }}
                                 />
                               </div>
                               <input
@@ -225,22 +342,32 @@ export function WorkflowStep({
 
                           {(isInteger || paramValue?.type === 'enumeration') && (
                             <div className="space-y-2">
-                              {(paramValue?.values || []).map((value, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                  <input
-                                    type="number"
-                                    className="flex-1 px-2 py-1 border rounded text-sm"
-                                    value={value}
-                                    onChange={(e) => handleEnumerationChange(task.id, param.name, index, Number(e.target.value))}
-                                  />
-                                  <button
-                                    onClick={() => removeEnumerationValue(task.id, param.name, index)}
-                                    className="text-gray-400 hover:text-red-500"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ))}
+                              {(() => {
+                                const paramKey = `${task.id}-${param.name}`;
+                                const values = parameterValues[paramKey]?.values || [];
+
+                                return values.map((value, index) => (
+                                  <div key={index} className="flex items-center space-x-2">
+                                    <input
+                                      type="number"
+                                      className="flex-1 px-2 py-1 border rounded text-sm"
+                                      value={value}
+                                      onChange={e => {
+                                        const newValue = Number(e.target.value);
+                                        handleEnumerationChange(task.id, param.name, index, newValue);
+                                      }}
+                                    />
+                                    {values.length > 1 && (
+                                      <button
+                                        onClick={() => removeEnumerationValue(task.id, param.name, index)}
+                                        className="text-gray-400 hover:text-red-500"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ));
+                              })()}
                               <button
                                 onClick={() => addEnumerationValue(task.id, param.name)}
                                 className="flex items-center text-sm text-blue-600 hover:text-blue-700"
