@@ -33,6 +33,7 @@ import DynamicTable from '../SupportComponents/DynamicTable';
 
 interface TaskConfigPanelProps {
   updateSideBar: () => void;
+  onSave: () => void;
 }
 
 const selector = (state: RFState) => ({
@@ -43,7 +44,7 @@ const selector = (state: RFState) => ({
   updateEdgeData: state.updateEdgeData,
 });
 
-const TaskConfigPanel: React.FC<TaskConfigPanelProps> = ({ updateSideBar }) => {
+const TaskConfigPanel: React.FC<TaskConfigPanelProps> = ({ updateSideBar,onSave }) => {
   // TODO: fetch task implementation references from the server
   const taskImpReferences: string[] = [
     'NoReference',
@@ -197,7 +198,10 @@ const TaskConfigPanel: React.FC<TaskConfigPanelProps> = ({ updateSideBar }) => {
 
   const handleSetCurrentVariant = (id: string) => {
     const prevId = selectedNode?.data?.currentVariant;
-    selectedNode?.data && (selectedNode.data.currentVariant = id);
+    if(selectedNode?.data){
+      selectedNode.data.currentVariant = id;
+      onSave();
+    }
 
     if (selectedNode?.data) {
       removeTab(prevId);
@@ -278,10 +282,6 @@ const TaskConfigPanel: React.FC<TaskConfigPanelProps> = ({ updateSideBar }) => {
         <span className="iconfont " onClick={handleOpenPopover}>
           &#xe601;
         </span>
-      </div>
-      <div className="sidebar__save-info">
-        Please click the current selected task node to save the changes before
-        variant selection or addition.
       </div>
       {showPopover && (
         <div className="popover__variant">

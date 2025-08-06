@@ -492,7 +492,7 @@ const Editor = () => {
                   fitView
                 >
                   {isOpenConfig && (
-                    <ConfigPanel updateSideBar={updateConfigPanel} />
+                    <ConfigPanel updateSideBar={updateConfigPanel} onSave={handleSave} />
                   )}
                   <Controls position="top-left" />
                   <Background />

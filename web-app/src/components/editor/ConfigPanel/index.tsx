@@ -5,16 +5,17 @@ import OperatorConfigPanel from './OperatorConfigPanel';
 
 interface ConfigPanelProps {
   updateSideBar: () => void;
+  onSave: () => void; 
 }
 
-const ConfigPanel: React.FC<ConfigPanelProps> = ({ updateSideBar }) => {
+const ConfigPanel: React.FC<ConfigPanelProps> = ({ updateSideBar, onSave }) => {
   const selectedNodeType = useConfigPanelStore(
     (state) => state.selectedNodeType
   );
   return (
     <div>
       {selectedNodeType === 'task' && (
-        <TaskConfigPanel updateSideBar={updateSideBar} />
+        <TaskConfigPanel updateSideBar={updateSideBar} onSave={onSave} />
       )}
       {selectedNodeType === 'opInclusive' && (
         <OperatorConfigPanel updateSideBar={updateSideBar} />
