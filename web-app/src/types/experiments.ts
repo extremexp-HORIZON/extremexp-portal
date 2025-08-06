@@ -121,7 +121,6 @@ export interface ExperimentStep {
   name: string;
   type: string;
   executionOrder?: number;
-  collapsed?: boolean;
   status?: 'idle' | 'running' | 'completed' | 'error';
   spaces: ExperimentSpace[];
 }
@@ -130,10 +129,6 @@ export interface ExperimentSpace {
   id: string;
   name: string;
   status?: 'idle' | 'running' | 'completed' | 'error';
-  collapsed?: boolean;
-  gridSearchEnabled?: boolean;
   searchMethod?: 'grid' | 'random' | 'bayesian' | 'evolutionary';
   workflow_id?: string; // Reference to imported workflow
-  // If you still support steps/tasks in a space, you can add:
-  // steps?: WorkflowStep[];
 }

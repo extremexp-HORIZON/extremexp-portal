@@ -10,19 +10,18 @@ import {
 } from '../../../utils/fileIO';
 import Popover from '../../general/Popover';
 import {
-  GraphicalModelType,
-  WorkflowType,
-  defaultWorkflow,
+  ExperimentType,
+  defaultExperiment,
 } from '../../../types/workflows';
 import {
-  WorkflowsResponseType,
-  CreateWorkflowResponseType,
-  UpdateWorkflowNameResponseType,
-  DeleteWorkflowResponseType,
+  ExperimentsResponseType,
+  CreateExperimentResponseType,
+  UpdateExperimentNameResponseType,
+  DeleteExperimentResponseType,
 } from '../../../types/requests';
 
 const ProjectExperiment = () => {
-  const [experiments, setExperiments] = useState([defaultWorkflow]);
+  const [experiments, setExperiments] = useState([defaultExperiment]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newExpName, setNewExpName] = useState('');
 
@@ -34,13 +33,13 @@ const ProjectExperiment = () => {
   // make sure the expID is the same as the one in the url
   const projID = useLocation().pathname.split('/')[3];
 
-  const { request: experimentsRequest } = useRequest<WorkflowsResponseType>();
+  const { request: experimentsRequest } = useRequest<ExperimentsResponseType>();
   const { request: createExperimentRequest } =
-    useRequest<CreateWorkflowResponseType>();
+    useRequest<CreateExperimentResponseType>();
   const { request: updateExpNameRequest } =
-    useRequest<UpdateWorkflowNameResponseType>();
+    useRequest<UpdateExperimentNameResponseType>();
   const { request: deleteExperimentRequest } =
-    useRequest<DeleteWorkflowResponseType>();
+    useRequest<DeleteExperimentResponseType>();
 
   const navigate = useNavigate();
 
@@ -66,13 +65,13 @@ const ProjectExperiment = () => {
   }, [getExperiments]);
 
   const postNewExperiment = useCallback(
-    (name: string, graphicalModel: GraphicalModelType) => {
+    (name: string, steps: []) => {
       createExperimentRequest({
         url: `/exp/projects/${projID}/experiments/create`,
         method: 'POST',
         data: {
           exp_name: name,
-          graphical_model: graphicalModel,
+          steps: steps,
         },
       })
         .then(() => {
@@ -89,8 +88,8 @@ const ProjectExperiment = () => {
 
   const handleNewExperiment = () => {
     postNewExperiment(`experiment-${timeNow()}`, {
-      nodes: [],
-      edges: [],
+      steps: [],
+    
     });
   };
 
@@ -124,7 +123,7 @@ const ProjectExperiment = () => {
     }
     updateExpNameRequest({
       url: `/exp/projects/${projID}/experiments/${
-        experiments[editingIndex!].id_workflow
+        experiments[editingIndex!].id_experiment
       }/update/name`,
       method: 'PUT',
       data: {
@@ -141,15 +140,14 @@ const ProjectExperiment = () => {
 
   const handleDownloadExperiment = (index: number) => {
     downloadGraphicalModel(
-      experiments[index].graphical_model,
+      experiments[index].steps,
       experiments[index].name
     );
   };
 
-  const handleOpenExperiment = (experiment: WorkflowType) => {
+  const handleOpenExperiment = (experiment: ExperimentType) => {
     navigate(`/editor/experiment/${projID}/${experiment.id_experiment}`);
   };
-
 
   function handleOpenPopover(index: number) {
     setDeleteIndex(index);
@@ -168,7 +166,7 @@ const ProjectExperiment = () => {
   const handleDeleteExperiment = () => {
     if (deleteIndex === null) return;
     deleteExperimentRequest({
-      url: `/exp/projects/${projID}/experiments/${experiments[deleteIndex].id_workflow}/delete`,
+      url: `/exp/projects/${projID}/experiments/${experiments[deleteIndex].id_experiment}/delete`,
       method: 'DELETE',
     })
       .then(() => {
@@ -185,7 +183,7 @@ const ProjectExperiment = () => {
     if (!model) {
       return;
     }
-    postNewExperiment(`imported-experiment-${timeNow()}`, model);
+    postNewExperiment(`imported-experiment-${timeNow()}`, []);
   }
 
   return (
