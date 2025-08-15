@@ -11,12 +11,14 @@ const Repository = () => {
   // const isProgress = location.pathname.includes('/progress');
   const isIntents = location.pathname.includes('/intents');
   const isDDM = location.pathname.includes('/ddm');
+  const isRedesign = location.pathname.includes('/redesign');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
   const reusableTaskSelectedClass = isReusableTask ? 'selected' : '';
   // const progressSelectedClass = isProgress ? 'selected' : '';
   const intentsSelectedClass = isIntents ? 'selected' : '';
   const ddmSelectedClass = isDDM ? 'selected' : '';
+  const redesignSelectedClass = isRedesign ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -78,6 +80,14 @@ const Repository = () => {
             >
               <span className="iconfont">&#xe653;</span>
               <p>DDM</p>
+            </div>
+          </Link>
+          <Link to={'/dashboard/redesign'}>
+            <div
+                className={`repository__panel__items__item ${redesignSelectedClass}`}
+            >
+              <span className="iconfont">&#xe78A;</span>
+              <p>Redesign</p>
             </div>
           </Link>
         </div>

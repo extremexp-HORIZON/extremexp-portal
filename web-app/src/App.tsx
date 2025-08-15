@@ -11,6 +11,7 @@ import Experiments from './containers/Dashboard/Experiments';
 import Progress from './containers/Dashboard/Progress';
 import Intents from './containers/Dashboard/Intents';
 import DDM from './containers/Dashboard/DDM';
+import Redesign from './containers/Dashboard/Redesign';
 import ReusableTasks from './containers/Dashboard/ReusableTasks';
 import Project from './components/dashboard/Experiment';
 import Tasks from './containers/Dashboard/Tasks';
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
       {
         path: '/dashboard/ddm',
         element: <DDM />,
+      },
+      {
+        path: '/dashboard/redesign',
+        element: <Redesign />,
       },
     ],
   },
