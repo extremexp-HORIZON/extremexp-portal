@@ -82,7 +82,7 @@ const Repository = () => {
               <p>DDM</p>
             </div>
           </Link>
-          <Link to={'/dashboard/redesign'}>
+          <Link to={'/redesign'}>
             <div
                 className={`repository__panel__items__item ${redesignSelectedClass}`}
             >

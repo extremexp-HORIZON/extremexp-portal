@@ -25,6 +25,10 @@ const router = createBrowserRouter([
     element: <Home />,
   },
   {
+    path: '/redesign',
+    element: <Redesign />,
+  },
+  {
     path: '/account/',
     element: <Account />,
     children: [
@@ -77,10 +81,6 @@ const router = createBrowserRouter([
       {
         path: '/dashboard/ddm',
         element: <DDM />,
-      },
-      {
-        path: '/dashboard/redesign',
-        element: <Redesign />,
       },
     ],
   },
