@@ -4,7 +4,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { 
   Database, 
   Brain, 
-  GripVertical, 
   X, 
   Settings,
   Plus,
@@ -15,16 +14,15 @@ interface WorkflowStepProps {
   step: WorkflowStepType;
   onRemove: (id: string) => void;
   onSelectTask: (stepId: string, taskId: string) => void;
+  onParamChange: (stepId: string, taskId: string, paramName: string, newValue: number) => void;
 }
 
 export function WorkflowStep({
   step,
-  onRemove,
   onSelectTask,
+  onParamChange,
 }: WorkflowStepProps) {
   const {
-    attributes,
-    listeners,
     setNodeRef,
     transform,
     transition,
@@ -78,16 +76,27 @@ export function WorkflowStep({
       }
     }
 
-    setParameterValues(prev => ({
-      ...prev,
-      [`${taskId}-${paramName}`]: {
-        type,
-        values: type === 'enumeration'
-          ? (param?.values && param.values.length > 0 ? [...param.values] : [0])
-          : [],
-        range: type === 'range' ? { min: 0, max: 1 } : undefined
+    setParameterValues(prev => {
+      // Find the task and param for values
+      const task = step.tasks.find(t => t.id === taskId);
+      let values: number[] = [0];
+      if (task) {
+        const paramObj = task.hyperParameters?.find(p => p.name === paramName);
+        if (paramObj && Array.isArray(paramObj.values) && paramObj.values.length > 0) {
+          values = [...paramObj.values];
+        } else if (paramObj && typeof paramObj.default === 'number') {
+          values = [paramObj.default];
+        }
       }
-    }));
+      return {
+        ...prev,
+        [`${taskId}-${paramName}`]: {
+          type,
+          values: type === 'enumeration' ? values : [],
+          range: type === 'range' ? { min: 0, max: 1 } : undefined
+        }
+      };
+    });
   };
 
   const handleRangeChange = (taskId: string, paramName: string, value: number, type: 'min' | 'max') => {
@@ -118,6 +127,8 @@ export function WorkflowStep({
         const param = task.hyperParameters?.find(p => p.name === paramName);
         if (param) {
           param.values = values;
+          // Notify parent of change
+          onParamChange(step.id, taskId, paramName, value);
         }
       }
 
@@ -185,7 +196,14 @@ export function WorkflowStep({
     if (!task) return;
     const param = task.hyperParameters?.find(p => p.name === paramName);
     if (param) {
-      param.value = newValue;
+      // For range, update values[0] or values[1] if needed
+      if (Array.isArray(param.values) && param.values.length > 0) {
+        param.values[0] = newValue;
+      } else {
+        param.values = [newValue];
+      }
+      // Notify parent of change
+      onParamChange(step.id, taskId, paramName, newValue);
     }
   };
 
@@ -200,12 +218,7 @@ export function WorkflowStep({
             type: 'enumeration',
             values: [...param.values],
           };
-        } else if (param.value !== undefined) {
-          initial[key] = {
-            type: 'enumeration',
-            values: [param.value],
-          };
-        } else if (param.default !== undefined) {
+        } else if (typeof param.default === 'number') {
           initial[key] = {
             type: 'enumeration',
             values: [param.default],
@@ -222,18 +235,8 @@ export function WorkflowStep({
     <div ref={setNodeRef} style={style} className="space-y-2">
       <div className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
         <div className="flex items-center mb-4">
-          {/* <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab hover:text-blue-600 mr-3"
-          >
-            <GripVertical className="w-5 h-5" />
-          </div> */}
-          
           {getStepIcon(step.type)}
-          
-          {/* <span className="flex-1 font-medium text-gray-700">{step.name}</span> */}
-
+          <span className="flex-1 font-medium text-gray-700">{ !(step.tasks && step.tasks.length > 0 )&& step.name}</span>
         </div>
 
         {step.tasks && step.tasks.length > 0 && (
@@ -267,7 +270,7 @@ export function WorkflowStep({
                             ...prev,
                             [`${task.id}-${param.name}`]: {
                               ...(paramValue || { type: 'enumeration' }),
-                              values: [param.value ?? param.default ?? 0],
+                              values: [typeof param.default === 'number' ? param.default : 0],
                             },
                           }));
                         }

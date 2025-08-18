@@ -39,11 +39,10 @@ import {
   ExperimentResponseType
 } from '../../types/requests';
 
-function ExperimentDesigner() {
-  const { request: specificationRequest } = useRequest<
-    ExperimentResponseType | TaskResponseType
-  >();
 
+function ExperimentDesigner() {
+  // --- State ---
+  const { request: specificationRequest } = useRequest<ExperimentResponseType | TaskResponseType>();
   const [steps, setSteps] = useState<Node[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [experimentName, setExperimentName] = useState('');
@@ -54,22 +53,25 @@ function ExperimentDesigner() {
   const [isImportingWorkflow, setIsImportingWorkflow] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // --- Routing ---
   const projID = useLocation().pathname.split('/')[3];
   const experimentID = useLocation().pathname.split('/')[4];
 
-  // Helper to extract steps from experiment object
+  // --- Helpers ---
+  // Extract steps from experiment object, supporting legacy and new formats
   const extractSteps = (experiment: any): Node[] => {
-    let steps: Node[] = [];
-    if (Array.isArray(experiment.steps)) steps = experiment.steps;
-    else if (Array.isArray(experiment.graphical_model)) steps = experiment.graphical_model;
-    return applyWorkflowOverrides(steps);
+    if (Array.isArray(experiment.steps)) return applyWorkflowOverrides(experiment.steps);
+    if (Array.isArray(experiment.graphical_model)) return applyWorkflowOverrides(experiment.graphical_model);
+    return [];
   };
 
+  // --- Effects ---
+  // Load experiment on mount or when ID changes
   useEffect(() => {
     const url = `exp/projects/experiments/${experimentID}`;
     specificationRequest({ url })
       .then((data) => {
-        if (data?.data?.experiment) {
+        if ('experiment' in data.data && data.data.experiment) {
           const experiment = data.data.experiment;
           setExperimentName(experiment.name || '');
           setSteps(extractSteps(experiment));
@@ -86,6 +88,7 @@ function ExperimentDesigner() {
       });
   }, [specificationRequest, projID, experimentID]);
 
+  // --- DnD Sensors ---
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -93,20 +96,19 @@ function ExperimentDesigner() {
     })
   );
 
-  const handleSaveExperiment = () => {
-    setIsSaving(true);
-    setExperimentName('');
-  };
+  // --- Handlers ---
+  // Save experiment: open modal
 
+  // Removed unused handleSaveExperiment
+
+  // Drag end: reorder steps
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
       setSteps((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
         const reorderedSteps = arrayMove(items, oldIndex, newIndex);
-        
         return reorderedSteps.map((step, index) => ({
           ...step,
           executionOrder: index + 1
@@ -115,73 +117,63 @@ function ExperimentDesigner() {
     }
   };
 
+  // Add a new step
   const handleAddNode = () => {
     if (steps.length >= 3) {
       setError('Maximum of 3 steps allowed');
       return;
     }
-
-    const isNodeEmpty = steps.some(step => 
-      step.spaces.length === 0 || step.spaces.every(space => space.steps.length === 0)
-    );
-
+    const isNodeEmpty = steps.some(step => step.spaces.length === 0 || step.spaces.every(space => space.steps.length === 0));
     if (isNodeEmpty) {
       setError('Cannot add a new step while there are empty steps');
       return;
     }
-
     setError(null);
     setIsAddingNode(true);
     setNewStepName('');
   };
 
+  // Create a new step
   const handleCreateNode = () => {
-    if (newStepName.trim()) {
-      const newStep: Node = {
-        id: `step-${Date.now()}`,
-        name: newStepName.trim(),
-        type: 'container',
-        spaces: [],
-        collapsed: false,
-        status: 'idle',
-        executionOrder: steps.length + 1
-      };
-      setSteps([...steps, newStep]);
-      setIsAddingNode(false);
-      setNewStepName('');
-    }
+    if (!newStepName.trim()) return;
+    const newStep: Node = {
+      id: `step-${Date.now()}`,
+      name: newStepName.trim(),
+      type: 'container',
+      spaces: [],
+      collapsed: false,
+      status: 'idle',
+      executionOrder: steps.length + 1
+    };
+    setSteps([...steps, newStep]);
+    setIsAddingNode(false);
+    setNewStepName('');
   };
 
+  // Add a space to a step
   const addSpace = (stepID: string) => {
     const step = steps.find(n => n.id === stepID);
     if (!step) return;
-
     const hasEmptySpace = step.spaces.some(space => space.steps.length === 0);
     if (hasEmptySpace) {
       setError('Cannot add new space while there is an empty space');
       return;
     }
-
     setError(null);
-    setSteps(steps.map(step => {
-      if (step.id === stepID) {
-        return {
-          ...step,
-          spaces: [
-            ...step.spaces,
-            {
-              id: `space-${Date.now()}`,
-              name: 'New Space',
-              steps: [],
-              status: 'idle',
-              gridSearchEnabled: true,
-              searchMethod: 'grid'
-            }
-          ]
-        };
-      }
-      return step;
-    }));
+    setSteps(steps.map(step => step.id === stepID ? {
+      ...step,
+      spaces: [
+        ...step.spaces,
+        {
+          id: `space-${Date.now()}`,
+          name: 'New Space',
+          steps: [],
+          status: 'idle',
+          gridSearchEnabled: true,
+          searchMethod: 'grid'
+        }
+      ]
+    } : step));
   };
 
   
@@ -569,7 +561,7 @@ function ExperimentDesigner() {
                                       <div className="flex items-center space-x-2">
                                         <input
                                           type="checkbox"
-                                          checked={true}
+                                          checked={space.gridSearchEnabled}
                                           onChange={() => toggleGridSearch(step.id, space.id)}
                                           className="rounded text-blue-600"
                                         />
