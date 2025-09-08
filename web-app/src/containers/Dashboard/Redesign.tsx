@@ -7,7 +7,6 @@ import { DataTable } from '../../components/redesign/DataTable';
 import { Pagination } from '../../components/redesign/Pagination';
 import { TabbedSection } from '../../components/redesign/TabbedSection';
 import './redesign.scss';
-
 const quickStartSteps = [
   { label: 'Upload your dataset' },
   { label: 'Define your experiment' },
@@ -17,18 +16,18 @@ const quickStartSteps = [
 
 const prepareCards = [
   {
-    id: 'data-management',
-    icon: Database,
-    title: 'Data management, upload,',
-    description: 'metadata',
-    onClick: () => console.log('Data management clicked')
-  },
-  {
     id: 'access-control',
     icon: Shield,
     title: 'Access control policy editor',
     description: '',
     onClick: () => console.log('Access control clicked')
+  },
+  {
+    id: 'data-management',
+    icon: Database,
+    title: 'Data management, upload, annotate',
+    description: '',
+    onClick: () => console.log('Data management clicked')
   }
 ];
 
@@ -41,7 +40,8 @@ const tableColumns = [
   { key: 'name', label: 'Name', sortable: true },
   { key: 'size', label: 'Size', sortable: true },
   { key: 'createdTime', label: 'Created Time', sortable: true },
-  { key: 'thumbnail', label: 'Thumbnail' },
+  { key: 'lastUpdatedTime', label: 'Last updated Time', sortable: true },
+  { key: 'linkedWorkflow', label: 'Linked workflow' },
   { key: 'actions', label: 'Action', width: 'w-80' }
 ];
 
@@ -50,30 +50,40 @@ const sampleData = [
     name: 'Workflow 1',
     size: '200MB',
     createdTime: '2025-02-05 08:28:36',
+    lastUpdatedTime: '2025-06-21 16:10:03',
+    linkedWorkflow: 'workflow-1'
   },
   {
     name: 'Workflow 2',
     size: '1GB',
     createdTime: '2025-02-03 19:49:33',
+    lastUpdatedTime: '2025-02-08 08:28:36',
+    linkedWorkflow: 'workflow-2'
   },
   {
     name: 'Workflow 3',
     size: '300MB',
     createdTime: '2025-02-02 19:17:15',
+    lastUpdatedTime: '2025-02-03 19:49:33',
+    linkedWorkflow: 'workflow-3'
   },
   {
     name: 'Workflow 4',
-    size: '250MB',
+    size: '750MB',
     createdTime: '2025-02-02 09:46:33',
+    lastUpdatedTime: '2025-02-02 19:17:15',
+    linkedWorkflow: 'workflow-4'
   },
   {
     name: 'Workflow 5',
     size: '150MB',
     createdTime: '2025-02-02 07:57:01',
+    lastUpdatedTime: '2025-02-02 09:46:33',
+    linkedWorkflow: 'workflow-5'
   }
 ];
 
-function Redesign() {
+function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [prepareCollapsed, setPrepareCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('experiments');
@@ -82,6 +92,40 @@ function Redesign() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [tableData, setTableData] = useState(sampleData);
+  const [sortedData, setSortedData] = useState(sampleData);
+
+  // Update sorted data when table data or sorting changes
+  React.useEffect(() => {
+    let sorted = [...tableData];
+    
+    if (sortColumn) {
+      sorted.sort((a, b) => {
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
+        
+        // Handle different data types
+        if (sortColumn === 'size') {
+          // Convert size strings to numbers for proper sorting
+          aValue = parseInt(aValue.replace(/[^\d]/g, ''));
+          bValue = parseInt(bValue.replace(/[^\d]/g, ''));
+        } else if (sortColumn === 'createdTime' || sortColumn === 'lastUpdatedTime') {
+          // Convert date strings to Date objects for proper sorting
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        }
+        
+        if (aValue < bValue) {
+          return sortDirection === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    setSortedData(sorted);
+  }, [tableData, sortColumn, sortDirection]);
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -111,7 +155,7 @@ function Redesign() {
   const handleDelete = () => {
     if (selectedRows.length === 0) return;
     
-    const newData = tableData.filter(row => !selectedRows.includes(row.name));
+    const newData = tableData.filter(row => !selectedRows.includes(row[rowIdKey]));
     setTableData(newData);
     setSelectedRows([]);
     
@@ -122,25 +166,27 @@ function Redesign() {
     }
   };
 
-  const totalPages = Math.ceil(tableData.length / 5);
+  const totalPages = Math.ceil(sortedData.length / 5);
+  const itemsPerPage = 5;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
+  const rowIdKey = 'name';
 
   const defineActions = [
     {
-      label: 'Delete',
-      variant: 'danger' as const,
-      icon: Trash2,
-      onClick: handleDelete
+      label: 'Create new experiment definition',
+      variant: 'primary' as const,
+      onClick: () => console.log('Create new experiment clicked')
     }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Banner */}
-        {/* {showWelcome && (
+        {showWelcome && (
           <WelcomeBanner
-            title="Welcome to ExtremeXP"
-            description="– an interactive platform for data scientists and domain experts to define, run, and evaluate machine learning experiments."
+            title="Welcome to ExtremeXP – an interactive platform for data scientists and domain experts to define, run, and evaluate machine learning experiments."
             primaryAction={{
               label: 'Have a quick tour',
               onClick: () => console.log('Quick tour clicked')
@@ -151,7 +197,7 @@ function Redesign() {
             }}
             onClose={() => setShowWelcome(false)}
           />
-        )} */}
+        )}
 
         {/* Quick Start Section */}
         <WorkflowSection
@@ -179,10 +225,11 @@ function Redesign() {
           <DataTable
             columns={tableColumns}
             data={tableData}
+            sortedData={paginatedData}
             selectedRows={selectedRows}
             onRowSelect={handleRowSelect}
             onSelectAll={handleSelectAll}
-            rowIdKey="name"
+            rowIdKey={rowIdKey}
             sortColumn={sortColumn}
             sortDirection={sortDirection}
             onSort={handleSort}
@@ -191,15 +238,32 @@ function Redesign() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={tableData.length}
-            itemsPerPage={5}
+            totalItems={sortedData.length}
+            itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />
         </TabbedSection>
+
+        {/* Bulk Actions */}
+        {/* {selectedRows.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-3">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {selectedRows.length} item{selectedRows.length > 1 ? 's' : ''} selected
+              </span>
+              <Button
+                variant="danger"
+                size="sm"
+                icon={Trash2}
+                onClick={handleDelete}
+              >
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+        )} */}
       </div>
     </div>
   );
 }
-
-
 export default Redesign;
