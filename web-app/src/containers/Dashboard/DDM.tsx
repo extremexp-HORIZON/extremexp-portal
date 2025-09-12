@@ -7,7 +7,7 @@ const DDM = () => {
     <>
       <div className="page dashboard__page">
         <iframe width="100%" height="100%" style={{border:'none'}}
-            src="http://146.124.106.200"
+            src="https://ddm.extremexp-icom.intracom-telecom.com"
         ></iframe>
       </div>
     </>
