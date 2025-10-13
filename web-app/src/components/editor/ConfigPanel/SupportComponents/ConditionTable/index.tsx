@@ -58,7 +58,6 @@ const ConditionTable: React.FC<TableProps> = ({
     index: number,
     targetLinkName: string
   ) => {
-    console.log(index);
     if (targetLinkName === 'select a link') {
       return;
     }

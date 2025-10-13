@@ -1,12 +1,12 @@
 export interface HyperParameter {
   id?: string;
   name: string;
-  type: 'number' | 'categorical' | 'boolean';
-  default: number | string | boolean;
+  type: 'integer' | 'real' | 'string' | 'boolean' | 'array' | 'blob' | 'categorical' | 'number';
+  default?: number | string | boolean;
   range?: [number, number];
-  options?: string[];
-  values?: number[];
-  inputType?: 'range' | 'enumeration';
+  options?: (string | number | boolean)[];
+  values?: (number | string | boolean)[];
+  inputType?: 'range' | 'enumeration' | 'text' | 'number';
 }
 
 export interface Task {
@@ -51,6 +51,7 @@ export interface Space {
   searchMethod?: SearchMethod;
   searchOptions?: SearchOption[];
   workflow?: SavedWorkflow;
+  workflow_overrides?: Record<string, any>; // Add workflow_overrides property
 }
 
 export interface Node {
@@ -92,6 +93,7 @@ export interface SavedWorkflow {
   steps: Step[];
   createdAt: string;
   nodes?: Node[];
+  tasks?: any[]; // Add tasks property for compatibility
 }
 
 export interface StepSelectorProps {
@@ -131,4 +133,28 @@ export interface ExperimentSpace {
   status?: 'idle' | 'running' | 'completed' | 'error';
   searchMethod?: 'grid' | 'random' | 'bayesian' | 'evolutionary';
   workflow_id?: string; // Reference to imported workflow
+  steps?: WorkflowStep[]; // Add steps property
+}
+
+
+export interface WorkflowTask {
+  id: string;
+  name: string;
+  type: 'dataset' | 'algorithm' | 'preprocessing' | 'evaluation';
+  selected: boolean;
+  hyperParameters: HyperParameter[];
+  implementationRef?: string;
+  description?: string;
+  isAbstract?: boolean;
+}
+
+export interface WorkflowStep {
+  id: string;
+  name: string;
+  type: 'preprocessing' | 'algorithm' | 'dataset' | 'evaluation';
+  tasks: WorkflowTask[];
+  subSteps?: WorkflowStep[];
+  collapsed?: boolean;
+  hyperParameterTuningEnabled?: boolean;
+  gridSearchEnabled?: boolean;
 }

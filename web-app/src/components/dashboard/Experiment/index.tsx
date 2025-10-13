@@ -6,13 +6,13 @@ import { timestampToDate, timeNow } from '../../../utils/timeToDate';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   downloadGraphicalModel,
-  uploadGraphicalModel,
 } from '../../../utils/fileIO';
 import Popover from '../../general/Popover';
 import {
   ExperimentType,
   defaultExperiment,
 } from '../../../types/workflows';
+import { ExperimentStep } from '../../../types/experiments';
 import {
   ExperimentsResponseType,
   CreateExperimentResponseType,
@@ -21,7 +21,7 @@ import {
 } from '../../../types/requests';
 
 const ProjectExperiment = () => {
-  const [experiments, setExperiments] = useState([defaultExperiment]);
+  const [experiments, setExperiments] = useState<ExperimentType[]>([defaultExperiment]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newExpName, setNewExpName] = useState('');
 
@@ -65,7 +65,7 @@ const ProjectExperiment = () => {
   }, [getExperiments]);
 
   const postNewExperiment = useCallback(
-    (name: string, steps: []) => {
+    (name: string, steps: ExperimentStep[]) => {
       createExperimentRequest({
         url: `/exp/projects/${projID}/experiments/create`,
         method: 'POST',
@@ -87,10 +87,7 @@ const ProjectExperiment = () => {
   );
 
   const handleNewExperiment = () => {
-    postNewExperiment(`experiment-${timeNow()}`, {
-      steps: [],
-    
-    });
+    postNewExperiment(`experiment-${timeNow()}`, []);
   };
 
   const handleStartEditingName = (index: number) => {
@@ -178,13 +175,6 @@ const ProjectExperiment = () => {
     closeMask();
   };
 
-  async function handleImportExperiment() {
-    const model = await uploadGraphicalModel();
-    if (!model) {
-      return;
-    }
-    postNewExperiment(`imported-experiment-${timeNow()}`, []);
-  }
 
   return (
     <div className="specification">

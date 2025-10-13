@@ -30,7 +30,7 @@ export interface ExperimentType {
   name: string;
   create_at: number;
   update_at: number;
-  steps?: ExperimentStep[];
+  steps: ExperimentStep[];
 }
 
 export const defaultProject = {

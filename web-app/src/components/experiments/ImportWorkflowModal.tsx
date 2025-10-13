@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, ChevronRight, FileJson } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, ChevronRight, FileJson, FileX } from 'lucide-react';
 import type { SavedWorkflow } from '../../types/experiments';
 import { WorkflowsResponseType } from '../../types/requests';
 import useRequest from '../../hooks/useRequest';
@@ -15,11 +15,13 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
   const [step, setStep] = useState(1);
   const [selectedWorkflow, setSelectedWorkflow] = useState<SavedWorkflow | null>(null);
   const [workflows, setWorkflows] = useState<SavedWorkflow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const projID = useLocation().pathname.split('/')[3];
 
   const { request: workflowsRequest } = useRequest<WorkflowsResponseType>();
 
   const getWorkflows = useCallback(() => {
+    setIsLoading(true);
     workflowsRequest({
       url: `work/projects/${projID}/workflows`,
     })
@@ -56,9 +58,9 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
             }
 
             return {
-              id: workflow.id_workflow || workflow.id_experiment,
+              id: workflow.id_workflow,
               name: workflow.name,
-              description: workflow.description || 'No description available',
+              description: `Created: ${new Date(workflow.create_at * 1000).toLocaleString()}`,
               createdAt: new Date(workflow.create_at * 1000).toISOString(),
               steps: orderedNodes
                 .filter((node: any) => {
@@ -85,14 +87,28 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
                           type: 'algorithm',
                           implementationRef: variant.implementationRef,
                           description: variant.description,
-                          hyperParameters: (variant.parameters || []).map((param: any) => ({
-                            name: param.name,
-                            type: param.type === 'integer' ? 'categorical' : 'number',
-                            default: param.values?.[0] || 0,
-                            ...(param.type === 'integer'
-                              ? { options: param.values?.map((v: any) => v.toString()) || [] }
-                              : { range: [Math.min(...(param.values || [0])), Math.max(...(param.values || [0]))] }),
-                          })),
+                          hyperParameters: (variant.parameters || []).map((param: any) => {
+                            const paramValues = Array.isArray(param.values) ? param.values : [];
+                            const isNumericType = param.type === 'integer' || param.type === 'real';
+                            
+                            return {
+                              name: param.name,
+                              type: param.type,
+                              default: paramValues[0] ?? 0,
+                              values: paramValues,
+                              inputType: param.type === 'categorical' ? 'enumeration' : 
+                                        isNumericType && paramValues.length > 1 ? 'range' : undefined,
+                              ...(param.type === 'categorical' 
+                                ? { options: paramValues.map(String) }
+                                : isNumericType 
+                                  ? { range: paramValues.length > 1 
+                                      ? [Math.min(...paramValues), Math.max(...paramValues)]
+                                      : undefined 
+                                    }
+                                  : {}
+                              ),
+                            };
+                          }),
                           selected: true,
                         }))
                     : [],
@@ -101,9 +117,11 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
           });
           setWorkflows(mappedWorkflows);
         }
+        setIsLoading(false);
       })
       .catch((error) => {
         message(error.response?.data?.message || error.message);
+        setIsLoading(false);
       });
   }, [workflowsRequest, projID]);
 
@@ -153,26 +171,40 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
 
           <div className="flex-1 overflow-y-auto">
             {step === 1 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workflows.map((workflow) => (
-                  <div
-                    key={workflow.id}
-                    onClick={() => handleWorkflowSelect(workflow)}
-                    className="border rounded-sm p-4 m-4 hover:border-blue-500 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-start">
-                      <FileJson className="w-6 h-6 text-blue-500 mt-1 flex-shrink-0" />
-                      <div className="ml-3">
-                        <h4 className="font-medium text-gray-900">{workflow.name}</h4>
-                        <p className="text-sm text-gray-500 mt-1">{workflow.description}</p>
-                        <div className="mt-2 text-xs text-gray-400">
-                          {workflow.steps.length} tasks
+              isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                  <h3 className="text-lg font-medium text-gray-900">Loading workflows...</h3>
+                  <p className="text-sm text-gray-500 mt-2">Please wait while we fetch available workflows.</p>
+                </div>
+              ) : workflows.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {workflows.map((workflow) => (
+                    <div
+                      key={workflow.id}
+                      onClick={() => handleWorkflowSelect(workflow)}
+                      className="border rounded-sm p-4 m-4 hover:border-blue-500 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start">
+                        <FileJson className="w-6 h-6 text-blue-500 mt-1 flex-shrink-0" />
+                        <div className="ml-3">
+                          <h4 className="font-medium text-gray-900">{workflow.name}</h4>
+                          <p className="text-sm text-gray-500 mt-1">{workflow.description || 'No description available'}</p>
+                          <div className="mt-2 text-xs text-gray-400">
+                          {workflow.steps?.length || 0} tasks
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full py-12">
+                  <FileX className="w-12 h-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900">No workflows found</h3>
+                  <p className="text-sm text-gray-500 mt-2">There are no workflows available to import.</p>
+                </div>
+              )
             ) : (
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-lg p-4">

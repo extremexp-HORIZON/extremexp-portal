@@ -437,7 +437,7 @@ function ExperimentDesigner() {
     }));
   }
 
-  const handleParamChange = (stepId: string, taskId: string , paramName: string, newValue: string) => {
+  const handleParamChange = (stepId: string, taskId: string , paramName: string, newValue: string | number | boolean) => {
     setSteps(steps =>
       steps.map(step =>
         step.id === stepId
@@ -582,7 +582,7 @@ function ExperimentDesigner() {
                                     </div>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    {!space.workflow_id && (
+                                    {!space.workflow && (
                                       <button
                                         onClick={() => {
                                           setSelectedNode(step.id);
