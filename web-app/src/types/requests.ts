@@ -1,4 +1,4 @@
-import { WorkflowType } from './workflows';
+import { WorkflowType,ExperimentType } from './workflows';
 import { TaskType } from './task';
 
 export type LoginResponseType = {
@@ -142,4 +142,33 @@ export type ConvertorResponseType = {
     json: object;
     xmi: string;
   };
+};
+
+export type ExperimentResponseType = {
+  message: string;
+  data: {
+    experiment: ExperimentType;
+  };
+};
+
+export type ExperimentsResponseType = {
+  message: string;
+  data: {
+    experiments: Array<ExperimentType>;
+  };
+};
+
+export type CreateExperimentResponseType = {
+  message: string;
+  data: {
+    id_experiment: string;
+  };
+};
+
+export type UpdateExperimentNameResponseType = {
+  message: string;
+};
+
+export type DeleteExperimentResponseType = {
+  message: string;
 };

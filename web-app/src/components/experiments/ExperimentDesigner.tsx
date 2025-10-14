@@ -36,19 +36,16 @@ import { message } from '../../utils/message';
 import useRequest from '../../hooks/useRequest';
 import {
   TaskResponseType,
-  WorkflowResponseType,
+  ExperimentResponseType
 } from '../../types/requests';
 
+
 function ExperimentDesigner() {
-
-   const { request: specificationRequest } = useRequest<
-    WorkflowResponseType | TaskResponseType
-  >();
-
+  // --- State ---
+  const { request: specificationRequest } = useRequest<ExperimentResponseType | TaskResponseType>();
   const [steps, setSteps] = useState<Node[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [experimentName, setExperimentName] = useState('');
-
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedSpace, setSelectedSpace] = useState<string | null>(null);
   const [isAddingNode, setIsAddingNode] = useState(false);
@@ -56,28 +53,42 @@ function ExperimentDesigner() {
   const [isImportingWorkflow, setIsImportingWorkflow] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // --- Routing ---
   const projID = useLocation().pathname.split('/')[3];
-  const ExperimentID = useLocation().pathname.split('/')[4];
-  
-  useEffect(() => {
-    const url = `exp/projects/${projID}/experiments/${ExperimentID}`;
+  const experimentID = useLocation().pathname.split('/')[4];
 
-    specificationRequest({
-      url: url,
-    })
+  // --- Helpers ---
+  // Extract steps from experiment object, supporting legacy and new formats
+  const extractSteps = (experiment: any): Node[] => {
+    if (Array.isArray(experiment.steps)) return applyWorkflowOverrides(experiment.steps);
+    if (Array.isArray(experiment.graphical_model)) return applyWorkflowOverrides(experiment.graphical_model);
+    return [];
+  };
+
+  // --- Effects ---
+  // Load experiment on mount or when ID changes
+  useEffect(() => {
+    const url = `exp/projects/experiments/${experimentID}`;
+    specificationRequest({ url })
       .then((data) => {
-        if (data.data && 'experiment' in data.data) {
+        if ('experiment' in data.data && data.data.experiment) {
           const experiment = data.data.experiment;
-          setExperimentName(experiment.name);
-          setSteps(experiment.steps || []);
+          setExperimentName(experiment.name || '');
+          setSteps(extractSteps(experiment));
+        } else {
+          setExperimentName('');
+          setSteps([]);
+          message('Experiment data not found.');
         }
       })
       .catch((error) => {
-        if (error.message) {
-          message(error.message);
-        }
+        setExperimentName('');
+        setSteps([]);
+        message(error?.response?.data?.message || error.message || 'Failed to load experiment.');
       });
-  }, [specificationRequest, projID, ExperimentID]);
+  }, [specificationRequest, projID, experimentID]);
+
+  // --- DnD Sensors ---
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -85,20 +96,19 @@ function ExperimentDesigner() {
     })
   );
 
-  const handleSaveExperiment = () => {
-    setIsSaving(true);
-    setExperimentName('');
-  };
+  // --- Handlers ---
+  // Save experiment: open modal
 
+  // Removed unused handleSaveExperiment
+
+  // Drag end: reorder steps
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
       setSteps((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
         const reorderedSteps = arrayMove(items, oldIndex, newIndex);
-        
         return reorderedSteps.map((step, index) => ({
           ...step,
           executionOrder: index + 1
@@ -107,73 +117,63 @@ function ExperimentDesigner() {
     }
   };
 
+  // Add a new step
   const handleAddNode = () => {
     if (steps.length >= 3) {
       setError('Maximum of 3 steps allowed');
       return;
     }
-
-    const isNodeEmpty = steps.some(step => 
-      step.spaces.length === 0 || step.spaces.every(space => space.steps.length === 0)
-    );
-
+    const isNodeEmpty = steps.some(step => step.spaces.length === 0 || step.spaces.every(space => space.steps.length === 0));
     if (isNodeEmpty) {
       setError('Cannot add a new step while there are empty steps');
       return;
     }
-
     setError(null);
     setIsAddingNode(true);
     setNewStepName('');
   };
 
+  // Create a new step
   const handleCreateNode = () => {
-    if (newStepName.trim()) {
-      const newStep: Node = {
-        id: `step-${Date.now()}`,
-        name: newStepName.trim(),
-        type: 'container',
-        spaces: [],
-        collapsed: false,
-        status: 'idle',
-        executionOrder: steps.length + 1
-      };
-      setSteps([...steps, newStep]);
-      setIsAddingNode(false);
-      setNewStepName('');
-    }
+    if (!newStepName.trim()) return;
+    const newStep: Node = {
+      id: `step-${Date.now()}`,
+      name: newStepName.trim(),
+      type: 'container',
+      spaces: [],
+      collapsed: false,
+      status: 'idle',
+      executionOrder: steps.length + 1
+    };
+    setSteps([...steps, newStep]);
+    setIsAddingNode(false);
+    setNewStepName('');
   };
 
+  // Add a space to a step
   const addSpace = (stepID: string) => {
     const step = steps.find(n => n.id === stepID);
     if (!step) return;
-
     const hasEmptySpace = step.spaces.some(space => space.steps.length === 0);
     if (hasEmptySpace) {
       setError('Cannot add new space while there is an empty space');
       return;
     }
-
     setError(null);
-    setSteps(steps.map(step => {
-      if (step.id === stepID) {
-        return {
-          ...step,
-          spaces: [
-            ...step.spaces,
-            {
-              id: `space-${Date.now()}`,
-              name: 'New Space',
-              steps: [],
-              status: 'idle',
-              gridSearchEnabled: true,
-              searchMethod: 'grid'
-            }
-          ]
-        };
-      }
-      return step;
-    }));
+    setSteps(steps.map(step => step.id === stepID ? {
+      ...step,
+      spaces: [
+        ...step.spaces,
+        {
+          id: `space-${Date.now()}`,
+          name: 'New Space',
+          steps: [],
+          status: 'idle',
+          gridSearchEnabled: true,
+          searchMethod: 'grid'
+        }
+      ]
+    } : step));
   };
 
   
@@ -204,7 +204,7 @@ function ExperimentDesigner() {
       if (step.id === stepId) {
         return {
           ...step,
-          spaces: step.spaces.map(space => {
+          spaces:  step.spaces.map(space => {
             if (space.id === spaceId) {
               return {
                 ...space,
@@ -344,41 +344,41 @@ function ExperimentDesigner() {
   };
 
   const saveExperiment = async () => {
-    // Build the experiment object using the interfaces
     const experimentToSave: ExperimentSave = {
-      id: ExperimentID,
+      id: experimentID,
       name: experimentName,
       project_id: projID,
       created_at: Date.now(),
       updated_at: Date.now(),
       steps: steps.map((step): ExperimentStep => ({
-        id: step.id,
-        name: step.name,
-        type: step.type,
-        executionOrder: step.executionOrder,
-        collapsed: step.collapsed,
-        status: step.status,
+        ...step,
         spaces: step.spaces.map((space): ExperimentSpace => ({
-          id: space.id,
-          name: space.name,
-          status: space.status,
-          collapsed: space.collapsed,
-          gridSearchEnabled: space.gridSearchEnabled,
-          searchMethod: typeof space.searchMethod === 'string' ? space.searchMethod : 'grid',
-          workflow_id: space.workflow_id, // reference to imported workflow
+          ...space,
+          steps: Array.isArray(space.steps) ? space.steps.map(wfStep => ({
+            ...wfStep,
+            tasks: Array.isArray(wfStep.tasks) ? wfStep.tasks.map(task => ({
+              ...task,
+              // This will include the current param.values for each hyperParameter
+              hyperParameters: Array.isArray(task.hyperParameters)
+                ? task.hyperParameters.map(param => ({
+                    ...param,
+                    // param.values is already up-to-date from WorkflowStep
+                  }))
+                : [],
+            })) : [],
+          })) : [],
         })),
       })),
     };
 
-    console.log('Experiment to save:', experimentToSave);
-
     await specificationRequest({
-      url: `exp/projects/${projID}/experiments/${ExperimentID}/save`,
-      method: 'POST',
+      url: `/exp/projects/${projID}/experiments/${experimentID}/update/`,
+      method: "PUT",
       data: experimentToSave,
     })
       .then(() => {
-        message('Experiment saved successfully');
+        message("Experiment saved successfully");
+        setIsSaving(false);
       })
       .catch((error) => {
         message(error.response?.data?.message || error.message);
@@ -396,6 +396,75 @@ function ExperimentDesigner() {
       default:
         return null;
     }
+  };
+
+  function applyWorkflowOverrides(steps: Node[]): Node[] {
+    return steps.map((step) => ({
+      ...step,
+      spaces: Array.isArray(step.spaces)
+        ? step.spaces.map((space) => {
+            const overrides = space.workflow_overrides || {};
+            return {
+              ...space,
+              steps: Array.isArray(space.steps)
+                ? space.steps.map((wfStep) => ({
+                    ...wfStep,
+                    tasks: Array.isArray(wfStep.tasks)
+                      ? wfStep.tasks.map((task) => {
+                          const override = overrides[task.id];
+                          if (!override) return task;
+                          return {
+                            ...task,
+                            selected: override.selected ?? task.selected,
+                            hyperParameters: Array.isArray(task.hyperParameters)
+                              ? task.hyperParameters.map((param) => {
+                                  const paramOverride = override.hyperParameters?.find(
+                                    (p: any) => p.name === param.name
+                                  );
+                                  return paramOverride
+                                    ? { ...param, value: paramOverride.value }
+                                    : param;
+                                })
+                              : task.hyperParameters,
+                          };
+                        })
+                      : wfStep.tasks,
+                  }))
+                : space.steps,
+            };
+          })
+        : step.spaces,
+    }));
+  }
+
+  const handleParamChange = (stepId: string, taskId: string , paramName: string, newValue: string | number | boolean) => {
+    setSteps(steps =>
+      steps.map(step =>
+        step.id === stepId
+          ? {
+              ...step,
+              spaces: step.spaces.map(space => ({
+                ...space,
+                steps: space.steps.map(wfStep => ({
+                  ...wfStep,
+                  tasks: wfStep.tasks.map(task =>
+                    task.id === taskId
+                      ? {
+                          ...task,
+                          hyperParameters: task.hyperParameters.map(param =>
+                            param.name === paramName
+                              ? { ...param, value: newValue }
+                              : param
+                          ),
+                        }
+                      : task
+                  ),
+                })),
+              })),
+            }
+          : step
+      )
+    );
   };
 
   return (
@@ -439,7 +508,7 @@ function ExperimentDesigner() {
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-6">
-                  {steps.map((step) => (
+                  {Array.isArray(steps) && steps.map((step) => (
                     <div key={step.id} className="bg-white rounded-lg shadow-sm">
                       <div className="px-6 py-4 border-b border-gray-200 flex items-center">
                         <div className="flex items-center flex-1">
@@ -475,7 +544,7 @@ function ExperimentDesigner() {
                       {!step.collapsed && (
                         <div className="p-6 space-y-4">
                           <div className="flex overflow-x-auto space-x-4 pb-4 snap-x">
-                            {step.spaces.map((space) => (
+                              {Array.isArray(step.spaces) && step.spaces.map((space) => (
                               <div key={space.id} className="border rounded-lg">
                                 <div className="px-4 py-3 border-b flex items-center bg-gray-50">
                                   <div className="flex-1">
@@ -492,7 +561,7 @@ function ExperimentDesigner() {
                                       <div className="flex items-center space-x-2">
                                         <input
                                           type="checkbox"
-                                          checked={true}
+                                          checked={space.gridSearchEnabled}
                                           onChange={() => toggleGridSearch(step.id, space.id)}
                                           className="rounded text-blue-600"
                                         />
@@ -513,7 +582,7 @@ function ExperimentDesigner() {
                                     </div>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    {!space.workflow_id && (
+                                    {!space.workflow && (
                                       <button
                                         onClick={() => {
                                           setSelectedNode(step.id);
@@ -544,12 +613,13 @@ function ExperimentDesigner() {
 
                                 {!space.collapsed && (
                                   <div className="p-4 space-y-4">
-                                    {space.steps.map((step) => (
+                                    {Array.isArray(space.steps) && space.steps.map((step) => (
                                       <WorkflowStep
                                         key={step.id}
                                         step={step}
                                         onRemove={() => removeStep(step.id, space.id, step.id)}
                                         onSelectTask={(stepId, taskId) => selectTask(step.id, space.id, stepId, taskId)}
+                                        onParamChange={handleParamChange}
                                       />
                                     ))}
                                   </div>

@@ -69,26 +69,6 @@ export function SearchOptionsPanel({
     setEnumValues(newValues);
   };
 
-  const validateRange = (min: string, max: string, param: HyperParameter) => {
-    const minNum = Number(min);
-    const maxNum = Number(max);
-    
-    if (isNaN(minNum) || isNaN(maxNum)) return false;
-    if (param.range) {
-      if (minNum < param.range[0] || maxNum > param.range[1]) return false;
-      if (minNum >= maxNum) return false;
-    }
-    return true;
-  };
-
-  const validateEnumValue = (value: string, param: HyperParameter) => {
-    const num = Number(value);
-    if (isNaN(num)) return false;
-    if (param.range) {
-      if (num < param.range[0] || num > param.range[1]) return false;
-    }
-    return true;
-  };
 
   return (
     <div className="tailwind-scope space-y-4 mt-4 border-t pt-4">

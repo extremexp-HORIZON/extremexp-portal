@@ -14,7 +14,16 @@ export type Action =
   | { type: 'UPDATE_PARAM_NAME'; payload: string }
   | { type: 'UPDATE_PARAM_TYPE'; payload: string }
   | { type: 'UPDATE_PARAM_ABSTRACT'; payload: boolean }
-  | { type: 'UPDATE_INTEGER_VALUE'; payload: number[] }
+  | { 
+      type: 'UPDATE_INTEGER_VALUE'; 
+      payload: (number | {
+        min: number;
+        max: number;
+        step: number;
+        minInclusive: boolean;
+        maxInclusive: boolean;
+      })[] 
+    }
   | { type: 'UPDATE_BLOB_VALUE'; payload: string[] }
   | { type: 'UPDATE_STRING_VALUE'; payload: string[] }
   | { type: 'UPDATE_BOOLEAN_VALUE'; payload: boolean[] };

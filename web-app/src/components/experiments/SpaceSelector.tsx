@@ -208,7 +208,7 @@ export function SpaceSelector({ spaces, onAddSpace, onSelectSpace, onImportWorkf
                           <div key={task.id} className="bg-gray-50 p-3 rounded-lg">
                             <div className="font-medium text-gray-800">{task.name}</div>
                             <div className="mt-2 text-sm text-gray-600">
-                              Variants: {task.variants.map(v => v.name).join(', ')}
+                              Variants: {task.variants.map((v: any) => v.name).join(', ')}
                             </div>
                           </div>
                         ))}

@@ -1,16 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './style.scss';
 
 interface RangeSelectorProps {
   number?: number;
+  onRangeChange?: (range: {
+    min: number;
+    max: number;
+    step: number;
+    minInclusive: boolean;
+    maxInclusive: boolean;
+  }) => void;
 }
 
-const RangeSelector: React.FC<RangeSelectorProps> = () => {
+const RangeSelector: React.FC<RangeSelectorProps> = ({ onRangeChange }) => {
   const [fromValue, setFromValue] = useState(0);
   const [toValue, setToValue] = useState(10);
   const [stepValue, setStepValue] = useState(1);
   const [fromChecked, setFromChecked] = useState(false);
   const [toChecked, setToChecked] = useState(false);
+
+  useEffect(() => {
+    if (onRangeChange) {
+      onRangeChange({
+        min: fromValue,
+        max: toValue,
+        step: stepValue,
+        minInclusive: fromChecked,
+        maxInclusive: toChecked
+      });
+    }
+  }, [fromValue, toValue, stepValue, fromChecked, toChecked, onRangeChange]);
 
   return (
     <div className="range-selector">

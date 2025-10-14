@@ -345,14 +345,14 @@ def get_experiment(exp_id):
 @cross_origin()
 def create_experiment(proj_id):
     exp_name = request.json["exp_name"]
-    graphical_model = request.json["graphical_model"]
+    steps = request.json["steps"]
     if experimentHandler.detect_duplicate(proj_id, exp_name):
         return {
             "error": ERROR_DUPLICATE,
             "message": "Experiment name already exists",
         }, 409
     res = experimentHandler.create_experiment(
-        g.username, proj_id, exp_name, graphical_model
+        g.username, proj_id, exp_name, steps
     )
     return {"message": "Experiment created", "data": {"id_experiment": res}}, 201
 
@@ -386,15 +386,15 @@ def update_experiment_name(proj_id, exp_id):
 
 
 @app.route(
-    "/exp/projects/<proj_id>/experiments/<exp_id>/update/graphical_model",
+    "/exp/projects/<proj_id>/experiments/<exp_id>/update/",
     methods=["OPTIONS", "PUT"],
 )
 @cross_origin()
 def update_experiment_graphical_model(proj_id, exp_id):
-    graphical_model = request.json["graphical_model"]
+    steps = request.json["steps"]
     experimentHandler.update_experiment_graphical_model(
-        exp_id, proj_id, graphical_model
+        exp_id, proj_id, steps
     )
-    return {"message": "experiment graphical model updated"}, 200
+    return {"message": "experiment updated"}, 200
 
 # 406: Not Acceptable

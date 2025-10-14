@@ -3,6 +3,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Parameter Controls Styles */
+.parameter-control {
+  @apply space-y-2;
+}
+
+.parameter-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}
+
+.parameter-input-container {
+  @apply flex items-center space-x-2;
+}
+
+.parameter-range {
+  @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
+}
+
+.parameter-range::-webkit-slider-thumb {
+  @apply appearance-none w-4 h-4 bg-blue-500 rounded-full cursor-pointer;
+}
+
+.parameter-range::-moz-range-thumb {
+  @apply w-4 h-4 bg-blue-500 rounded-full cursor-pointer border-0;
+}
+
 * {
   margin: 0;
   padding: 0;
