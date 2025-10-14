@@ -6,8 +6,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: admin
     container_name: mongo
     restart: always
-    expose:
-      - '27017'
+    ports:
+      - '27017:27017'
     volumes:
       - ~/mongo/data:/data/db
     networks:
@@ -16,8 +16,8 @@ services:
   exp-service:
     build: ./server-experiment
     container_name: exp-service
-    expose:
-      - '5050'
+    ports:
+      - '5050:5050'
     depends_on:
       access-control-service:
         condition: service_started
@@ -33,8 +33,8 @@ services:
   emf-cloud-service:
     build: ./server-emf-cloud
     container_name: emf-cloud-service
-    expose:
-      - '8081'
+    ports:
+      - '8081:8081'
     healthcheck:
       test: curl --fail http://localhost:8081/api/v2/models || exit 1
       interval: 40s
