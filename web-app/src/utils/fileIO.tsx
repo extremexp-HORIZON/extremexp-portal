@@ -1,4 +1,4 @@
-import { GraphicalModelType } from '../types/experiment';
+import { GraphicalModelType } from '../types/workflows';
 
 export function downloadGraphicalModel(model: object, filename: string) {
   const json = JSON.stringify(model, null, 2);

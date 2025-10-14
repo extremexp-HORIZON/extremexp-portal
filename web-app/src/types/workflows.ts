@@ -1,5 +1,6 @@
 import { timeNow } from '../utils/timeToDate';
 import { Node, Edge } from 'reactflow';
+import type { ExperimentStep } from './experiments';
 
 export interface Project {
   id_project: string;
@@ -14,13 +15,22 @@ export interface GraphicalModelType {
   edges: Array<Edge>;
 }
 
+export interface WorkflowType {
+  id_workflow: string;
+  project_id: string;
+  name: string;
+  create_at: number;
+  update_at: number;
+  graphical_model: GraphicalModelType;
+}
+
 export interface ExperimentType {
   id_experiment: string;
   project_id: string;
   name: string;
   create_at: number;
   update_at: number;
-  graphical_model: GraphicalModelType;
+  steps: ExperimentStep[];
 }
 
 export const defaultProject = {
@@ -39,11 +49,22 @@ export const defaultGraphicalModel = {
   edges: initialEdges,
 };
 
+export const defaultWorkflow = {
+  id_workflow: '',
+  project_id: '',
+  name: '',
+  create_at: NaN,
+  update_at: NaN,
+  graphical_model: defaultGraphicalModel,
+};
+
+
+ 
 export const defaultExperiment = {
   id_experiment: '',
   project_id: '',
   name: '',
   create_at: NaN,
   update_at: NaN,
-  graphical_model: defaultGraphicalModel,
+  steps: [],
 };

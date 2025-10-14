@@ -1,5 +1,5 @@
 import './common.scss';
-import './experiments.scss';
+import './workflows.scss';
 
 const Progress = () => {
 

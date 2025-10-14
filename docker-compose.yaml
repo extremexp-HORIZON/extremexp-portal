@@ -48,7 +48,11 @@ services:
     build: ./web-app
     container_name: web-app
     ports:
+<<<<<<< HEAD
       - '7001:7001'
+=======
+      - "7001:7001"
+>>>>>>> 6b18396011a59cf4a62704dae93847f415dc2ca2
     networks:
       - extremexp_network
 

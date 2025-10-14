@@ -1,4 +1,4 @@
-import { ExperimentType } from './experiment';
+import { WorkflowType,ExperimentType } from './workflows';
 import { TaskType } from './task';
 
 export type LoginResponseType = {
@@ -52,28 +52,28 @@ export type DeleteProjectResponseType = {
   message: string;
 };
 
-export type ExperimentResponseType = {
+export type WorkflowResponseType = {
   message: string;
   data: {
-    experiment: ExperimentType;
+    workflow: WorkflowType;
   };
 };
 
-export type ExperimentsResponseType = {
+export type WorkflowsResponseType = {
   message: string;
   data: {
-    experiments: Array<ExperimentType>;
+    workflows: Array<WorkflowType>;
   };
 };
 
-export type CreateExperimentResponseType = {
+export type CreateWorkflowResponseType = {
   message: string;
   data: {
-    id_experiment: string;
+    id_workflow: string;
   };
 };
 
-export type UpdateExperimentNameResponseType = {
+export type UpdateWorkflowNameResponseType = {
   message: string;
 };
 
@@ -81,7 +81,7 @@ export type UpdateGraphicalModelResponseType = {
   message: string;
 };
 
-export type DeleteExperimentResponseType = {
+export type DeleteWorkflowResponseType = {
   message: string;
 };
 
@@ -142,4 +142,33 @@ export type ConvertorResponseType = {
     json: object;
     xmi: string;
   };
+};
+
+export type ExperimentResponseType = {
+  message: string;
+  data: {
+    experiment: ExperimentType;
+  };
+};
+
+export type ExperimentsResponseType = {
+  message: string;
+  data: {
+    experiments: Array<ExperimentType>;
+  };
+};
+
+export type CreateExperimentResponseType = {
+  message: string;
+  data: {
+    id_experiment: string;
+  };
+};
+
+export type UpdateExperimentNameResponseType = {
+  message: string;
+};
+
+export type DeleteExperimentResponseType = {
+  message: string;
 };

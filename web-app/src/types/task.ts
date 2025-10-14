@@ -1,4 +1,4 @@
-import { GraphicalModelType } from './experiment';
+import { GraphicalModelType } from './workflows';
 import { MarkerType } from 'reactflow';
 
 export interface CategoryType {

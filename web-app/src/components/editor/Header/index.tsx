@@ -4,8 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAccountStore } from '../../../stores/accountStore';
 import { clearTabs } from '../../../stores/tabStore';
 import { useConfigPanelStore } from '../../../stores/configPanelStore';
-import { useValidationStore } from '../../../stores/validationStore';
-import message from '../../../utils/message';
 
 interface HeaderProps {
   onSave: () => void;
@@ -18,9 +16,6 @@ const Header: React.FC<HeaderProps> = ({ onSave, onSaveAs }) => {
   const navigate = useNavigate();
   const specificationType = useLocation().pathname.split('/')[2];
   const projID = useLocation().pathname.split('/')[3];
-  const experimentID = useLocation().pathname.split('/')[4];
-  const validation = useValidationStore.getState();
-  const { valid } = validation;
 
   const handleGoBack = () => {
     clearTabs();
@@ -41,17 +36,6 @@ const Header: React.FC<HeaderProps> = ({ onSave, onSaveAs }) => {
     useConfigPanelStore.getState().clearConfigStore();
   };
 
-  const handleExecution = () => {
-    if (!valid) {
-      message('Please fix the validation errors before execution');
-      return;
-    }
-
-    onSave();
-    setTimeout(() => {
-      navigate(`/execution/convert/${projID}/${experimentID}`);
-    }, 500);
-  };
 
   return (
     <div className="header">
@@ -82,16 +66,6 @@ const Header: React.FC<HeaderProps> = ({ onSave, onSaveAs }) => {
           >
             Save as
           </button>
-        </div>
-        <div className="header__right__execution">
-          {specificationType === 'experiment' && (
-            <button
-              className="header__right__execution__button"
-              onClick={handleExecution}
-            >
-              <span className="iconfont">&#xe606;</span>
-            </button>
-          )}
         </div>
       </div>
     </div>

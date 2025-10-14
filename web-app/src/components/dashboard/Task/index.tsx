@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import Popover from '../../general/Popover';
 import { TaskType, defaultTask } from '../../../types/task';
-import { GraphicalModelType } from '../../../types/experiment';
+import { GraphicalModelType } from '../../../types/workflows';
 import {
   TasksResponseType,
   CreateTaskResponseType,

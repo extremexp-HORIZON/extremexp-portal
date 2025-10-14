@@ -2,6 +2,7 @@ from flask import Flask, request, g
 from flask_cors import CORS, cross_origin
 from userAuthHandler import userAuthHandler
 from projectHandler import projectHandler
+from workflowHandler import workflowHandler
 from experimentHandler import experimentHandler
 from categoryHandler import categoryHandler
 from taskHandler import taskHandler
@@ -42,14 +43,14 @@ def after_request(response):
     return response
 
 
-@app.route("/exp/", methods=["GET"])
+@app.route("/work/", methods=["GET"])
 @cross_origin()
 def index():
-    return "experiment service connected"
+    return "workflow service connected"
 
 
 # PROJECTS
-@app.route("/exp/projects", methods=["GET"])
+@app.route("/work/projects", methods=["GET"])
 @cross_origin()
 def get_projects():
     projects = projectHandler.get_projects(g.username)
@@ -59,7 +60,7 @@ def get_projects():
     }, 200
 
 
-@app.route("/exp/projects/create", methods=["OPTIONS", "POST"])
+@app.route("/work/projects/create", methods=["OPTIONS", "POST"])
 @cross_origin()
 def create_project():
     proj_name = request.json["name"]
@@ -73,7 +74,7 @@ def create_project():
     return {"message": "Project created.", "data": {"id_project": res}}, 201
 
 
-@app.route("/exp/projects/<proj_id>/update", methods=["OPTIONS", "PUT"])
+@app.route("/work/projects/<proj_id>/update", methods=["OPTIONS", "PUT"])
 @cross_origin()
 def update_project_info(proj_id):
     proj_name = request.json["name"]
@@ -89,92 +90,92 @@ def update_project_info(proj_id):
     return {"message": "project info updated"}, 200
 
 
-@app.route("/exp/projects/<proj_id>/delete", methods=["OPTIONS", "DELETE"])
+@app.route("/work/projects/<proj_id>/delete", methods=["OPTIONS", "DELETE"])
 @cross_origin()
 def delete_project(proj_id):
     if not projectHandler.project_exists(proj_id):
         return {"message": "project does not exist"}, 404
     projectHandler.delete_project(proj_id)
-    experimentHandler.delete_experiments(proj_id)
+    workflowHandler.delete_workflows(proj_id)
     return {"message": "project deleted"}, 204
 
 
-# EXPERIMENTS
-@app.route("/exp/projects/<proj_id>/experiments", methods=["GET"])
+# WORKFLOWS
+@app.route("/work/projects/<proj_id>/workflows", methods=["GET"])
 @cross_origin()
-def get_experiments(proj_id):
-    experiments = experimentHandler.get_experiments(proj_id)
+def get_workflows(proj_id):
+    workflows = workflowHandler.get_workflows(proj_id)
     return {
-        "message": "experiments retrieved",
-        "data": {"experiments": experiments},
+        "message": "workflows retrieved",
+        "data": {"workflows": workflows},
     }, 200
 
 
-@app.route("/exp/projects/experiments/<exp_id>", methods=["GET"])
+@app.route("/work/projects/workflows/<work_id>", methods=["GET"])
 @cross_origin()
-def get_experiment(exp_id):
-    experiment = experimentHandler.get_experiment(exp_id)
+def get_workflow(work_id):
+    workflow = workflowHandler.get_workflow(work_id)
     return {
-        "message": "experiment retrieved",
-        "data": {"experiment": experiment},
+        "message": "workflow retrieved",
+        "data": {"workflow": workflow},
     }, 200
 
 
-@app.route("/exp/projects/<proj_id>/experiments/create", methods=["OPTIONS", "POST"])
+@app.route("/work/projects/<proj_id>/workflows/create", methods=["OPTIONS", "POST"])
 @cross_origin()
-def create_experiment(proj_id):
-    exp_name = request.json["exp_name"]
+def create_workflow(proj_id):
+    work_name = request.json["work_name"]
     graphical_model = request.json["graphical_model"]
-    if experimentHandler.detect_duplicate(proj_id, exp_name):
+    if workflowHandler.detect_duplicate(proj_id, work_name):
         return {
             "error": ERROR_DUPLICATE,
-            "message": "Experiment name already exists",
+            "message": "Workflow name already exists",
         }, 409
-    res = experimentHandler.create_experiment(
-        g.username, proj_id, exp_name, graphical_model
+    res = workflowHandler.create_workflow(
+        g.username, proj_id, work_name, graphical_model
     )
-    return {"message": "Experiment created", "data": {"id_experiment": res}}, 201
+    return {"message": "Workflow created", "data": {"id_workflow": res}}, 201
 
 
 @app.route(
-    "/exp/projects/<proj_id>/experiments/<exp_id>/delete",
+    "/work/projects/<proj_id>/workflows/<work_id>/delete",
     methods=["OPTIONS", "DELETE"],
 )
 @cross_origin()
-def delete_experiment(proj_id, exp_id):
-    if not experimentHandler.experiment_exists(exp_id):
-        return {"message": "this experiment does not exist"}, 404
-    experimentHandler.delete_experiment(exp_id, proj_id)
-    return {"message": "experiment deleted"}, 204
+def delete_workflow(proj_id, work_id):
+    if not workflowHandler.workflow_exists(work_id):
+        return {"message": "this workflow does not exist"}, 404
+    workflowHandler.delete_workflow(work_id, proj_id)
+    return {"message": "workflow deleted"}, 204
 
 
 @app.route(
-    "/exp/projects/<proj_id>/experiments/<exp_id>/update/name",
+    "/work/projects/<proj_id>/workflows/<work_id>/update/name",
     methods=["OPTIONS", "PUT"],
 )
 @cross_origin()
-def update_experiment_name(proj_id, exp_id):
-    exp_name = request.json["exp_name"]
-    if experimentHandler.detect_duplicate(proj_id, exp_name):
+def update_workflow_name(proj_id, work_id):
+    work_name = request.json["work_name"]
+    if workflowHandler.detect_duplicate(proj_id, work_name):
         return {
             "error": ERROR_DUPLICATE,
-            "message": "Experiment name already exists",
+            "message": "Workflow name already exists",
         }, 409
-    experimentHandler.update_experiment_name(exp_id, proj_id, exp_name)
-    return {"message": "experiment name updated"}, 200
+    workflowHandler.update_workflow_name(work_id, proj_id, work_name)
+    return {"message": "workflow name updated"}, 200
 
 
 @app.route(
-    "/exp/projects/<proj_id>/experiments/<exp_id>/update/graphical_model",
+    "/work/projects/<proj_id>/workflows/<work_id>/update/graphical_model",
     methods=["OPTIONS", "PUT"],
 )
 @cross_origin()
-def update_experiment_graphical_model(proj_id, exp_id):
+def update_workflow_graphical_model(proj_id, work_id):
     graphical_model = request.json["graphical_model"]
-    experimentHandler.update_experiment_graphical_model(
-        exp_id, proj_id, graphical_model
+    workflowHandler.update_workflow_graphical_model(
+        work_id, proj_id, graphical_model
     )
-    return {"message": "experiment graphical model updated"}, 200
+    return {"message": "workflow graphical model updated"}, 200
 
 
 # CATEGORIES
@@ -307,17 +308,93 @@ def update_task_graphical_model(task_id):
 
 
 # EXECUTION
-@app.route("/exp/execute/convert/<exp_id>", methods=["OPTIONS", "POST"])
+@app.route("/work/execute/convert/<work_id>", methods=["OPTIONS", "POST"])
 @cross_origin()
-def convert_to_source_model(exp_id):
-    if not experimentHandler.experiment_exists(exp_id):
+def convert_to_source_model(work_id):
+    if not workflowHandler.workflow_exists(work_id):
         return {"error": ERROR_NOT_FOUND, "message": "experiment not found"}, 404
-    exp = experimentHandler.get_experiment(exp_id)
-    convert_res = convertorHandler.convert(exp)
+    work = workflowHandler.get_workflow(work_id)
+    convert_res = convertorHandler.convert(work)
 
     if not convert_res["success"]:
         return {"error": "Error converting model", "message": convert_res["error"]}, 500
     return {"message": "source model converted", "data": convert_res["data"]}, 200
 
+# EXPERIMENTS
+@app.route("/exp/projects/<proj_id>/experiments", methods=["GET"])
+@cross_origin()
+def get_experiments(proj_id):
+    experiments = experimentHandler.get_experiments(proj_id)
+    return {
+        "message": "experiments retrieved",
+        "data": {"experiments": experiments},
+    }, 200
+
+
+@app.route("/exp/projects/experiments/<exp_id>", methods=["GET"])
+@cross_origin()
+def get_experiment(exp_id):
+    experiment = experimentHandler.get_experiment(exp_id)
+    return {
+        "message": "experiment retrieved",
+        "data": {"experiment": experiment},
+    }, 200
+
+
+@app.route("/exp/projects/<proj_id>/experiments/create", methods=["OPTIONS", "POST"])
+@cross_origin()
+def create_experiment(proj_id):
+    exp_name = request.json["exp_name"]
+    steps = request.json["steps"]
+    if experimentHandler.detect_duplicate(proj_id, exp_name):
+        return {
+            "error": ERROR_DUPLICATE,
+            "message": "Experiment name already exists",
+        }, 409
+    res = experimentHandler.create_experiment(
+        g.username, proj_id, exp_name, steps
+    )
+    return {"message": "Experiment created", "data": {"id_experiment": res}}, 201
+
+
+@app.route(
+    "/exp/projects/<proj_id>/experiments/<exp_id>/delete",
+    methods=["OPTIONS", "DELETE"],
+)
+@cross_origin()
+def delete_experiment(proj_id, exp_id):
+    if not experimentHandler.experiment_exists(exp_id):
+        return {"message": "this experiment does not exist"}, 404
+    experimentHandler.delete_experiment(exp_id, proj_id)
+    return {"message": "experiment deleted"}, 204
+
+
+@app.route(
+    "/exp/projects/<proj_id>/experiments/<exp_id>/update/name",
+    methods=["OPTIONS", "PUT"],
+)
+@cross_origin()
+def update_experiment_name(proj_id, exp_id):
+    exp_name = request.json["exp_name"]
+    if experimentHandler.detect_duplicate(proj_id, exp_name):
+        return {
+            "error": ERROR_DUPLICATE,
+            "message": "Experiment name already exists",
+        }, 409
+    experimentHandler.update_experiment_name(exp_id, proj_id, exp_name)
+    return {"message": "experiment name updated"}, 200
+
+
+@app.route(
+    "/exp/projects/<proj_id>/experiments/<exp_id>/update/",
+    methods=["OPTIONS", "PUT"],
+)
+@cross_origin()
+def update_experiment_graphical_model(proj_id, exp_id):
+    steps = request.json["steps"]
+    experimentHandler.update_experiment_graphical_model(
+        exp_id, proj_id, steps
+    )
+    return {"message": "experiment updated"}, 200
 
 # 406: Not Acceptable

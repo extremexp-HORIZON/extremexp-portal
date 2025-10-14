@@ -65,11 +65,11 @@ class ConvertorHandler:
         data = json.dumps({"data": emf_model})
 
         # avoid name conflicts
-        exp_name = f"{exp['name']}-{generate(size=3)}.workflow"
+        work_name = f"{exp['name']}-{generate(size=3)}.workflow"
 
         post_response = requests.post(
             f"{self.url}/models",
-            params={"modeluri": exp_name},
+            params={"modeluri": work_name},
             data=data,
             timeout=5,
         )
@@ -83,9 +83,9 @@ class ConvertorHandler:
             }
 
         emf_model = response_json["data"]
-        xmi_model = self.__get_xmi_model(exp_name)["data"]
+        xmi_model = self.__get_xmi_model(work_name)["data"]
 
-        requests.delete(f"{self.url}/models", params={"modeluri": exp_name}, timeout=5)
+        requests.delete(f"{self.url}/models", params={"modeluri": work_name}, timeout=5)
 
         return {"success": True, "data": {"json": emf_model, "xmi": xmi_model}}
 
@@ -378,10 +378,10 @@ class ConvertorHandler:
         """Get the EMF object $type for the given graphical component's type name."""
         return f"{self.meta_model_loc}{type_name}"
 
-    def __get_xmi_model(self, exp_name):
+    def __get_xmi_model(self, work_name):
         """Get the XMI model from the EMF server."""
         response = requests.get(
-            f"{self.url}/models?modeluri={exp_name}&format=xmi", timeout=5
+            f"{self.url}/models?modeluri={work_name}&format=xmi", timeout=5
         )
         return {"success": response.status_code == 200, "data": response.json()["data"]}
 

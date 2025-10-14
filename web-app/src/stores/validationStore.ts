@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import ValidationText from '../assets/texts/validation.json';
-import { GraphicalModelType } from '../types/experiment';
+import { GraphicalModelType } from '../types/workflows';
 import { Node } from 'reactflow';
 
 export type ValidationCodeType =

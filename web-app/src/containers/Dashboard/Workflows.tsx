@@ -14,7 +14,7 @@ import {
   DeleteProjectResponseType,
 } from '../../types/requests';
 
-const Experiments = () => {
+const Workflows = () => {
   const [projects, setProjects] = useState([defaultProject]);
   const [currentProj, setCurrentProj] = useState(defaultProject);
   const [searchInput, setSearchInput] = useState('');
@@ -63,7 +63,7 @@ const Experiments = () => {
     getProjects();
   }, []);
 
-  // set the first experiment as the current experiment when enter the page
+  // set the first workflow as the current workflow when enter the page
   useEffect(() => {
     if (projects.length > 0 && currentProj.id_project === 'default') {
       setCurrentProj(projects[0]);
@@ -71,10 +71,10 @@ const Experiments = () => {
   }, [projects, currentProj.id_project]);
 
   useEffect(() => {
-    navigate(`/dashboard/projects/${currentProj?.id_project}/experiments`);
+    navigate(`/dashboard/workflows/${currentProj?.id_project}/workflows`);
   }, [currentProj.id_project]);
 
-  // FIXME: Add experiment name validation
+  // FIXME: Add workflow name validation
   const isProjectNameValid = (name: string) => {
     if (!name) {
       message('Project name can not be empty');
@@ -266,7 +266,7 @@ const Experiments = () => {
               </div>
             ) : (
               <>
-                <div className="dashboard__common__right__header experiments__header">
+                <div className="dashboard__common__right__header workflows__header">
                   <div className="dashboard__common__right__header__info">
                     <div className="dashboard__common__right__header__info__name">
                       <span
@@ -342,4 +342,4 @@ const Experiments = () => {
   );
 };
 
-export default Experiments;
+export default Workflows;

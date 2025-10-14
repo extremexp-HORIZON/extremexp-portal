@@ -1,0 +1,365 @@
+{
+  "edges": [
+    {
+      "data": {},
+      "id": "edge-start-node-task-ReadData",
+      "markerEnd": {
+        "color": "#000",
+        "height": 20,
+        "type": "arrow",
+        "width": 20
+      },
+      "source": "start-node",
+      "sourceHandle": null,
+      "style": {
+        "stroke": "#000",
+        "strokeWidth": 1.5
+      },
+      "target": "task-ReadData",
+      "targetHandle": "t-top",
+      "type": "regular"
+    },
+    {
+      "data": {},
+      "id": "41co4dkMFOyJKoF7JGa-s",
+      "markerEnd": {
+        "color": "#000",
+        "height": 20,
+        "type": "arrow",
+        "width": 20
+      },
+      "source": "task-2MEXId-Rdsi21LxTpRFbV",
+      "sourceHandle": "s-bottom",
+      "style": {
+        "stroke": "#000",
+        "strokeWidth": 1.5
+      },
+      "target": "end-node",
+      "targetHandle": null,
+      "type": "regular"
+    },
+    {
+      "data": {},
+      "id": "4Xwl4iqb9NJj-FOiiwJTF",
+      "markerEnd": {
+        "color": "#000",
+        "height": 20,
+        "type": "arrow",
+        "width": 20
+      },
+      "source": "task-TrainModel",
+      "sourceHandle": "s-bottom",
+      "style": {
+        "stroke": "#000",
+        "strokeWidth": 1.5
+      },
+      "target": "task-2MEXId-Rdsi21LxTpRFbV",
+      "targetHandle": "t-top",
+      "type": "regular"
+    },
+    {
+      "animated": true,
+      "data": {},
+      "id": "vGDntk14IjZA8YzDtIHFk",
+      "markerEnd": {
+        "color": "#000",
+        "height": 20,
+        "type": "arrow",
+        "width": 20
+      },
+      "source": "task-ReadData",
+      "sourceHandle": "s-left",
+      "style": {
+        "stroke": "#000",
+        "strokeWidth": 1.5
+      },
+      "target": "data-AUFFCj0fRhCMBMVow7ZiB",
+      "targetHandle": null,
+      "type": "dataflow"
+    },
+    {
+      "data": {},
+      "id": "43BK3xENDq7f7O5nt82PV",
+      "markerEnd": {
+        "color": "#000",
+        "height": 20,
+        "type": "arrow",
+        "width": 20
+      },
+      "source": "task-ReadData",
+      "sourceHandle": "s-bottom",
+      "style": {
+        "stroke": "#000",
+        "strokeWidth": 1.5
+      },
+      "target": "task-JNBZDwcHWuH6ZOHxouwO8",
+      "targetHandle": "t-top",
+      "type": "regular"
+    },
+    {
+      "data": {},
+      "id": "GBwJM5mJRAdHglAqCac8g",
+      "markerEnd": {
+        "color": "#000",
+        "height": 20,
+        "type": "arrow",
+        "width": 20
+      },
+      "source": "task-JNBZDwcHWuH6ZOHxouwO8",
+      "sourceHandle": "s-bottom",
+      "style": {
+        "stroke": "#000",
+        "strokeWidth": 1.5
+      },
+      "target": "task-TrainModel",
+      "targetHandle": "t-top",
+      "type": "regular"
+    }
+  ],
+  "nodes": [
+    {
+      "data": {},
+      "dragging": false,
+      "height": 36,
+      "id": "start-node",
+      "position": {
+        "x": 135,
+        "y": -0.21418758256274373
+      },
+      "positionAbsolute": {
+        "x": 135,
+        "y": -0.21418758256274373
+      },
+      "selected": false,
+      "type": "start",
+      "width": 31
+    },
+    {
+      "data": {
+        "currentVariant": "variant-1-ReadData",
+        "variants": [
+          {
+            "description": "no description",
+            "graphical_model": {
+              "edges": [],
+              "nodes": []
+            },
+            "id_task": "variant-1-ReadData",
+            "implementationRef": "ReadData",
+            "isAbstract": false,
+            "is_composite": false,
+            "name": "ReadData",
+            "parameters": [],
+            "variant": 1
+          }
+        ]
+      },
+      "dragging": false,
+      "height": 44,
+      "id": "task-ReadData",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "positionAbsolute": {
+        "x": 100,
+        "y": 100
+      },
+      "selected": false,
+      "type": "task",
+      "width": 102
+    },
+    {
+      "data": {
+        "currentVariant": "variant-1-TrainModel",
+        "variants": [
+          {
+            "description": "no description",
+            "graphical_model": {
+              "edges": [],
+              "nodes": []
+            },
+            "id_task": "variant-1-TrainModel",
+            "implementationRef": "TrainModelNN",
+            "isAbstract": true,
+            "is_composite": false,
+            "name": "TrainModel",
+            "parameters": [
+              {
+                "abstract": false,
+                "id": "parameter-7AJLKTsmPiathHvw7g4ZW",
+                "name": "epochs",
+                "type": "integer",
+                "values": [
+                  2,
+                  4
+                ]
+              },
+              {
+                "abstract": false,
+                "id": "parameter-FdgbGo5Fwmy0t0oBFS7Sf",
+                "name": "batch_size",
+                "type": "integer",
+                "values": [
+                  64
+                ]
+              }
+            ],
+            "variant": 1
+          },
+          {
+            "description": "no description",
+            "graphical_model": null,
+            "id_task": "variant-2-kO3W__nz32olBG_CUMgbI",
+            "implementationRef": "TrainModelRNN",
+            "isAbstract": true,
+            "is_composite": false,
+            "name": "TrainModel",
+            "parameters": [
+              {
+                "abstract": false,
+                "id": "parameter-r19OEgzb7D7j2WPEvKE41",
+                "name": "epochs",
+                "type": "integer",
+                "values": [
+                  2
+                ]
+              },
+              {
+                "abstract": false,
+                "id": "parameter-wiPbGuvY9WrK7wTvP5cpT",
+                "name": "batch_size",
+                "type": "integer",
+                "values": [
+                  32
+                ]
+              }
+            ],
+            "variant": 2
+          }
+        ]
+      },
+      "dragging": false,
+      "height": 91,
+      "id": "task-TrainModel",
+      "position": {
+        "x": 99.0075193053886,
+        "y": 376.50805812417445
+      },
+      "positionAbsolute": {
+        "x": 99.0075193053886,
+        "y": 376.50805812417445
+      },
+      "selected": true,
+      "type": "task",
+      "width": 102
+    },
+    {
+      "data": {},
+      "dragging": false,
+      "height": 37,
+      "id": "end-node",
+      "position": {
+        "x": 138.9699227784456,
+        "y": 673.2265521796566
+      },
+      "positionAbsolute": {
+        "x": 138.9699227784456,
+        "y": 673.2265521796566
+      },
+      "selected": false,
+      "type": "end",
+      "width": 32
+    },
+    {
+      "data": {
+        "name": "ExternalDataFile",
+        "path": "IDEKO1"
+      },
+      "dragging": false,
+      "height": 57,
+      "id": "data-AUFFCj0fRhCMBMVow7ZiB",
+      "position": {
+        "x": -166.5300107071256,
+        "y": 118.5670262323484
+      },
+      "positionAbsolute": {
+        "x": -166.5300107071256,
+        "y": 118.5670262323484
+      },
+      "selected": false,
+      "type": "data",
+      "width": 122
+    },
+    {
+      "data": {
+        "currentVariant": "variant-1-pc9RBqOZBh9wtqejKEqAf",
+        "variants": [
+          {
+            "description": "no description",
+            "graphical_model": {
+              "edges": [],
+              "nodes": []
+            },
+            "id_task": "variant-1-pc9RBqOZBh9wtqejKEqAf",
+            "implementationRef": "EvaluateModel",
+            "isAbstract": true,
+            "is_composite": false,
+            "name": "EvaluateModel",
+            "parameters": [],
+            "variant": 1
+          }
+        ]
+      },
+      "dragging": false,
+      "height": 44,
+      "id": "task-2MEXId-Rdsi21LxTpRFbV",
+      "position": {
+        "x": 101.30112886736521,
+        "y": 549.3378356780645
+      },
+      "positionAbsolute": {
+        "x": 101.30112886736521,
+        "y": 549.3378356780645
+      },
+      "selected": false,
+      "type": "task",
+      "width": 102
+    },
+    {
+      "data": {
+        "currentVariant": "variant-1-vi3REF1151FMvppS73xDe",
+        "variants": [
+          {
+            "description": "no description",
+            "graphical_model": {
+              "edges": [],
+              "nodes": []
+            },
+            "id_task": "variant-1-vi3REF1151FMvppS73xDe",
+            "implementationRef": "AddPadding",
+            "isAbstract": true,
+            "is_composite": false,
+            "name": "AddPadding",
+            "parameters": [],
+            "variant": 1
+          }
+        ]
+      },
+      "dragging": false,
+      "height": 44,
+      "id": "task-JNBZDwcHWuH6ZOHxouwO8",
+      "position": {
+        "x": 97.53230132603392,
+        "y": 240.26942334836795
+      },
+      "positionAbsolute": {
+        "x": 97.53230132603392,
+        "y": 240.26942334836795
+      },
+      "selected": false,
+      "type": "task",
+      "width": 102
+    }
+  ]
+}

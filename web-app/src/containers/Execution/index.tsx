@@ -19,12 +19,12 @@ const Execution = () => {
   const [xmlData, setXmlData] = useState('');
 
   const handleGoBack = () => {
-    navigate(`/editor/experiment/${projID}/${experimentID}`);
+    navigate(`/editor/workflow/${projID}/${experimentID}`);
   };
 
   useEffect(() => {
     convertRequest({
-      url: `/exp/execute/convert/${experimentID}`,
+      url: `/work/execute/convert/${experimentID}`,
       method: 'POST',
     })
       .then((response) => {

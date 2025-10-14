@@ -31,18 +31,18 @@ import Validation from '../../components/editor/Validation';
 
 import {
   defaultGraphicalModel,
-  defaultExperiment,
-  ExperimentType,
+  defaultWorkflow,
+  WorkflowType,
   GraphicalModelType,
-} from '../../types/experiment';
+} from '../../types/workflows';
 
 import { TaskType, TaskVariantType } from '../../types/task';
 
 import {
   TaskResponseType,
-  ExperimentResponseType,
+  WorkflowResponseType,
   UpdateGraphicalModelResponseType,
-  CreateExperimentResponseType,
+  CreateWorkflowResponseType,
   CreateTaskResponseType,
   // ExecutionResponseType,
 } from '../../types/requests';
@@ -73,14 +73,14 @@ const selector = (state: RFState) => ({
 
 const Editor = () => {
   const { request: specificationRequest } = useRequest<
-    ExperimentResponseType | TaskResponseType
+    WorkflowResponseType | TaskResponseType
   >();
 
   const { request: updateGraphRequest } =
     useRequest<UpdateGraphicalModelResponseType>();
 
   const { request: createNewSpecRequest } = useRequest<
-    CreateExperimentResponseType | CreateTaskResponseType
+  CreateWorkflowResponseType | CreateTaskResponseType
   >();
 
   const {
@@ -102,38 +102,38 @@ const Editor = () => {
   const navigate = useNavigate();
   const specificationType = useLocation().pathname.split('/')[2];
   const projID = useLocation().pathname.split('/')[3];
-  const experimentID = useLocation().pathname.split('/')[4];
+  const workID = useLocation().pathname.split('/')[4];
 
-  const [experiment, setExperiment] = useState<ExperimentType | TaskType>(
-    defaultExperiment
+  const [workflow, setWorkflow] = useState<WorkflowType | TaskType>(
+    defaultWorkflow
   );
   const [graphicalModel, setGraphicalModel] = useState(defaultGraphicalModel);
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>(Object);
 
-  // Fetch the experiment or task
+  // Fetch the workflow or task
   useEffect(() => {
     let url = '';
-    specificationType === 'experiment'
-      ? (url = `exp/projects/experiments/${experimentID}`)
-      : (url = `task/categories/tasks/${experimentID}`);
+    specificationType === 'workflow'
+      ? (url = `work/projects/workflows/${workID}`)
+      : (url = `task/categories/tasks/${workID}`);
 
     specificationRequest({
       url: url,
     })
       .then((data) => {
-        let newExperiment: ExperimentType | TaskType = defaultExperiment;
-        if (specificationType === 'experiment') {
-          if ('experiment' in data.data) {
-            newExperiment = data.data.experiment;
+        let newWorkflow: WorkflowType | TaskType = defaultWorkflow;
+        if (specificationType === 'workflow') {
+          if ('workflow' in data.data) {
+            newWorkflow = data.data.workflow as WorkflowType;
           }
         } else {
           if ('task' in data.data) {
-            newExperiment = data.data.task;
+            newWorkflow = data.data.task;
           }
         }
-        setExperiment(newExperiment);
+        setWorkflow(newWorkflow);
       })
       .catch((error) => {
         if (error.message) {
@@ -143,8 +143,8 @@ const Editor = () => {
   }, []);
 
   useEffect(() => {
-    setGraphicalModel(experiment.graphical_model);
-  }, [experiment]);
+    setGraphicalModel(workflow.graphical_model);
+  }, [workflow]);
 
   useEffect(() => {
     setNodes(graphicalModel.nodes);
@@ -252,7 +252,7 @@ const Editor = () => {
   // Save and Save As
 
   const [showPopover, setShowPopover] = useState(false);
-  const [newExpName, setNewExpName] = useState('');
+  const [newWorkName, setNewWorkName] = useState('');
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -271,9 +271,9 @@ const Editor = () => {
 
   const updateGraphicalModel = (graph: GraphicalModelType) => {
     let url = '';
-    specificationType === 'experiment'
-      ? (url = `/exp/projects/${projID}/experiments/${experimentID}/update/graphical_model`)
-      : (url = `/task/categories/tasks/${experimentID}/update/graphical_model`);
+    specificationType === 'workflow'
+      ? (url = `/work/projects/${projID}/workflows/${workID}/update/graphical_model`)
+      : (url = `/task/categories/tasks/${workID}/update/graphical_model`);
     updateGraphRequest({
       url: url,
       method: 'PUT',
@@ -318,7 +318,7 @@ const Editor = () => {
 
   const handleShowPopover = () => {
     setShowPopover(true);
-    setNewExpName(experiment.name);
+    setNewWorkName(workflow.name);
   };
 
   function closeMask() {
@@ -333,20 +333,20 @@ const Editor = () => {
     closeMask();
     const graphicalModel = getCurrentGraphOnBoard();
     let url = '';
-    specificationType === 'experiment'
-      ? (url = `/exp/projects/${projID}/experiments/create`)
+    specificationType === 'workflow'
+      ? (url = `/work/projects/${projID}/workflows/create`)
       : (url = `/task/categories/${projID}/tasks/create`);
 
     let data = {};
-    if (specificationType === 'experiment') {
+    if (specificationType === 'workflow') {
       data = {
-        exp_name: newExpName,
+        work_name: newWorkName,
         graphical_model: graphicalModel,
       };
     } else {
       data = {
-        name: newExpName,
-        provider: (experiment as TaskType).provider,
+        name: newWorkName,
+        provider: (workflow as TaskType).provider,
         graphical_model: graphicalModel,
       };
     }
@@ -358,8 +358,8 @@ const Editor = () => {
     })
       .then((data) => {
         let specID = '';
-        if ('id_experiment' in data.data) {
-          specID = data.data.id_experiment;
+        if ('id_workflow' in data.data) {
+          specID = data.data.id_workflow;
         } else if ('id_task' in data.data) {
           specID = data.data.id_task;
         }
@@ -492,7 +492,7 @@ const Editor = () => {
                   fitView
                 >
                   {isOpenConfig && (
-                    <ConfigPanel updateSideBar={updateConfigPanel} />
+                    <ConfigPanel updateSideBar={updateConfigPanel} onSave={handleSave} />
                   )}
                   <Controls position="top-left" />
                   <Background />
@@ -508,15 +508,15 @@ const Editor = () => {
         <div className="popover__save">
           <div className="popover__save__text">
             {` Save the current specification as a new ${
-              specificationType === 'experiment' ? 'experiment' : 'template'
+              specificationType === 'workflow' ? 'workflow' : 'template'
             }`}
           </div>
           <input
             type="text"
             className="popover__save__input"
             placeholder="specification name"
-            value={newExpName}
-            onChange={(e) => setNewExpName(e.target.value)}
+            value={newWorkName}
+            onChange={(e) => setNewWorkName(e.target.value)}
             onKeyUp={(e) => {
               if (e.key === 'Enter') {
                 handleSaveAs();
