@@ -408,6 +408,31 @@ class ConvertorHandler:
         }
 
         return self.__emf_object_type(type_map.get(node["type"], None))
+    
+    def dsl2graph(project_id, experiment_name):
+        filepath = workspace_path / g.username / f"{project_id}" / "experiments" / f"{experiment_name}.xxp"
+        if not filepath.exists():
+            return {"message": f"experiment name {experiment_name} does not exist"}, 404
+
+        #TODO: read the DSL and convert it to graph_json
+        graph_json = {}
+
+        return graph_json, 200
+    
+    def graph2dsl(project_id, experiment_name):
+        filepath = workspace_path / g.username / f"{project_id}" / "experiments" / f"{experiment_name}.xxp"
+        if not filepath.exists():
+            #TODO
+            print ("creating ...")
+
+        else:
+            #TODO
+            print ("updating ...")
+
+        # TODO: read the json form data, and convert it DSL and store it
+        graph_json = request.json
+
+        return {"message": "not done yet"}, 201
 
 
 convertorHandler = ConvertorHandler()
