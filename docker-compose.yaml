@@ -6,7 +6,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: admin
     container_name: mongo
     restart: always
-    expose:
+    ports:
       - '27017'
     volumes:
       - ~/mongo/data:/data/db
@@ -16,7 +16,7 @@ services:
   exp-service:
     build: ./server-experiment
     container_name: exp-service
-    expose:
+    ports:
       - '5050'
     depends_on:
       access-control-service:
@@ -33,7 +33,7 @@ services:
   emf-cloud-service:
     build: ./server-emf-cloud
     container_name: emf-cloud-service
-    expose:
+    ports:
       - '8081'
     healthcheck:
       test: curl --fail http://localhost:8081/api/v2/models || exit 1
@@ -47,8 +47,8 @@ services:
   web-app:
     build: ./web-app
     container_name: web-app
-    expose:
-      - '7001'
+    ports:
+      - '7001:7001'
     networks:
       - extremexp_network
 
@@ -107,8 +107,6 @@ services:
     container_name: access-control-service
     ports:
       - ${FLASK_AC_APP_PORT}:${FLASK_AC_APP_PORT}
-    expose:
-      - ${FLASK_AC_APP_PORT}
     environment:
       - FLASK_AC_APP_HOST=${FLASK_AC_APP_HOST}
       - FLASK_AC_APP_PORT=${FLASK_AC_APP_PORT}
