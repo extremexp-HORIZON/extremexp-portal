@@ -9,12 +9,16 @@ const Repository = () => {
   const isWorkflows = location.pathname.includes('/workflows');
   const isTask = location.pathname.includes('/categories');
   const isReusableTask = location.pathname.includes('/reusable_tasks');
-  const isProgress = location.pathname.includes('/progress');
+  // const isProgress = location.pathname.includes('/progress');
+  const isIntents = location.pathname.includes('/intents');
+  const isDDM = location.pathname.includes('/ddm');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const workflowsSelectedClass = isWorkflows ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
   const reusableTaskSelectedClass = isReusableTask ? 'selected' : '';
-  const progressSelectedClass = isProgress ? 'selected' : '';
+  // const progressSelectedClass = isProgress ? 'selected' : '';
+  const intentsSelectedClass = isIntents ? 'selected' : '';
+  const ddmSelectedClass = isDDM ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -63,12 +67,28 @@ const Repository = () => {
               <p>Tasks</p>
             </div>
           </Link>
-          <Link to={'/dashboard/progress'}>
+          {/* <Link to={'/dashboard/progress'}>
             <div
                 className={`repository__panel__items__item ${progressSelectedClass}`}
             >
               <span className="iconfont">&#xe653;</span>
               <p>Progress</p>
+            </div>
+          </Link> */}
+        <Link to={'/dashboard/intents'}>
+            <div
+                className={`repository__panel__items__item ${intentsSelectedClass}`}
+            >
+              <span className="iconfont">&#xe653;</span>
+              <p>Intents</p>
+            </div>
+          </Link>
+          <Link to={'/dashboard/ddm'}>
+            <div
+                className={`repository__panel__items__item ${ddmSelectedClass}`}
+            >
+              <span className="iconfont">&#xe653;</span>
+              <p>DDM</p>
             </div>
           </Link>
         </div>
