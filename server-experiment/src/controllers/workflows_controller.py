@@ -6,7 +6,7 @@ workflows = Blueprint("workflows", __name__)
 
 ERROR_DUPLICATE = "Error: Duplicate name"
 
-@workflows.route("/<proj_id>/list", methods=["GET"])
+@workflows.route("/<proj_id>/all", methods=["GET"])
 @cross_origin()
 def get_workflows(proj_id):
     workflows = workflowHandler.get_workflows(proj_id)
