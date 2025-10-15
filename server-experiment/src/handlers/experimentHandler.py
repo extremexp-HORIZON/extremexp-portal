@@ -3,7 +3,7 @@ import json
 import time
 import calendar
 from dbClient import mongo_client
-from projectHandler import projectHandler
+from handlers import projectHandler
 
 
 class ExperimentHandler(object):

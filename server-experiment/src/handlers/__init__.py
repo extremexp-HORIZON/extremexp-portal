@@ -6,6 +6,7 @@ from .taskHandler import taskHandler
 from .convertorHandler import convertorHandler
 from .executionHandler import executionHandler
 from .fileSystemHandler import fileSystemHandler
+from .workflowHandler import workflowHandler
 
 __all__ = [
     "userAuthHandler",
@@ -16,4 +17,5 @@ __all__ = [
     "convertorHandler",
     "executionHandler",
     "fileSystemHandler",
+    "workflowHandler",
 ]

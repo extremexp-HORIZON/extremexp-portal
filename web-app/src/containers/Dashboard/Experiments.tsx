@@ -45,7 +45,8 @@ const Experiments = () => {
 
   const getProjects = useCallback(() => {
     projectsRequest({
-      url: `work/projects`,
+      url: `/api/projects`,
+      method: 'GET',
     })
       .then((data) => {
         if (data.data.projects) {
@@ -90,7 +91,7 @@ const Experiments = () => {
   const handleCreateProject = () => {
     if (!isProjectNameValid(createprojName)) return;
     createProjectRequest({
-      url: `work/projects/create`,
+      url: `/api/projects/create`,
       method: 'POST',
       data: {
         name: createprojName,
@@ -146,7 +147,7 @@ const Experiments = () => {
     }
 
     updateProjectRequest({
-      url: `work/projects/${currentProj.id_project}/update`,
+      url: `/api/projects/rename/${currentProj.id_project}`,
       method: 'PUT',
       data: {
         name: projNameInput,
@@ -178,7 +179,7 @@ const Experiments = () => {
 
   const handleDeleteProject = () => {
     deleteProjectRequest({
-      url: `work/projects/${currentProj.id_project}/delete`,
+      url: `/api/projects/delete/${currentProj.id_project}`,
       method: 'DELETE',
     })
       .then(() => {

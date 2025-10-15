@@ -1,20 +1,20 @@
 from flask import Flask, request, g
 from flask_cors import CORS, cross_origin
 from handlers import userAuthHandler
-from controllers import projects, experiments, categories, tasks
+from controllers import projects, experiments, categories, tasks, workflows
+
+BASE_PREFIX = "/api"
+ERROR_FORBIDDEN = "Error: Forbidden"
+ENDPOINT_WITHOUT_AUTH = []
 
 app = Flask(__name__)
 cors = CORS(app)  # cors is added in advance to allow cors requests
 app.config["CORS_HEADERS"] = "Content-Type"
-app.register_blueprint(projects, url_prefix='/projects')
-app.register_blueprint(experiments, url_prefix='/experiments')
-app.register_blueprint(categories, url_prefix='/categories')
-app.register_blueprint(tasks, url_prefix='/tasks')
-
-ERROR_FORBIDDEN = "Error: Forbidden"
-
-ENDPOINT_WITHOUT_AUTH = []
-
+app.register_blueprint(projects, url_prefix=f"{BASE_PREFIX}/projects")
+app.register_blueprint(experiments, url_prefix=f"{BASE_PREFIX}/experiments")
+app.register_blueprint(categories, url_prefix=f"{BASE_PREFIX}/categories")
+app.register_blueprint(tasks, url_prefix=f"{BASE_PREFIX}/tasks")
+app.register_blueprint(workflows, url_prefix=f"{BASE_PREFIX}/workflows")
 
 # there's a bug in flask_cors that headers is None when using before_request for OPTIONS request
 @app.before_request
@@ -40,7 +40,7 @@ def after_request(response):
     return response
 
 
-@app.route("/", methods=["GET"])
+@app.route(f"{BASE_PREFIX}/", methods=["GET"])
 @cross_origin()
 def index():
     return {"message": "Experiment service is running."}, 200

@@ -48,7 +48,7 @@ const Tasks = () => {
 
   const getCategories = useCallback(() => {
     categoriesRequest({
-      url: `task/categories`,
+      url: `/api/categories`,
     })
       .then((data) => {
         if (data.data.categories) {
@@ -93,7 +93,7 @@ const Tasks = () => {
   const handleCreateCategory = () => {
     if (!isCategoryNameValid(createCategoryName)) return;
     createCategoryRequest({
-      url: `task/categories/create`,
+      url: `/api/categories/create`,
       method: 'POST',
       data: {
         name: createCategoryName,
@@ -135,7 +135,7 @@ const Tasks = () => {
     if (currentCategory.name === categoryNameInput) return;
 
     updateCategoryRequest({
-      url: `task/categories/${currentCategory.id_category}/update`,
+      url: `/api/categories/rename/${currentCategory.id_category}`,
       method: 'PUT',
       data: {
         name: categoryNameInput,
@@ -166,7 +166,7 @@ const Tasks = () => {
 
   const handleDeleteCategory = () => {
     deleteCategoryRequest({
-      url: `task/categories/${currentCategory.id_category}/delete`,
+      url: `/api/categories/delete/${currentCategory.id_category}`,
       method: 'DELETE',
     })
       .then(() => {

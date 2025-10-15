@@ -116,8 +116,8 @@ const Editor = () => {
   useEffect(() => {
     let url = '';
     specificationType === 'workflow'
-      ? (url = `work/projects/workflows/${workID}`)
-      : (url = `task/categories/tasks/${workID}`);
+      ? (url = `/api/workflows/${workID}`)
+      : (url = `/api/tasks/${workID}`);
 
     specificationRequest({
       url: url,
@@ -272,8 +272,8 @@ const Editor = () => {
   const updateGraphicalModel = (graph: GraphicalModelType) => {
     let url = '';
     specificationType === 'workflow'
-      ? (url = `/work/projects/${projID}/workflows/${workID}/update/graphical_model`)
-      : (url = `/task/categories/tasks/${workID}/update/graphical_model`);
+      ? (url = `/api/workflows/update/graph/${projID}/${workID}`)
+      : (url = `/api/tasks/update/graph/${projID}/${workID}`);
     updateGraphRequest({
       url: url,
       method: 'PUT',
@@ -334,8 +334,8 @@ const Editor = () => {
     const graphicalModel = getCurrentGraphOnBoard();
     let url = '';
     specificationType === 'workflow'
-      ? (url = `/work/projects/${projID}/workflows/create`)
-      : (url = `/task/categories/${projID}/tasks/create`);
+      ? (url = `/api/workflows/create/${projID}`)
+      : (url = `/api/tasks/create/${projID}`);
 
     let data = {};
     if (specificationType === 'workflow') {

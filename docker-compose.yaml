@@ -16,6 +16,14 @@ services:
   exp-service:
     build: ./server-experiment
     container_name: exp-service
+    healthcheck:
+      test: curl --fail http://localhost:5050/api || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    environment:
+      - WORKSPACE_PATH=/Users/konstantinoskozanis/Documents/test
     ports:
       - '5050:5050'
     depends_on:

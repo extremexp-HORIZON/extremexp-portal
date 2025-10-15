@@ -30,14 +30,14 @@ def get_experiment(experiment_id):
 @cross_origin()
 def create_experiment(project_id):
     exp_name = request.json["exp_name"]
-    graphical_model = request.json["graphical_model"]
+    steps = request.json["steps"]
     if experimentHandler.detect_duplicate(project_id, exp_name):
         return {
             "error": ERROR_DUPLICATE,
             "message": "Experiment name already exists",
         }, 409
     res = experimentHandler.create_experiment(
-        g.username, project_id, exp_name, graphical_model
+        g.username, project_id, exp_name, steps
     )
 
     fileSystemHandler.create_experiment(g.username, project_id, exp_name)
@@ -45,9 +45,7 @@ def create_experiment(project_id):
     return {"message": "Experiment created", "data": {"id_experiment": res}}, 201
 
 
-@experiments.route("/delete/<project_id>/<experiment_id>",
-    methods=["OPTIONS", "DELETE"],
-)
+@experiments.route("/delete/<project_id>/<experiment_id>",methods=["OPTIONS", "DELETE"])
 @cross_origin()
 def delete_experiment(project_id, experiment_id):
     if not experimentHandler.experiment_exists(experiment_id):
@@ -57,32 +55,26 @@ def delete_experiment(project_id, experiment_id):
     return {"message": "experiment deleted"}, 204
 
 
-@experiments.route(
-    "/rename/<project_id>/<old_experiment_id>/<new_experiment_id>",
-    methods=["OPTIONS", "PUT"],
-)
+@experiments.route("/rename/<project_id>/<experiment_id>",methods=["OPTIONS", "PUT"])
 @cross_origin()
-def rename_experiment(project_id, old_experiment_id, new_experiment_id):
+def rename_experiment(project_id, experiment_id):
     exp_name = request.json["exp_name"]
     if experimentHandler.detect_duplicate(project_id, exp_name):
         return {
             "error": ERROR_DUPLICATE,
             "message": "Experiment name already exists",
         }, 409
-    experimentHandler.update_experiment_name(old_experiment_id, project_id, new_experiment_id)
-    fileSystemHandler.rename_experiment(g.username, project_id, old_experiment_id, new_experiment_id)
+    experimentHandler.update_experiment_name(experiment_id, project_id, exp_name)
+    fileSystemHandler.rename_experiment(g.username, project_id, experiment_id, exp_name)
     return {"message": "experiment name updated"}, 200
 
 
-@experiments.route(
-    "/update/<project_id>/<experiment_id>",
-    methods=["OPTIONS", "PUT"],
-)
+@experiments.route("/update/<project_id>/<experiment_id>",methods=["OPTIONS", "PUT"])
 @cross_origin()
 def update_experiment_graphical_model(project_id, experiment_id):
-    graphical_model = request.json["graphical_model"]
+    steps = request.json["steps"]
     experimentHandler.update_experiment_graphical_model(
-        experiment_id, project_id, graphical_model
+        experiment_id, project_id, steps
     )
-    fileSystemHandler.update_experiment(g.username, project_id, experiment_id, graphical_model)
+    fileSystemHandler.update_experiment(g.username, project_id, experiment_id, steps)
     return {"message": "experiment graphical model updated"}, 200

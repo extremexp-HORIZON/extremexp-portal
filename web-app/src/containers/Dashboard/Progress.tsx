@@ -7,7 +7,7 @@ const Progress = () => {
     <>
       <div className="page dashboard__page">
         <iframe width="100%" height="100%" style={{border:'none'}}
-            src="https://extreme-viz.pulsar.imsi.athenarc.gr/ideko"
+            src="https://vis.extremexp-icom.intracom-telecom.com/"
         ></iframe>
       </div>
     </>

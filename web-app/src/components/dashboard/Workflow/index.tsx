@@ -46,7 +46,7 @@ const Project = () => {
 
   const getWorkflows = useCallback(() => {
     workflowsRequest({
-      url: `work/projects/${projID}/workflows`,
+      url: `/api/workflows/${projID}/list`,
     })
       .then((data) => {
         if (data.data.workflows) {
@@ -68,7 +68,7 @@ const Project = () => {
   const postNewWorkflow = useCallback(
     (name: string, graphicalModel: GraphicalModelType) => {
       createWorkflowRequest({
-        url: `/work/projects/${projID}/workflows/create`,
+        url: `/api/workflows/create/${projID}`,
         method: 'POST',
         data: {
           work_name: name,
@@ -123,9 +123,7 @@ const Project = () => {
       return;
     }
     updateWorkNameRequest({
-      url: `/work/projects/${projID}/workflows/${
-        workflows[editingIndex!].id_workflow
-      }/update/name`,
+      url: `/api/workflows/rename/${projID}/${workflows[editingIndex!].id_workflow}`,
       method: 'PUT',
       data: {
         work_name: newWorkName,
@@ -167,7 +165,7 @@ const Project = () => {
   const handleDeleteWorkflow= () => {
     if (deleteIndex === null) return;
     deleteWorkflowRequest({
-      url: `/work/projects/${projID}/workflows/${workflows[deleteIndex].id_workflow}/delete`,
+      url: `/api/workflows/delete/${projID}/${workflows[deleteIndex].id_workflow}`,
       method: 'DELETE',
     })
       .then(() => {

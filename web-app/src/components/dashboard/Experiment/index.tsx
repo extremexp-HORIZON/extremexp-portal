@@ -45,7 +45,7 @@ const ProjectExperiment = () => {
 
   const getExperiments = useCallback(() => {
     experimentsRequest({
-      url: `exp/projects/${projID}/experiments`,
+      url: `/api/experiments/${projID}/list`,
     })
       .then((data) => {
         if (data.data.experiments) {

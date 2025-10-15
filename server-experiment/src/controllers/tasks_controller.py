@@ -9,7 +9,7 @@ ERROR_NOT_FOUND = "Error: Not found"
 
 
 # TASKS
-@tasks.route("/<category_id>/all", methods=["GET"])
+@tasks.route("/<category_id>/list", methods=["GET"])
 @cross_origin()
 def get_tasks(category_id):
     tasks = taskHandler.get_tasks(category_id, g.username)
