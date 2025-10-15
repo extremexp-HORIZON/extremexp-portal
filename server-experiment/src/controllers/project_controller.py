@@ -6,7 +6,7 @@ projects = Blueprint('projects', __name__)
 ERROR_DUPLICATE = "Error: Duplicate name"
 
 # PROJECTS
-@projects.route("/", methods=["GET"])
+@projects.route("/all", methods=["GET"])
 @cross_origin()
 def get_projects():
     projects = projectHandler.get_projects(g.username)

@@ -6,7 +6,7 @@ experiments = Blueprint('experiments', __name__)
 
 ERROR_DUPLICATE = "Error: Duplicate name"
 
-@experiments.route("/<project_id>/list", methods=["GET"])
+@experiments.route("/<project_id>/all", methods=["GET"])
 @cross_origin()
 def get_experiments(project_id):
     experiments = experimentHandler.get_experiments(project_id)

@@ -45,7 +45,7 @@ const Workflows = () => {
 
   const getProjects = useCallback(() => {
     projectsRequest({
-      url: `/api/projects`,
+      url: `/api/projects/all`,
     })
       .then((data) => {
         if (data.data.projects) {

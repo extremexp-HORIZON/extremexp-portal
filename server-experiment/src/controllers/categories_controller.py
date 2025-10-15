@@ -6,7 +6,7 @@ categories = Blueprint('categories', __name__)
 
 ERROR_DUPLICATE = "Error: Duplicate name"
 
-@categories.route("/", methods=["GET"])
+@categories.route("/all", methods=["GET"])
 @cross_origin()
 def get_categories():
     categories = categoryHandler.get_categories(g.username)

@@ -45,7 +45,7 @@ const ProjectExperiment = () => {
 
   const getExperiments = useCallback(() => {
     experimentsRequest({
-      url: `/api/experiments/${projID}/list`,
+      url: `/api/experiments/${projID}/all`,
     })
       .then((data) => {
         if (data.data.experiments) {
@@ -62,7 +62,7 @@ const ProjectExperiment = () => {
 
   useEffect(() => {
     getExperiments();
-  }, [getExperiments]);
+  }, []);
 
   const postNewExperiment = useCallback(
     (name: string, steps: ExperimentStep[]) => {

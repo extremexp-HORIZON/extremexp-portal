@@ -45,7 +45,7 @@ const Experiments = () => {
 
   const getProjects = useCallback(() => {
     projectsRequest({
-      url: `/api/projects`,
+      url: `/api/projects/all`,
       method: 'GET',
     })
       .then((data) => {

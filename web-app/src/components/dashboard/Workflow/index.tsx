@@ -46,7 +46,7 @@ const Project = () => {
 
   const getWorkflows = useCallback(() => {
     workflowsRequest({
-      url: `/api/workflows/${projID}/list`,
+      url: `/api/workflows/${projID}/all`,
     })
       .then((data) => {
         if (data.data.workflows) {
@@ -62,8 +62,9 @@ const Project = () => {
   }, [workflowsRequest, projID]);
 
   useEffect(() => {
+    if(projID !== "default" && workflows.indexOf(defaultWorkflow) !== -1)
     getWorkflows();
-  }, [getWorkflows]);
+  }, [projID]);
 
   const postNewWorkflow = useCallback(
     (name: string, graphicalModel: GraphicalModelType) => {
