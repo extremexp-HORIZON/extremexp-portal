@@ -365,6 +365,7 @@ const Editor = () => {
         } else if ("id_task" in data.data) {
           specID = data.data.id_task;
         }
+        navigate(specificationType === "workflow" ? `/dashboard/workflows` : `/dashboard/categories`);
       })
       .catch((error) => {
         if (error.message) {

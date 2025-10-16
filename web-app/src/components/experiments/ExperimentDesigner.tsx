@@ -39,7 +39,7 @@ import type {
 } from "../../types/experiments";
 import "../../containers/Dashboard/experiments.scss";
 import Header from "../editor/Header";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { message } from "../../utils/message";
 import useRequest from "../../hooks/useRequest";
 import { TaskResponseType, ExperimentResponseType } from "../../types/requests";
@@ -61,6 +61,7 @@ function ExperimentDesigner() {
   const [newStepName, setNewStepName] = useState("");
   const [isImportingWorkflow, setIsImportingWorkflow] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // --- Routing ---
   const projID = useLocation().pathname.split("/")[3];
@@ -446,6 +447,7 @@ function ExperimentDesigner() {
       .then(() => {
         message("Experiment saved successfully");
         setIsSaving(false);
+        navigate('/dashboard/experiments');
       })
       .catch((error) => {
         message(error.response?.data?.message || error.message);
