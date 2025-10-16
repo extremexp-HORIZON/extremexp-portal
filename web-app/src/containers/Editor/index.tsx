@@ -54,7 +54,6 @@ import { removeTab, setSelectedTab, useTabStore } from "../../stores/tabStore";
 import ConfigPanel from "../../components/editor/ConfigPanel";
 import { defaultCondition } from "../../types/operator";
 import { nanoid } from "nanoid";
-import { create } from "domain";
 
 const selector = (state: RFState) => ({
   nodes: state.nodes,

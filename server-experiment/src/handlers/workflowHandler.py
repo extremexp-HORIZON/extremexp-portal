@@ -59,6 +59,10 @@ class WorkflowHandler(object):
         query = {"id_workflow": work_id}
         self.collection_workflow.delete_one(query)
 
+    def delete_workflows(self, exp_ids: list):
+        query = {"id_workflow": {"$in": exp_ids}}
+        self.collection_workflow.delete_many(query)
+
     # FIXME: bad implementation
     def detect_duplicate(self, exp_name):
         query = {"name": exp_name}

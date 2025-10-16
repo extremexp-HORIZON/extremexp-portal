@@ -10,6 +10,14 @@ ERROR_DUPLICATE = "Error: Duplicate name"
 @cross_origin()
 def get_workflows():
     workflows = workflowHandler.get_workflows(g.username)
+    # Check for missing files and clean up database
+    missing_files = []
+    for wrk in workflows:
+        exists = fileSystemHandler.detect_missing_file(g.username, "workflows", wrk["name"])
+        if not exists:
+            missing_files.append(wrk["id_workflow"])
+    workflowHandler.delete_workflows(missing_files)
+    workflows = [wrk for wrk in workflows if wrk["id_workflow"] not in missing_files]
     return {
         "message": "workflows retrieved",
         "data": {"workflows": workflows},
@@ -34,6 +42,8 @@ def create_workflow():
     fs_result, fs_status = fileSystemHandler.create_workflow(g.username, res)
     if fs_status != 201:
         return {"message": "Filesystem error", "error": fs_result}, 500
+    if payload:
+        fs_result, fs_status = fileSystemHandler.update_workflow(g.username, res, payload["graphical_model"])
 
     return {"message": "Workflow created", "data": {"name": res}}, 201
 
@@ -45,9 +55,7 @@ def delete_workflow(work_id):
     if not workflowHandler.workflow_exists(work_id):
         return {"message": "this workflow does not exist"}, 404
     workflowHandler.delete_workflow(work_id)
-    fs_result, fs_status = fileSystemHandler.delete_workflow(g.username, workflow_name)
-    if fs_status != 204:
-        return {"message": "Filesystem error", "error": fs_result}, 500
+    fileSystemHandler.delete_workflow(g.username, workflow_name)
 
     return {"message": "workflow deleted"}, 204
 

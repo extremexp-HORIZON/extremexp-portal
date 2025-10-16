@@ -18,7 +18,7 @@ const Account = () => {
   // If the user is already logged in, redirect to the repository page
   useEffect(() => {
     if (isLogin) {
-      navigate('/dashboard/projects');
+      navigate('/dashboard/experiments');
     } else {
       navigate('/account/login');
     }

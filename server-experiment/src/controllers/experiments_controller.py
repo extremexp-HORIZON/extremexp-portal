@@ -10,6 +10,14 @@ ERROR_DUPLICATE = "Error: Duplicate name"
 @cross_origin()
 def get_experiments():
     experiments = experimentHandler.get_experiments(g.username)
+    # Check for missing files and clean up database
+    missing_files = []
+    for exp in experiments:
+        exists = fileSystemHandler.detect_missing_file(g.username, "experiments", exp["name"])
+        if not exists:
+            missing_files.append(exp["id_experiment"])
+    experimentHandler.delete_experiments(missing_files)
+    experiments = [exp for exp in experiments if exp["id_experiment"] not in missing_files]
     return {
         "message": "experiments retrieved",
         "data": {"experiments": experiments},
@@ -24,6 +32,8 @@ def create_experiment():
     fs_result, fs_status = fileSystemHandler.create_experiment(g.username, res)
     if fs_status != 201:
         return {"message": "Filesystem error", "error": fs_result}, 500
+    if payload:
+        fs_result, fs_status = fileSystemHandler.update_experiment(g.username, res, payload["steps"])
 
     return {"message": "Experiment created", "data": {"id_experiment": res}}, 201
 
@@ -45,10 +55,8 @@ def delete_experiment(experiment_id):
     if not experimentHandler.experiment_exists(experiment_id):
         return {"message": "this experiment does not exist"}, 404
     experimentHandler.delete_experiment(experiment_id)
-    fs_result, fs_status = fileSystemHandler.delete_experiment(g.username, experiment_name)
-    if fs_status != 204:
-        return {"message": "Filesystem error", "error": fs_result}, 500
-    
+    fileSystemHandler.delete_experiment(g.username, experiment_name)
+
     return {"message": "experiment deleted"}, 204
 
 

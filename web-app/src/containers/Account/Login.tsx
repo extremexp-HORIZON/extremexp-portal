@@ -28,7 +28,7 @@ const Login = () => {
         const token = response?.access_token;
         if (token) {
           login(username, token);
-          navigate('/dashboard/projects');
+          navigate('/dashboard/experiments');
         }
       })
       .catch((error) => {

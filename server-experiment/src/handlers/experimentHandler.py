@@ -41,7 +41,7 @@ class ExperimentHandler(object):
         documents = self.collection_experiment.find(query)
         return json.loads(json.dumps(documents[0], default=str))
 
-    def create_experiment(self, username, payload):
+    def create_experiment(self, username: str, payload: dict):
         create_time = calendar.timegm(time.gmtime())
         exp_id = username + "-" + str(uuid.uuid4()) + "-" + str(create_time)
         exp_name = None
@@ -62,18 +62,22 @@ class ExperimentHandler(object):
         self.collection_experiment.insert_one(query)
         return exp_name if exp_name else payload["name"]
 
-    def delete_experiment(self, exp_id):
+    def delete_experiment(self, exp_id: str):
         query = {"id_experiment": exp_id}
         self.collection_experiment.delete_one(query)
 
-    def update_experiment_name(self, exp_id, new_name):
+    def delete_experiments(self, exp_ids: list):
+        query = {"id_experiment": {"$in": exp_ids}}
+        self.collection_experiment.delete_many(query)
+
+    def update_experiment_name(self, exp_id: str, new_name: str):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": exp_id}
         new_values = {"$set": {"name": new_name, "update_at": update_time}}
         self.collection_experiment.update_one(query, new_values)
         return True
 
-    def update_experiment_graphical_model(self, exp_id, steps):
+    def update_experiment_graphical_model(self, exp_id: str, steps: list):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": exp_id}
         new_values = {
