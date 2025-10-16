@@ -1,7 +1,7 @@
 from flask import Flask, request, g
 from flask_cors import CORS, cross_origin
 from handlers import userAuthHandler
-from controllers import projects, experiments, categories, tasks, workflows
+from controllers import experiments, categories, tasks, workflows
 
 BASE_PREFIX = "/api"
 ERROR_FORBIDDEN = "Error: Forbidden"
@@ -10,7 +10,6 @@ ENDPOINT_WITHOUT_AUTH = []
 app = Flask(__name__)
 cors = CORS(app)  # cors is added in advance to allow cors requests
 app.config["CORS_HEADERS"] = "Content-Type"
-app.register_blueprint(projects, url_prefix=f"{BASE_PREFIX}/projects")
 app.register_blueprint(experiments, url_prefix=f"{BASE_PREFIX}/experiments")
 app.register_blueprint(categories, url_prefix=f"{BASE_PREFIX}/categories")
 app.register_blueprint(tasks, url_prefix=f"{BASE_PREFIX}/tasks")

@@ -12,7 +12,6 @@ import {
   ExperimentType,
   defaultExperiment,
 } from '../../../types/workflows';
-import { ExperimentStep } from '../../../types/experiments';
 import {
   ExperimentsResponseType,
   CreateExperimentResponseType,
@@ -45,7 +44,7 @@ const ProjectExperiment = () => {
 
   const getExperiments = useCallback(() => {
     experimentsRequest({
-      url: `/api/experiments/${projID}/all`,
+      url: `/api/experiments/all`,
     })
       .then((data) => {
         if (data.data.experiments) {
@@ -65,14 +64,10 @@ const ProjectExperiment = () => {
   }, []);
 
   const postNewExperiment = useCallback(
-    (name: string, steps: ExperimentStep[]) => {
+    () => {
       createExperimentRequest({
-        url: `/exp/projects/${projID}/experiments/create`,
-        method: 'POST',
-        data: {
-          exp_name: name,
-          steps: steps,
-        },
+        url: `/api/experiments/create`,
+        method: 'POST'
       })
         .then(() => {
           getExperiments();
@@ -87,7 +82,7 @@ const ProjectExperiment = () => {
   );
 
   const handleNewExperiment = () => {
-    postNewExperiment(`experiment-${timeNow()}`, []);
+    postNewExperiment();
   };
 
   const handleStartEditingName = (index: number) => {
@@ -119,12 +114,11 @@ const ProjectExperiment = () => {
       return;
     }
     updateExpNameRequest({
-      url: `/exp/projects/${projID}/experiments/${
-        experiments[editingIndex!].id_experiment
-      }/update/name`,
+      url: `/api/experiments/${experiments[editingIndex!].id_experiment}/rename`,
       method: 'PUT',
       data: {
-        exp_name: newExpName,
+        old_exp_name: experiments[editingIndex!].name,
+        new_exp_name: newExpName,
       },
     })
       .then(() => {
@@ -163,8 +157,9 @@ const ProjectExperiment = () => {
   const handleDeleteExperiment = () => {
     if (deleteIndex === null) return;
     deleteExperimentRequest({
-      url: `/exp/projects/${projID}/experiments/${experiments[deleteIndex].id_experiment}/delete`,
+      url: `/api/experiments/${experiments[deleteIndex].id_experiment}`,
       method: 'DELETE',
+      data: { exp_name: experiments[deleteIndex].name },
     })
       .then(() => {
         getExperiments();
@@ -201,8 +196,8 @@ const ProjectExperiment = () => {
         </div>
         {isExperimentEmpty ? (
           <div className="specification__contents__empty">
-            <span className="iconfont">&#xe6a6;</span>
-            <p>Empty Experiment</p>
+            <span style={{ userSelect: "none" }} className="iconfont">&#xe6a6;</span>
+            <p style={{ userSelect: "none" }}>Empty Experiment</p>
           </div>
         ) : (
           <ul className="specification__contents__list">

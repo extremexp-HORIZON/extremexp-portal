@@ -35,7 +35,7 @@ const Repository = () => {
         </div>
         <div className="repository__panel__items">
           {/* TODO icon */}
-          <Link to={'/dashboard/projects'}>
+          <Link to={'/dashboard/experiments'}>
             <div
               className={`repository__panel__items__item ${experimentSelectedClass}`}
             >

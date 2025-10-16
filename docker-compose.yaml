@@ -22,8 +22,8 @@ services:
       timeout: 30s
       retries: 3
       start_period: 60s
-    environment:
-      - WORKSPACE_PATH=${WORKSPACE_PATH}
+    volumes:
+      - ${WORKSPACE_PATH}:/workspace
     ports:
       - '5050:5050'
     depends_on:

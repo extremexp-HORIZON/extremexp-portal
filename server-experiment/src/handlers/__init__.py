@@ -1,5 +1,4 @@
 from .userAuthHandler import userAuthHandler
-from .projectHandler import projectHandler
 from .experimentHandler import experimentHandler
 from .categoryHandler import categoryHandler
 from .taskHandler import taskHandler
@@ -10,7 +9,6 @@ from .workflowHandler import workflowHandler
 
 __all__ = [
     "userAuthHandler",
-    "projectHandler",
     "experimentHandler",
     "categoryHandler",
     "taskHandler",

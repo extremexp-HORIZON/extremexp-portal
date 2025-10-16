@@ -3,7 +3,7 @@ import json
 import time
 import calendar
 from dbClient import mongo_client
-from handlers import projectHandler
+import uuid
 
 
 class ExperimentHandler(object):
@@ -12,13 +12,21 @@ class ExperimentHandler(object):
         self.db = self.client.experiments
         self.collection_experiment = self.db.experiment
 
-    def get_experiments(self, proj_id):
-        query = {"project_id": proj_id}
+    def get_experiments(self, username):
+        query = {"id_experiment": {"$regex": username}}
         documents = self.collection_experiment.find(query).sort(
             "update_at", pymongo.DESCENDING
         )
         # return documents in JSON format
         return json.loads(json.dumps(list(documents), default=str))
+    
+    def detect_duplicate(self, new_name):
+        query = {"name": new_name}
+        documents = self.collection_experiment.find(query)
+        for doc in documents:
+            if doc["name"] == new_name:
+                return True
+        return False
 
     def experiment_exists(self, exp_id):
         query = {"id_experiment": exp_id}
@@ -33,51 +41,32 @@ class ExperimentHandler(object):
         documents = self.collection_experiment.find(query)
         return json.loads(json.dumps(documents[0], default=str))
 
-    def create_experiment(self, username, proj_id, exp_name, steps):
+    def create_experiment(self, username):
         create_time = calendar.timegm(time.gmtime())  # get current time in seconds
-        exp_id = username + "-" + exp_name.replace(" ", "") + "-" + str(create_time)
+        exp_id = username + "-" + str(uuid.uuid4()) + "-" + str(create_time)
+        exp_name = "Experiment-" + str(create_time)
         query = {
             "id_experiment": exp_id,
-            "project_id": proj_id,
             "name": exp_name,
             "create_at": create_time,
             "update_at": create_time,
-            "steps": steps,
+            "steps": [],
         }
         self.collection_experiment.insert_one(query)
+        return exp_name
 
-        projectHandler.update_project_update_at(proj_id)
-        return exp_id
-
-    def delete_experiment(self, exp_id, proj_id):
+    def delete_experiment(self, exp_id):
         query = {"id_experiment": exp_id}
         self.collection_experiment.delete_one(query)
 
-        projectHandler.update_project_update_at(proj_id)
-
-    def delete_experiments(self, proj_id):
-        query = {"project_id": proj_id}
-        self.collection_experiment.delete_many(query)
-
-    # FIXME: bad implementation
-    def detect_duplicate(self, proj_id, exp_name):
-        query = {"project_id": proj_id, "name": exp_name}
-        documents = self.collection_experiment.find(query)
-        for doc in documents:
-            if doc["name"] == exp_name:
-                return True
-        return False
-
-    def update_experiment_name(self, exp_id, proj_id, exp_name):
+    def update_experiment_name(self, exp_id, new_name):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": exp_id}
-        new_values = {"$set": {"name": exp_name, "update_at": update_time}}
+        new_values = {"$set": {"name": new_name, "update_at": update_time}}
         self.collection_experiment.update_one(query, new_values)
-
-        projectHandler.update_project_update_at(proj_id)
         return True
 
-    def update_experiment_graphical_model(self, exp_id, proj_id, steps):
+    def update_experiment_graphical_model(self, exp_id, steps):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": exp_id}
         new_values = {
@@ -85,7 +74,6 @@ class ExperimentHandler(object):
         }
         self.collection_experiment.update_one(query, new_values)
 
-        projectHandler.update_project_update_at(proj_id)
         return True
 
 

@@ -45,24 +45,12 @@ const router = createBrowserRouter([
     element: <Dashboard />,
     children: [
       {
-        path: '/dashboard/projects',
-        element: <Experiments />,
-        children: [
-          {
-            path: '/dashboard/projects/:projID/experiments',
-            element: <ProjectExperiment />,
-          },
-        ],
+        path: '/dashboard/experiments',
+        element: <ProjectExperiment />,
       },
       {
         path: '/dashboard/workflows',
-        element: <Workflows />,
-        children: [
-          {
-            path: '/dashboard/workflows/:projID/workflows',
-            element: <Project />,
-          },
-        ],
+        element: <Project />,
       },
       {
         path: '/dashboard/categories',

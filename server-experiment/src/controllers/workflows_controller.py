@@ -1,15 +1,15 @@
 from flask import Blueprint, request, Response, g
 from flask_cors import cross_origin
-from handlers import workflowHandler
+from handlers import workflowHandler, fileSystemHandler
 
 workflows = Blueprint("workflows", __name__)
 
 ERROR_DUPLICATE = "Error: Duplicate name"
 
-@workflows.route("/<proj_id>/all", methods=["GET"])
+@workflows.route("/all", methods=["GET"])
 @cross_origin()
-def get_workflows(proj_id):
-    workflows = workflowHandler.get_workflows(proj_id)
+def get_workflows():
+    workflows = workflowHandler.get_workflows(g.username)
     return {
         "message": "workflows retrieved",
         "data": {"workflows": workflows},
@@ -26,58 +26,57 @@ def get_workflow(work_id):
     }, 200
 
 
-@workflows.route("/create/<proj_id>", methods=["OPTIONS", "POST"])
+@workflows.route("/create", methods=["OPTIONS", "POST"])
 @cross_origin()
-def create_workflow(proj_id):
-    work_name = request.json["work_name"]
-    graphical_model = request.json["graphical_model"]
-    if workflowHandler.detect_duplicate(proj_id, work_name):
-        return {
-            "error": ERROR_DUPLICATE,
-            "message": "Workflow name already exists",
-        }, 409
-    res = workflowHandler.create_workflow(
-        g.username, proj_id, work_name, graphical_model
-    )
-    return {"message": "Workflow created", "data": {"id_workflow": res}}, 201
+def create_workflow():
+    res = workflowHandler.create_workflow(g.username)
+    fs_result, fs_status = fileSystemHandler.create_workflow(g.username, res)
+    if fs_status != 201:
+        return {"message": "Filesystem error", "error": fs_result}, 500
+
+    return {"message": "Workflow created", "data": {"name": res}}, 201
 
 
-@workflows.route(
-    "/delete/<proj_id>/<work_id>",
-    methods=["OPTIONS", "DELETE"],
-)
+@workflows.route("/<work_id>",methods=["OPTIONS", "DELETE"])
 @cross_origin()
-def delete_workflow(proj_id, work_id):
+def delete_workflow(work_id):
+    workflow_name = request.json["work_name"]
     if not workflowHandler.workflow_exists(work_id):
         return {"message": "this workflow does not exist"}, 404
-    workflowHandler.delete_workflow(work_id, proj_id)
+    workflowHandler.delete_workflow(work_id)
+    fs_result, fs_status = fileSystemHandler.delete_workflow(g.username, workflow_name)
+    if fs_status != 204:
+        return {"message": "Filesystem error", "error": fs_result}, 500
+
     return {"message": "workflow deleted"}, 204
 
 
-@workflows.route(
-    "/rename/<proj_id>/<work_id>",
-    methods=["OPTIONS", "PUT"],
-)
+@workflows.route("/<work_id>/rename",methods=["OPTIONS", "PUT"])
 @cross_origin()
-def rename_workflow(proj_id, work_id):
-    work_name = request.json["work_name"]
-    if workflowHandler.detect_duplicate(proj_id, work_name):
+def rename_workflow(work_id):
+    old_work_name = request.json["old_work_name"]
+    new_work_name = request.json["new_work_name"]
+    if workflowHandler.detect_duplicate(new_work_name):
         return {
             "error": ERROR_DUPLICATE,
             "message": "Workflow name already exists",
         }, 409
-    workflowHandler.update_workflow_name(work_id, proj_id, work_name)
+    workflowHandler.update_workflow_name(work_id, new_work_name)
+    fs_result, fs_status = fileSystemHandler.rename_workflow(g.username, old_work_name, new_work_name)
+    if fs_status != 200:
+        return {"message": "Filesystem error", "error": fs_result}, 500
     return {"message": "workflow name updated"}, 200
 
 
-@workflows.route(
-    "/update/graph/<proj_id>/<work_id>/",
-    methods=["OPTIONS", "PUT"],
-)
+@workflows.route("/<work_id>/update",methods=["OPTIONS", "PUT"])
 @cross_origin()
-def update_workflow_graphical_model(proj_id, work_id):
+def update_workflow_graphical_model(work_id):
+    workflow_name = request.json["work_name"]
     graphical_model = request.json["graphical_model"]
     workflowHandler.update_workflow_graphical_model(
-        work_id, proj_id, graphical_model
+        work_id, graphical_model
     )
+    fs_result, fs_status = fileSystemHandler.update_workflow(g.username, workflow_name, graphical_model)
+    if fs_status != 200:
+        return {"message": "Filesystem error", "error": fs_result}, 500
     return {"message": "workflow graphical model updated"}, 200

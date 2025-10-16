@@ -2,7 +2,7 @@ import './style.scss';
 import { useState, useEffect, useCallback } from 'react';
 import useRequest from '../../../hooks/useRequest';
 import { message } from '../../../utils/message';
-import { timestampToDate, timeNow } from '../../../utils/timeToDate';
+import { timestampToDate } from '../../../utils/timeToDate';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   downloadGraphicalModel,
@@ -10,7 +10,6 @@ import {
 } from '../../../utils/fileIO';
 import Popover from '../../general/Popover';
 import {
-  GraphicalModelType,
   WorkflowType,
   defaultWorkflow,
 } from '../../../types/workflows';
@@ -46,7 +45,7 @@ const Project = () => {
 
   const getWorkflows = useCallback(() => {
     workflowsRequest({
-      url: `/api/workflows/${projID}/all`,
+      url: `/api/workflows/all`,
     })
       .then((data) => {
         if (data.data.workflows) {
@@ -67,14 +66,10 @@ const Project = () => {
   }, [projID]);
 
   const postNewWorkflow = useCallback(
-    (name: string, graphicalModel: GraphicalModelType) => {
+    () => {
       createWorkflowRequest({
-        url: `/api/workflows/create/${projID}`,
-        method: 'POST',
-        data: {
-          work_name: name,
-          graphical_model: graphicalModel,
-        },
+        url: `/api/workflows/create`,
+        method: 'POST'
       })
         .then(() => {
           getWorkflows();
@@ -89,10 +84,7 @@ const Project = () => {
   );
 
   const handleNewWorkflow = () => {
-    postNewWorkflow(`workflow-${timeNow()}`, {
-      nodes: [],
-      edges: [],
-    });
+    postNewWorkflow();
   };
 
   const handleStartEditingName = (index: number) => {
@@ -124,10 +116,11 @@ const Project = () => {
       return;
     }
     updateWorkNameRequest({
-      url: `/api/workflows/rename/${projID}/${workflows[editingIndex!].id_workflow}`,
+      url: `/api/workflows/${workflows[editingIndex!].id_workflow}/rename`,
       method: 'PUT',
       data: {
-        work_name: newWorkName,
+        old_work_name: workflows[editingIndex!].name,
+        new_work_name: newWorkName,
       },
     })
       .then(() => {
@@ -166,8 +159,11 @@ const Project = () => {
   const handleDeleteWorkflow= () => {
     if (deleteIndex === null) return;
     deleteWorkflowRequest({
-      url: `/api/workflows/delete/${projID}/${workflows[deleteIndex].id_workflow}`,
+      url: `/api/workflows/${workflows[deleteIndex].id_workflow}`,
       method: 'DELETE',
+      data: {
+        work_name: workflows[deleteIndex].name,
+      }
     })
       .then(() => {
         getWorkflows();
@@ -183,7 +179,7 @@ const Project = () => {
     if (!model) {
       return;
     }
-    postNewWorkflow(`imported-workflow-${timeNow()}`, model);
+    postNewWorkflow();
   }
 
   return (

@@ -5,6 +5,7 @@ from handlers import categoryHandler, taskHandler
 categories = Blueprint('categories', __name__)
 
 ERROR_DUPLICATE = "Error: Duplicate name"
+ERROR_NOT_FOUND = "Error: Not found"
 
 @categories.route("/all", methods=["GET"])
 @cross_origin()
@@ -30,7 +31,7 @@ def create_category():
     return {"message": "Category created.", "data": {"id_category": res}}, 201
 
 
-@categories.route("/rename/<category_id>", methods=["OPTIONS", "PUT"])
+@categories.route("/<category_id>/rename", methods=["OPTIONS", "PUT"])
 @cross_origin()
 def update_category_name(category_id):
     category_name = request.json["name"]
@@ -45,7 +46,7 @@ def update_category_name(category_id):
     return {"message": "category name updated"}, 200
 
 
-@categories.route("/delete/<category_id>", methods=["OPTIONS", "DELETE"])
+@categories.route("/<category_id>", methods=["OPTIONS", "DELETE"])
 @cross_origin()
 # FIXME: delete official category should not be allowed
 def delete_category(category_id):
