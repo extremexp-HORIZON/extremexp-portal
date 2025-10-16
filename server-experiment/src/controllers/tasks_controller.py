@@ -29,7 +29,7 @@ def get_task(task_id):
     }, 200
 
 
-@tasks.route("/create/<category_id>", methods=["OPTIONS", "POST"])
+@tasks.route("/<category_id>", methods=["OPTIONS", "POST"])
 @cross_origin()
 def create_task(category_id):
     task_name = request.json["name"]
@@ -46,7 +46,7 @@ def create_task(category_id):
     return {"message": "Task created", "data": {"id_task": res}}, 201
 
 
-@tasks.route("/delete/<task_id>",methods=["OPTIONS", "DELETE"])
+@tasks.route("/<task_id>",methods=["OPTIONS", "DELETE"])
 @cross_origin()
 def delete_task(task_id):
     if not taskHandler.task_exists(task_id):
@@ -55,7 +55,7 @@ def delete_task(task_id):
     return {"message": "task deleted"}, 204
 
 
-@tasks.route("/update/info/<category_id>/<task_id>",methods=["OPTIONS", "PUT"])
+@tasks.route("/<category_id>/<task_id>/update",methods=["OPTIONS", "PUT"])
 @cross_origin()
 def update_task_info(category_id, task_id):
     task_name = request.json["name"]

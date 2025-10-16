@@ -46,7 +46,7 @@ const Panel: React.FC<PanelProps> = ({ selectedLink, onLinkSelection }) => {
 
   const getCategories = useCallback(() => {
     categoriesRequest({
-      url: `task/categories`,
+      url: `/api/categories/all`,
     })
       .then((data) => {
         if (data.data.categories) {

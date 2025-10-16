@@ -20,7 +20,7 @@ const SubTask = ({ category, setWindow }: SubTaskProps) => {
 
   const getTasks = useCallback(() => {
     tasksRequest({
-      url: `task/categories/${category.id_category}/tasks`,
+      url: `/api/tasks/${category.id_category}/all`,
     })
       .then((data) => {
         if (data.data.tasks) {

@@ -110,11 +110,9 @@ export interface ImportWorkflowModalProps {
 }
 
 export interface ExperimentSave {
-  id: string;
   name: string;
-  project_id?: string;
-  created_at?: number;
-  updated_at?: number;
+  create_at?: number;
+  update_at?: number;
   steps: ExperimentStep[];
 }
 

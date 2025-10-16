@@ -39,7 +39,7 @@ const Category = () => {
 
   const getTasks = useCallback(() => {
     tasksRequest({
-      url: `/api/tasks/${categoryIdByURL}/list`,
+      url: `/api/tasks/${categoryIdByURL}/all`,
     })
       .then((data) => {
         if (data.data.tasks) {
@@ -61,7 +61,7 @@ const Category = () => {
   const postNewTask = useCallback(
     (name: string, provider: string, graphicalModel: GraphicalModelType) => {
       createTaskRequest({
-        url: `/api/tasks/create/${categoryIdByURL}`,
+        url: `/api/tasks/${categoryIdByURL}`,
         method: 'POST',
         data: {
           name: name,
@@ -118,7 +118,7 @@ const Category = () => {
       return;
     }
     updateTaskInfoRequest({
-      url: `/api/tasks/update/info/${categoryIdByURL}/${tasks[editingIndex!].id_task}`,
+      url: `/api/tasks/${categoryIdByURL}/${tasks[editingIndex!].id_task}/update`,
       method: 'PUT',
       data: {
         name: newTaskName,
@@ -163,7 +163,7 @@ const Category = () => {
   const handleDeleteTask = () => {
     if (deleteIndex === null) return;
     deleteTaskRequest({
-      url: `/api/tasks/delete/${tasks[deleteIndex].id_task}`,
+      url: `/api/tasks/${tasks[deleteIndex].id_task}`,
       method: 'DELETE',
     })
       .then(() => {

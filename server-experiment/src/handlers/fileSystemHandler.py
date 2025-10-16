@@ -81,7 +81,7 @@ class FileSystemHandler:
             return {"message": f"experiment name {experiment_name} does not exist"}, 404
 
         with open(filepath, 'w', encoding='utf-8') as fileobject:
-            fileobject.write(content)
+            fileobject.write(json.dumps(content))
 
         return {"message": f"{experiment_name} has been updated"}, 200
 
@@ -91,7 +91,7 @@ class FileSystemHandler:
             return {"message": f"workflow name {workflow_name} does not exist"}, 404
 
         with open(filepath, 'w', encoding='utf-8') as fileobject:
-            fileobject.write(content)
+            fileobject.write(json.dumps(content))
 
         return {"message": f"{workflow_name} has been updated"}, 200
 

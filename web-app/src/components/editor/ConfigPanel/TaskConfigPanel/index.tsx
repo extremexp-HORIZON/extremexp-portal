@@ -241,7 +241,7 @@ const TaskConfigPanel: React.FC<TaskConfigPanelProps> = ({ updateSideBar,onSave 
   const getTasks = useCallback(
     (categoryID: string) => {
       tasksRequest({
-        url: `task/categories/${categoryID}/tasks`,
+        url: `/api/tasks/${categoryID}/all`,
       })
         .then((data) => {
           if (data.data.tasks) {

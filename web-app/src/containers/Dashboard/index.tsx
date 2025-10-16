@@ -5,7 +5,7 @@ import { logout } from '../../stores/accountStore';
 
 const Repository = () => {
   const location = useLocation();
-  const isExperiments = location.pathname.includes('/projects');
+  const isExperiments = location.pathname.includes('/experiments');
   const isWorkflows = location.pathname.includes('/workflows');
   const isTask = location.pathname.includes('/categories');
   const isReusableTask = location.pathname.includes('/reusable_tasks');

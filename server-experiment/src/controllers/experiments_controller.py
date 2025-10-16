@@ -19,7 +19,8 @@ def get_experiments():
 @experiments.route("/create", methods=["OPTIONS", "POST"])
 @cross_origin()
 def create_experiment():
-    res = experimentHandler.create_experiment(g.username)
+    payload = request.json
+    res = experimentHandler.create_experiment(g.username, payload)
     fs_result, fs_status = fileSystemHandler.create_experiment(g.username, res)
     if fs_status != 201:
         return {"message": "Filesystem error", "error": fs_result}, 500
@@ -40,7 +41,7 @@ def get_experiment(experiment_id):
 @experiments.route("/<experiment_id>",methods=["OPTIONS", "DELETE"])
 @cross_origin()
 def delete_experiment(experiment_id):
-    experiment_name = request.json["exp_name"]
+    experiment_name = request.json["name"]
     if not experimentHandler.experiment_exists(experiment_id):
         return {"message": "this experiment does not exist"}, 404
     experimentHandler.delete_experiment(experiment_id)
@@ -71,7 +72,7 @@ def rename_experiment(experiment_id):
 @experiments.route("/<experiment_id>/update",methods=["OPTIONS", "PUT"])
 @cross_origin()
 def update_experiment_graphical_model(experiment_id):
-    experiment_name = request.json["exp_name"]
+    experiment_name = request.json["name"]
     steps = request.json["steps"]
     experimentHandler.update_experiment_graphical_model(
         experiment_id, steps

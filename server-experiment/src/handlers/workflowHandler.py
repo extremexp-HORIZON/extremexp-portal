@@ -34,23 +34,26 @@ class WorkflowHandler(object):
         documents = self.collection_workflow.find(query)
         return json.loads(json.dumps(documents[0], default=str))
 
-    def create_workflow(self, username):
+    def create_workflow(self, username, payload):
         create_time = calendar.timegm(time.gmtime())  # get current time in seconds
         work_id = username + "-" + str(uuid.uuid4()) + "-" + str(create_time)
-        work_name = "Workflow-" + str(create_time)
-        query = {
-            "id_workflow": work_id,
-            "name": work_name,
-            "create_at": create_time,
-            "update_at": create_time,
-            "graphical_model": {
-                "nodes": [],
-                "edges": [],
-            },
-        }
+        workflow_name = None
+        if not payload:
+            workflow_name = "Workflow-" + str(create_time)
+            query = {
+                "id_workflow": work_id,
+                "name": workflow_name,
+                "create_at": create_time,
+                "update_at": create_time,
+                "graphical_model": {"nodes": [], "edges": []},
+            }
+        else:
+            query = payload
+            query["id_workflow"] = work_id
+            query["create_at"] = create_time
+            query["update_at"] = create_time
         self.collection_workflow.insert_one(query)
-
-        return work_name
+        return workflow_name if workflow_name else payload["name"]
 
     def delete_workflow(self, work_id):
         query = {"id_workflow": work_id}

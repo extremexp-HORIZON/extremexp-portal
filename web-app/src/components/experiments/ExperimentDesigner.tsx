@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -7,13 +7,13 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+} from "@dnd-kit/sortable";
 import {
   Plus,
   X,
@@ -24,67 +24,82 @@ import {
   XCircle,
   Import,
   AlertCircle,
-} from 'lucide-react';
-import { WorkflowStep } from './WorkflowStep';
-import { ImportWorkflowModal } from './ImportWorkflowModal';
-import { ExperimentSave, ExperimentStep, ExperimentSpace } from '../../types/experiments';
-import type { Node, SearchMethod, SavedWorkflow } from '../../types/experiments';
-import '../../containers/Dashboard/experiments.scss'
-import Header from '../editor/Header';
-import { useLocation } from 'react-router-dom';
-import { message } from '../../utils/message';
-import useRequest from '../../hooks/useRequest';
+} from "lucide-react";
+import { WorkflowStep } from "./WorkflowStep";
+import { ImportWorkflowModal } from "./ImportWorkflowModal";
 import {
-  TaskResponseType,
-  ExperimentResponseType
-} from '../../types/requests';
-
+  ExperimentSave,
+  ExperimentStep,
+  ExperimentSpace,
+} from "../../types/experiments";
+import type {
+  Node,
+  SearchMethod,
+  SavedWorkflow,
+} from "../../types/experiments";
+import "../../containers/Dashboard/experiments.scss";
+import Header from "../editor/Header";
+import { useLocation } from "react-router-dom";
+import { message } from "../../utils/message";
+import useRequest from "../../hooks/useRequest";
+import { TaskResponseType, ExperimentResponseType } from "../../types/requests";
+import Popover from "../general/Popover";
 
 function ExperimentDesigner() {
   // --- State ---
-  const { request: specificationRequest } = useRequest<ExperimentResponseType | TaskResponseType>();
+  const { request: specificationRequest } = useRequest<
+    ExperimentResponseType | TaskResponseType
+  >();
   const [steps, setSteps] = useState<Node[]>([]);
+  const [showPopover, setShowPopover] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [experimentName, setExperimentName] = useState('');
+  const [experimentName, setExperimentName] = useState("");
+  const [newExperimentName, setNewExperimentName] = useState("");
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedSpace, setSelectedSpace] = useState<string | null>(null);
   const [isAddingNode, setIsAddingNode] = useState(false);
-  const [newStepName, setNewStepName] = useState('');
+  const [newStepName, setNewStepName] = useState("");
   const [isImportingWorkflow, setIsImportingWorkflow] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // --- Routing ---
-  const projID = useLocation().pathname.split('/')[3];
-  const experimentID = useLocation().pathname.split('/')[4];
+  const projID = useLocation().pathname.split("/")[3];
+  const experimentID = useLocation().pathname.split("/")[4];
 
   // --- Helpers ---
   // Extract steps from experiment object, supporting legacy and new formats
   const extractSteps = (experiment: any): Node[] => {
-    if (Array.isArray(experiment.steps)) return applyWorkflowOverrides(experiment.steps);
-    if (Array.isArray(experiment.graphical_model)) return applyWorkflowOverrides(experiment.graphical_model);
+    if (Array.isArray(experiment.steps))
+      return applyWorkflowOverrides(experiment.steps);
+    if (Array.isArray(experiment.graphical_model))
+      return applyWorkflowOverrides(experiment.graphical_model);
     return [];
   };
 
   // --- Effects ---
   // Load experiment on mount or when ID changes
   useEffect(() => {
-    const url = `exp/projects/experiments/${experimentID}`;
+    const url = `/api/experiments/${experimentID}`;
     specificationRequest({ url })
       .then((data) => {
-        if ('experiment' in data.data && data.data.experiment) {
+        if ("experiment" in data.data && data.data.experiment) {
           const experiment = data.data.experiment;
-          setExperimentName(experiment.name || '');
+          setExperimentName(experiment.name || "");
           setSteps(extractSteps(experiment));
         } else {
-          setExperimentName('');
+          setExperimentName("");
           setSteps([]);
-          message('Experiment data not found.');
+          message("Experiment data not found.");
         }
       })
       .catch((error) => {
-        setExperimentName('');
+        setExperimentName("");
         setSteps([]);
-        message(error?.response?.data?.message || error.message || 'Failed to load experiment.');
+        message(
+          error?.response?.data?.message ||
+            error.message ||
+            "Failed to load experiment."
+        );
       });
   }, [specificationRequest, projID, experimentID]);
 
@@ -95,6 +110,19 @@ function ExperimentDesigner() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const handleShowPopover = () => {
+    setShowPopover(true);
+    setNewExperimentName("Experiment-" + new Date().getTime());
+  };
+
+  function closeMask() {
+    setShowPopover(false);
+  }
+
+  function handleCancelSave() {
+    setShowPopover(false);
+  }
 
   // --- Handlers ---
   // Save experiment: open modal
@@ -111,7 +139,7 @@ function ExperimentDesigner() {
         const reorderedSteps = arrayMove(items, oldIndex, newIndex);
         return reorderedSteps.map((step, index) => ({
           ...step,
-          executionOrder: index + 1
+          executionOrder: index + 1,
         }));
       });
     }
@@ -120,17 +148,21 @@ function ExperimentDesigner() {
   // Add a new step
   const handleAddNode = () => {
     if (steps.length >= 3) {
-      setError('Maximum of 3 steps allowed');
+      setError("Maximum of 3 steps allowed");
       return;
     }
-    const isNodeEmpty = steps.some(step => step.spaces.length === 0 || step.spaces.every(space => space.steps.length === 0));
+    const isNodeEmpty = steps.some(
+      (step) =>
+        step.spaces.length === 0 ||
+        step.spaces.every((space) => space.steps.length === 0)
+    );
     if (isNodeEmpty) {
-      setError('Cannot add a new step while there are empty steps');
+      setError("Cannot add a new step while there are empty steps");
       return;
     }
     setError(null);
     setIsAddingNode(true);
-    setNewStepName('');
+    setNewStepName("");
   };
 
   // Create a new step
@@ -139,175 +171,205 @@ function ExperimentDesigner() {
     const newStep: Node = {
       id: `step-${Date.now()}`,
       name: newStepName.trim(),
-      type: 'container',
+      type: "container",
       spaces: [],
       collapsed: false,
-      status: 'idle',
-      executionOrder: steps.length + 1
+      status: "idle",
+      executionOrder: steps.length + 1,
     };
     setSteps([...steps, newStep]);
     setIsAddingNode(false);
-    setNewStepName('');
+    setNewStepName("");
   };
 
   // Add a space to a step
   const addSpace = (stepID: string) => {
-    const step = steps.find(n => n.id === stepID);
+    const step = steps.find((n) => n.id === stepID);
     if (!step) return;
-    const hasEmptySpace = step.spaces.some(space => space.steps.length === 0);
+    const hasEmptySpace = step.spaces.some((space) => space.steps.length === 0);
     if (hasEmptySpace) {
-      setError('Cannot add new space while there is an empty space');
+      setError("Cannot add new space while there is an empty space");
       return;
     }
     setError(null);
-    setSteps(steps.map(step => step.id === stepID ? {
-      ...step,
-      spaces: [
-        ...step.spaces,
-        {
-          id: `space-${Date.now()}`,
-          name: 'New Space',
-          steps: [],
-          status: 'idle',
-          gridSearchEnabled: true,
-          searchMethod: 'grid'
-        }
-      ]
-    } : step));
+    setSteps(
+      steps.map((step) =>
+        step.id === stepID
+          ? {
+              ...step,
+              spaces: [
+                ...step.spaces,
+                {
+                  id: `space-${Date.now()}`,
+                  name: "New Space",
+                  steps: [],
+                  status: "idle",
+                  gridSearchEnabled: true,
+                  searchMethod: "grid",
+                },
+              ],
+            }
+          : step
+      )
+    );
   };
 
-  
   const removeNode = (stepID: string) => {
-    setSteps(prevSteps => {
-      const filteredSteps = prevSteps.filter(step => step.id !== stepID);
+    setSteps((prevSteps) => {
+      const filteredSteps = prevSteps.filter((step) => step.id !== stepID);
       return filteredSteps.map((step, index) => ({
         ...step,
-        executionOrder: index + 1
+        executionOrder: index + 1,
       }));
     });
   };
 
   const removeSpace = (stepID: string, spaceId: string) => {
-    setSteps(steps.map(step => {
-      if (step.id === stepID) {
-        return {
-          ...step,
-          spaces: step.spaces.filter(space => space.id !== spaceId)
-        };
-      }
-      return step;
-    }));
+    setSteps(
+      steps.map((step) => {
+        if (step.id === stepID) {
+          return {
+            ...step,
+            spaces: step.spaces.filter((space) => space.id !== spaceId),
+          };
+        }
+        return step;
+      })
+    );
   };
 
   const removeStep = (stepId: string, spaceId: string, newStepId: string) => {
-    setSteps(steps.map(step => {
-      if (step.id === stepId) {
-        return {
-          ...step,
-          spaces:  step.spaces.map(space => {
-            if (space.id === spaceId) {
-              return {
-                ...space,
-                steps: space.steps.filter(step => step.id !== newStepId)
-              };
-            }
-            return space;
-          })
-        };
-      }
-      return step;
-    }));
+    setSteps(
+      steps.map((step) => {
+        if (step.id === stepId) {
+          return {
+            ...step,
+            spaces: step.spaces.map((space) => {
+              if (space.id === spaceId) {
+                return {
+                  ...space,
+                  steps: space.steps.filter((step) => step.id !== newStepId),
+                };
+              }
+              return space;
+            }),
+          };
+        }
+        return step;
+      })
+    );
   };
 
   const toggleNodeCollapse = (nodeId: string) => {
-    setSteps(steps.map(step => 
-      step.id === nodeId ? { ...step, collapsed: !step.collapsed } : step
-    ));
+    setSteps(
+      steps.map((step) =>
+        step.id === nodeId ? { ...step, collapsed: !step.collapsed } : step
+      )
+    );
   };
 
   const toggleSpaceCollapse = (stepID: string, spaceId: string) => {
-    setSteps(steps.map(step => {
-      if (step.id === stepID) {
-        return {
-          ...step,
-          spaces: step.spaces.map(space => 
-            space.id === spaceId ? { ...space, collapsed: !space.collapsed } : space
-          )
-        };
-      }
-      return step;
-    }));
+    setSteps(
+      steps.map((step) => {
+        if (step.id === stepID) {
+          return {
+            ...step,
+            spaces: step.spaces.map((space) =>
+              space.id === spaceId
+                ? { ...space, collapsed: !space.collapsed }
+                : space
+            ),
+          };
+        }
+        return step;
+      })
+    );
   };
 
-  const selectTask = (stepId: string, spaceId: string, newStepId: string, taskId: string) => {
-    setSteps(steps.map(step => {
-      if (step.id === stepId) {
-        return {
-          ...step,
-          spaces: step.spaces.map(space => {
-            if (space.id === spaceId) {
-              return {
-                ...space,
-                steps: space.steps.map(step => {
-                  if (step.id === newStepId) {
-                    return {
-                      ...step,
-                      tasks: step.tasks.map(task => ({
-                        ...task,
-                        selected: task.id === taskId
-                      }))
-                    };
-                  }
-                  return step;
-                })
-              };
-            }
-            return space;
-          })
-        };
-      }
-      return step;
-    }));
+  const selectTask = (
+    stepId: string,
+    spaceId: string,
+    newStepId: string,
+    taskId: string
+  ) => {
+    setSteps(
+      steps.map((step) => {
+        if (step.id === stepId) {
+          return {
+            ...step,
+            spaces: step.spaces.map((space) => {
+              if (space.id === spaceId) {
+                return {
+                  ...space,
+                  steps: space.steps.map((step) => {
+                    if (step.id === newStepId) {
+                      return {
+                        ...step,
+                        tasks: step.tasks.map((task) => ({
+                          ...task,
+                          selected: task.id === taskId,
+                        })),
+                      };
+                    }
+                    return step;
+                  }),
+                };
+              }
+              return space;
+            }),
+          };
+        }
+        return step;
+      })
+    );
   };
 
   const toggleGridSearch = (stepID: string, spaceId: string) => {
-    setSteps(steps.map(step => {
-      if (step.id === stepID) {
-        return {
-          ...step,
-          spaces: step.spaces.map(space => {
-            if (space.id === spaceId) {
-              return {
-                ...space,
-                gridSearchEnabled: !space.gridSearchEnabled
-              };
-            }
-            return space;
-          })
-        };
-      }
-      return step;
-    }));
+    setSteps(
+      steps.map((step) => {
+        if (step.id === stepID) {
+          return {
+            ...step,
+            spaces: step.spaces.map((space) => {
+              if (space.id === spaceId) {
+                return {
+                  ...space,
+                  gridSearchEnabled: !space.gridSearchEnabled,
+                };
+              }
+              return space;
+            }),
+          };
+        }
+        return step;
+      })
+    );
   };
 
-  const changeSearchMethod = (nodeId: string, spaceId: string, method: SearchMethod) => {
-    setSteps(steps.map(step => {
-      if (step.id === nodeId) {
-        return {
-          ...step,
-          spaces: step.spaces.map(space => {
-            if (space.id === spaceId) {
-              return {
-                ...space,
-                searchMethod: method
-              };
-            }
-            return space;
-          })
-        };
-      }
-      return step;
-    }));
+  const changeSearchMethod = (
+    nodeId: string,
+    spaceId: string,
+    method: SearchMethod
+  ) => {
+    setSteps(
+      steps.map((step) => {
+        if (step.id === nodeId) {
+          return {
+            ...step,
+            spaces: step.spaces.map((space) => {
+              if (space.id === spaceId) {
+                return {
+                  ...space,
+                  searchMethod: method,
+                };
+              }
+              return space;
+            }),
+          };
+        }
+        return step;
+      })
+    );
   };
 
   const handleImportWorkflow = (workflow: SavedWorkflow) => {
@@ -343,36 +405,87 @@ function ExperimentDesigner() {
     setIsImportingWorkflow(false);
   };
 
-  const saveExperiment = async () => {
+  const saveAsExperiment = async () => {
+    closeMask();
     const experimentToSave: ExperimentSave = {
-      id: experimentID,
-      name: experimentName,
-      project_id: projID,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-      steps: steps.map((step): ExperimentStep => ({
-        ...step,
-        spaces: step.spaces.map((space): ExperimentSpace => ({
-          ...space,
-          steps: Array.isArray(space.steps) ? space.steps.map(wfStep => ({
-            ...wfStep,
-            tasks: Array.isArray(wfStep.tasks) ? wfStep.tasks.map(task => ({
-              ...task,
-              // This will include the current param.values for each hyperParameter
-              hyperParameters: Array.isArray(task.hyperParameters)
-                ? task.hyperParameters.map(param => ({
-                    ...param,
-                    // param.values is already up-to-date from WorkflowStep
+      name: newExperimentName,
+      steps: steps.map(
+        (step): ExperimentStep => ({
+          ...step,
+          spaces: step.spaces.map(
+            (space): ExperimentSpace => ({
+              ...space,
+              steps: Array.isArray(space.steps)
+                ? space.steps.map((wfStep) => ({
+                    ...wfStep,
+                    tasks: Array.isArray(wfStep.tasks)
+                      ? wfStep.tasks.map((task) => ({
+                          ...task,
+                          // This will include the current param.values for each hyperParameter
+                          hyperParameters: Array.isArray(task.hyperParameters)
+                            ? task.hyperParameters.map((param) => ({
+                                ...param,
+                                // param.values is already up-to-date from WorkflowStep
+                              }))
+                            : [],
+                        }))
+                      : [],
                   }))
                 : [],
-            })) : [],
-          })) : [],
-        })),
-      })),
+            })
+          ),
+        })
+      ),
     };
 
     await specificationRequest({
-      url: `/exp/projects/${projID}/experiments/${experimentID}/update/`,
+      url: `/api/experiments/create`,
+      method: "POST",
+      data: experimentToSave,
+    })
+      .then(() => {
+        message("Experiment saved successfully");
+        setIsSaving(false);
+      })
+      .catch((error) => {
+        message(error.response?.data?.message || error.message);
+      });
+  };
+
+  const saveExperiment = async () => {
+    const experimentToSave: ExperimentSave = {
+      name: experimentName,
+      steps: steps.map(
+        (step): ExperimentStep => ({
+          ...step,
+          spaces: step.spaces.map(
+            (space): ExperimentSpace => ({
+              ...space,
+              steps: Array.isArray(space.steps)
+                ? space.steps.map((wfStep) => ({
+                    ...wfStep,
+                    tasks: Array.isArray(wfStep.tasks)
+                      ? wfStep.tasks.map((task) => ({
+                          ...task,
+                          // This will include the current param.values for each hyperParameter
+                          hyperParameters: Array.isArray(task.hyperParameters)
+                            ? task.hyperParameters.map((param) => ({
+                                ...param,
+                                // param.values is already up-to-date from WorkflowStep
+                              }))
+                            : [],
+                        }))
+                      : [],
+                  }))
+                : [],
+            })
+          ),
+        })
+      ),
+    };
+
+    await specificationRequest({
+      url: `/api/experiments/${experimentID}/update`,
       method: "PUT",
       data: experimentToSave,
     })
@@ -385,13 +498,15 @@ function ExperimentDesigner() {
       });
   };
 
-  const getStatusIcon = (status: 'idle' | 'running' | 'completed' | 'error') => {
+  const getStatusIcon = (
+    status: "idle" | "running" | "completed" | "error"
+  ) => {
     switch (status) {
-      case 'running':
+      case "running":
         return <Loader className="w-4 h-4 animate-spin text-blue-500" />;
-      case 'completed':
+      case "completed":
         return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case 'error':
+      case "error":
         return <XCircle className="w-4 h-4 text-red-500" />;
       default:
         return null;
@@ -418,9 +533,10 @@ function ExperimentDesigner() {
                             selected: override.selected ?? task.selected,
                             hyperParameters: Array.isArray(task.hyperParameters)
                               ? task.hyperParameters.map((param) => {
-                                  const paramOverride = override.hyperParameters?.find(
-                                    (p: any) => p.name === param.name
-                                  );
+                                  const paramOverride =
+                                    override.hyperParameters?.find(
+                                      (p: any) => p.name === param.name
+                                    );
                                   return paramOverride
                                     ? { ...param, value: paramOverride.value }
                                     : param;
@@ -437,21 +553,26 @@ function ExperimentDesigner() {
     }));
   }
 
-  const handleParamChange = (stepId: string, taskId: string , paramName: string, newValue: string | number | boolean) => {
-    setSteps(steps =>
-      steps.map(step =>
+  const handleParamChange = (
+    stepId: string,
+    taskId: string,
+    paramName: string,
+    newValue: string | number | boolean
+  ) => {
+    setSteps((steps) =>
+      steps.map((step) =>
         step.id === stepId
           ? {
               ...step,
-              spaces: step.spaces.map(space => ({
+              spaces: step.spaces.map((space) => ({
                 ...space,
-                steps: space.steps.map(wfStep => ({
+                steps: space.steps.map((wfStep) => ({
                   ...wfStep,
-                  tasks: wfStep.tasks.map(task =>
+                  tasks: wfStep.tasks.map((task) =>
                     task.id === taskId
                       ? {
                           ...task,
-                          hyperParameters: task.hyperParameters.map(param =>
+                          hyperParameters: task.hyperParameters.map((param) =>
                             param.name === paramName
                               ? { ...param, value: newValue }
                               : param
@@ -469,15 +590,44 @@ function ExperimentDesigner() {
 
   return (
     <div className="flex h-screen bg-gray-100 w-[100vw]">
-
       <div className="flex-1 flex flex-col overflow-hidden">
-
         <div className="editor__top">
-          {/* TODO: save as */}
-        <Header onSave={saveExperiment} onSaveAs={saveExperiment} />
-      </div>
-
+          <Header onSave={saveExperiment} onSaveAs={handleShowPopover} />
+        </div>
         <main className="flex-1 overflow-auto bg-gray-50 p-6">
+          <Popover show={showPopover} blankClickCallback={closeMask}>
+            <div className="popover__save">
+              <div className="popover__save__text">
+                {` Save the current specification as a new experiment`}
+              </div>
+              <input
+                type="text"
+                className="popover__save__input"
+                placeholder="specification name"
+                value={newExperimentName}
+                onChange={(e) => setNewExperimentName(e.target.value)}
+                onKeyUp={(e) => {
+                  if (e.key === "Enter") {
+                    saveAsExperiment();
+                  }
+                }}
+              />
+              <div className="popover__save__buttons">
+                <button
+                  className="popover__save__buttons__cancel"
+                  onClick={handleCancelSave}
+                >
+                  cancel
+                </button>
+                <button
+                  className="popover__save__buttons__confirm"
+                  onClick={saveAsExperiment}
+                >
+                  confirm
+                </button>
+              </div>
+            </div>
+          </Popover>
           <div className="max-w-7xl mx-auto">
             {error && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
@@ -504,133 +654,198 @@ function ExperimentDesigner() {
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={steps.map(step => step.id)}
+                items={steps.map((step) => step.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-6">
-                  {Array.isArray(steps) && steps.map((step) => (
-                    <div key={step.id} className="bg-white rounded-lg shadow-sm">
-                      <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-                        <div className="flex items-center flex-1">
-                          <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                            {step.executionOrder}
+                  {Array.isArray(steps) &&
+                    steps.map((step) => (
+                      <div
+                        key={step.id}
+                        className="bg-white rounded-lg shadow-sm"
+                      >
+                        <div className="px-6 py-4 border-b border-gray-200 flex items-center">
+                          <div className="flex items-center flex-1">
+                            <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                              {step.executionOrder}
+                            </div>
+                            <Boxes className="w-5 h-5 text-gray-500 mr-3" />
+                            <h2 className="text-lg font-medium text-gray-900">
+                              {step.name}
+                            </h2>
+                            {getStatusIcon(step.status)}
                           </div>
-                          <Boxes className="w-5 h-5 text-gray-500 mr-3" />
-                          <h2 className="text-lg font-medium text-gray-900">{step.name}</h2>
-                          {getStatusIcon(step.status)}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => addSpace(step.id)}
+                              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => toggleNodeCollapse(step.id)}
+                              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                            >
+                              <ChevronDown
+                                className={`w-5 h-5 transform transition-transform ${
+                                  step.collapsed ? "" : "rotate-180"
+                                }`}
+                              />
+                            </button>
+                            <button
+                              onClick={() => removeNode(step.id)}
+                              className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => addSpace(step.id)}
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                          >
-                            <Plus className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => toggleNodeCollapse(step.id)}
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                          >
-                            <ChevronDown className={`w-5 h-5 transform transition-transform ${step.collapsed ? '' : 'rotate-180'}`} />
-                          </button>
-                          <button
-                            onClick={() => removeNode(step.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
 
-                      {!step.collapsed && (
-                        <div className="p-6 space-y-4">
-                          <div className="flex overflow-x-auto space-x-4 pb-4 snap-x">
-                              {Array.isArray(step.spaces) && step.spaces.map((space) => (
-                              <div key={space.id} className="border rounded-lg">
-                                <div className="px-4 py-3 border-b flex items-center bg-gray-50">
-                                  <div className="flex-1">
-                                    <h3 className="text-md font-medium text-gray-700 flex items-center">
-                                      {space.name}
-                                      {getStatusIcon(space.status)}
-                                      {space.executionTime && space.status === 'completed' && (
-                                        <span className="ml-2 text-sm text-gray-500">
-                                          ({space.executionTime}ms)
-                                        </span>
-                                      )}
-                                    </h3>
-                                    <div className="mt-2 flex items-center space-x-4">
-                                      <div className="flex items-center space-x-2">
-                                        <input
-                                          type="checkbox"
-                                          checked={space.gridSearchEnabled}
-                                          onChange={() => toggleGridSearch(step.id, space.id)}
-                                          className="rounded text-blue-600"
-                                        />
-                                        <label className="text-sm text-gray-600">Enable Search</label>
+                        {!step.collapsed && (
+                          <div className="p-6 space-y-4">
+                            <div className="flex overflow-x-auto space-x-4 pb-4 snap-x">
+                              {Array.isArray(step.spaces) &&
+                                step.spaces.map((space) => (
+                                  <div
+                                    key={space.id}
+                                    className="border rounded-lg"
+                                  >
+                                    <div className="px-4 py-3 border-b flex items-center bg-gray-50">
+                                      <div className="flex-1">
+                                        <h3 className="text-md font-medium text-gray-700 flex items-center">
+                                          {space.name}
+                                          {getStatusIcon(space.status)}
+                                          {space.executionTime &&
+                                            space.status === "completed" && (
+                                              <span className="ml-2 text-sm text-gray-500">
+                                                ({space.executionTime}ms)
+                                              </span>
+                                            )}
+                                        </h3>
+                                        <div className="mt-2 flex items-center space-x-4">
+                                          <div className="flex items-center space-x-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={space.gridSearchEnabled}
+                                              onChange={() =>
+                                                toggleGridSearch(
+                                                  step.id,
+                                                  space.id
+                                                )
+                                              }
+                                              className="rounded text-blue-600"
+                                            />
+                                            <label className="text-sm text-gray-600">
+                                              Enable Search
+                                            </label>
+                                          </div>
+                                          {space.gridSearchEnabled && (
+                                            <select
+                                              value={
+                                                space.searchMethod || "grid"
+                                              }
+                                              onChange={(e) =>
+                                                changeSearchMethod(
+                                                  step.id,
+                                                  space.id,
+                                                  e.target.value as SearchMethod
+                                                )
+                                              }
+                                              className="text-sm border rounded px-2 py-1"
+                                            >
+                                              <option value="grid">
+                                                Grid Search
+                                              </option>
+                                              <option value="random">
+                                                Random Search
+                                              </option>
+                                              <option value="bayesian">
+                                                Bayesian Optimization
+                                              </option>
+                                              <option value="evolutionary">
+                                                Evolutionary Algorithm
+                                              </option>
+                                            </select>
+                                          )}
+                                        </div>
                                       </div>
-                                      {space.gridSearchEnabled && (
-                                        <select
-                                          value={space.searchMethod || 'grid'}
-                                          onChange={(e) => changeSearchMethod(step.id, space.id, e.target.value as SearchMethod)}
-                                          className="text-sm border rounded px-2 py-1"
-                                        >
-                                          <option value="grid">Grid Search</option>
-                                          <option value="random">Random Search</option>
-                                          <option value="bayesian">Bayesian Optimization</option>
-                                          <option value="evolutionary">Evolutionary Algorithm</option>
-                                        </select>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {!space.workflow && (
-                                      <button
-                                        onClick={() => {
-                                          setSelectedNode(step.id);
-                                          setSelectedSpace(space.id);
-                                          setIsImportingWorkflow(true);
-                                        }}
-                                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                                        title="Import Workflow"
-                                      >
-                                        <Import className="w-4 h-4" />
-                                      </button>
-                                    )}
-                                    
-                                    <button
-                                      onClick={() => toggleSpaceCollapse(step.id, space.id)}
-                                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                                    >
-                                      <ChevronDown className={`w-4 h-4 transform transition-transform ${space.collapsed ? '' : 'rotate-180'}`} />
-                                    </button>
-                                    <button
-                                      onClick={() => removeSpace(step.id, space.id)}
-                                      className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </div>
+                                      <div className="flex items-center space-x-2">
+                                        {!space.workflow && (
+                                          <button
+                                            onClick={() => {
+                                              setSelectedNode(step.id);
+                                              setSelectedSpace(space.id);
+                                              setIsImportingWorkflow(true);
+                                            }}
+                                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                                            title="Import Workflow"
+                                          >
+                                            <Import className="w-4 h-4" />
+                                          </button>
+                                        )}
 
-                                {!space.collapsed && (
-                                  <div className="p-4 space-y-4">
-                                    {Array.isArray(space.steps) && space.steps.map((step) => (
-                                      <WorkflowStep
-                                        key={step.id}
-                                        step={step}
-                                        onRemove={() => removeStep(step.id, space.id, step.id)}
-                                        onSelectTask={(stepId, taskId) => selectTask(step.id, space.id, stepId, taskId)}
-                                        onParamChange={handleParamChange}
-                                      />
-                                    ))}
+                                        <button
+                                          onClick={() =>
+                                            toggleSpaceCollapse(
+                                              step.id,
+                                              space.id
+                                            )
+                                          }
+                                          className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                                        >
+                                          <ChevronDown
+                                            className={`w-4 h-4 transform transition-transform ${
+                                              space.collapsed
+                                                ? ""
+                                                : "rotate-180"
+                                            }`}
+                                          />
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            removeSpace(step.id, space.id)
+                                          }
+                                          className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {!space.collapsed && (
+                                      <div className="p-4 space-y-4">
+                                        {Array.isArray(space.steps) &&
+                                          space.steps.map((step) => (
+                                            <WorkflowStep
+                                              key={step.id}
+                                              step={step}
+                                              onRemove={() =>
+                                                removeStep(
+                                                  step.id,
+                                                  space.id,
+                                                  step.id
+                                                )
+                                              }
+                                              onSelectTask={(stepId, taskId) =>
+                                                selectTask(
+                                                  step.id,
+                                                  space.id,
+                                                  stepId,
+                                                  taskId
+                                                )
+                                              }
+                                              onParamChange={handleParamChange}
+                                            />
+                                          ))}
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            ))}
+                                ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    ))}
                 </div>
               </SortableContext>
             </DndContext>
@@ -661,7 +876,7 @@ function ExperimentDesigner() {
                     value={newStepName}
                     onChange={(e) => setNewStepName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newStepName.trim()) {
+                      if (e.key === "Enter" && newStepName.trim()) {
                         handleCreateNode();
                       }
                     }}
@@ -696,7 +911,7 @@ function ExperimentDesigner() {
           onImport={handleImportWorkflow}
         />
       )}
-      
+
       {isSaving && (
         <div className="modal-overlay">
           <div className="modal-content max-w-lg">

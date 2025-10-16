@@ -22,12 +22,12 @@ const Header: React.FC<HeaderProps> = ({ onSave, onSaveAs }) => {
     if (isLogin) {
       let url = '';
       specificationType === 'experiment'
-        ? (url = `/dashboard/projects/${projID}/experiments`)
-        : (url = `/dashboard/categories/${projID}/tasks`);
+        ? (url = `/dashboard/experiments`)
+        : (url = `/dashboard/workflows`);
       if (projID) {
         navigate(url);
       } else {
-        navigate(`/dashboard/projects`);
+        navigate(`/dashboard/categories`);
       }
     } else {
       navigate('/account/login');

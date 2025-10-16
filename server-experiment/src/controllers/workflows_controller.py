@@ -29,7 +29,8 @@ def get_workflow(work_id):
 @workflows.route("/create", methods=["OPTIONS", "POST"])
 @cross_origin()
 def create_workflow():
-    res = workflowHandler.create_workflow(g.username)
+    payload = request.json
+    res = workflowHandler.create_workflow(g.username, payload)
     fs_result, fs_status = fileSystemHandler.create_workflow(g.username, res)
     if fs_status != 201:
         return {"message": "Filesystem error", "error": fs_result}, 500

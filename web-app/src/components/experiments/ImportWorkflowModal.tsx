@@ -23,7 +23,7 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
   const getWorkflows = useCallback(() => {
     setIsLoading(true);
     workflowsRequest({
-      url: `work/projects/${projID}/workflows`,
+      url: `/api/workflows/all`,
     })
       .then((data) => {
         if (data.data.workflows) {

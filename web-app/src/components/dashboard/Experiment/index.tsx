@@ -159,7 +159,7 @@ const ProjectExperiment = () => {
     deleteExperimentRequest({
       url: `/api/experiments/${experiments[deleteIndex].id_experiment}`,
       method: 'DELETE',
-      data: { exp_name: experiments[deleteIndex].name },
+      data: { name: experiments[deleteIndex].name },
     })
       .then(() => {
         getExperiments();
@@ -197,7 +197,7 @@ const ProjectExperiment = () => {
         {isExperimentEmpty ? (
           <div className="specification__contents__empty">
             <span style={{ userSelect: "none" }} className="iconfont">&#xe6a6;</span>
-            <p style={{ userSelect: "none" }}>Empty Experiment</p>
+            <p style={{ userSelect: "none" }}>Empty Experiments</p>
           </div>
         ) : (
           <ul className="specification__contents__list">
