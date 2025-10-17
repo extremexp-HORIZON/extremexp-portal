@@ -10,14 +10,6 @@ ERROR_DUPLICATE = "Error: Duplicate name"
 @cross_origin()
 def get_workflows():
     workflows = workflowHandler.get_workflows(g.username)
-    # Check for missing files and clean up database
-    missing_files = []
-    for wrk in workflows:
-        exists = fileSystemHandler.detect_missing_file(g.username, "workflows", wrk["name"])
-        if not exists:
-            missing_files.append(wrk["id_workflow"])
-    workflowHandler.delete_workflows(missing_files)
-    workflows = [wrk for wrk in workflows if wrk["id_workflow"] not in missing_files]
     return {
         "message": "workflows retrieved",
         "data": {"workflows": workflows},
@@ -28,6 +20,11 @@ def get_workflows():
 @cross_origin()
 def get_workflow(work_id):
     workflow = workflowHandler.get_workflow(work_id)
+    # Check if the corresponding file exists (lazy cleanup)
+    if not fileSystemHandler.detect_missing_file(g.username, "workflows", workflow["name"]):
+        # File is missing, clean up the database entry
+        workflowHandler.delete_workflow(work_id)
+        return {"message": "workflow file not found", "error": "File was deleted"}, 404
     return {
         "message": "workflow retrieved",
         "data": {"workflow": workflow},

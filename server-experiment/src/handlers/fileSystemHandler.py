@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import shutil
 from datetime import datetime
+from services.file_watcher import register_api_event
 
 
 class FileSystemHandler:
@@ -14,7 +15,7 @@ class FileSystemHandler:
         filepath = self.workspace_path / username / "experiments" / f"{exp_name}.xxp"
         if filepath.exists():
             return {"message": f"experiment name {exp_name} already exists"}, 406
-
+        register_api_event('create', username, "experiments", exp_name)
         os.makedirs(self.workspace_path / username / "experiments", exist_ok=True)
         with open(filepath, 'w') as fileobject:
             fileobject.write("")
@@ -25,7 +26,7 @@ class FileSystemHandler:
         filepath = self.workspace_path / username / "workflows" / f"{workflow_name}.xxp"
         if filepath.exists():
             return {"message": f"workflow name {workflow_name} already exists"}, 406
-
+        register_api_event('create', username, "workflows", workflow_name)
         filepath.parent.mkdir(parents=True, exist_ok=True)
         filepath.write_text("", encoding='utf-8')
 
@@ -37,6 +38,7 @@ class FileSystemHandler:
             return {"message": f"experiment name {old_experiment_name} does not exist"}, 404
 
         if new_experiment_name:
+            register_api_event('rename', username, "experiments", old_experiment_name)
             os.rename(filepath, self.workspace_path / username / "experiments" / f"{new_experiment_name}.xxp")
             return {"message": f"experiment {old_experiment_name} was renamed to {new_experiment_name}"}, 200
 
@@ -47,9 +49,9 @@ class FileSystemHandler:
         targetPath = self.workspace_path / username / "workflows" / f"{new_workflow_name}.xxp"
         if not sourcePath.exists():
             return {"message": f"workflow name {old_workflow_name} does not exist"}, 404
-        print(sourcePath)
-        print(targetPath)
+
         if new_workflow_name:
+            register_api_event('rename', username, "workflows", old_workflow_name)
             os.rename(sourcePath, targetPath)
             return {"message": f"workflow {old_workflow_name} was renamed to {new_workflow_name}"}, 200
 
@@ -60,6 +62,8 @@ class FileSystemHandler:
         if not filepath.exists():
             return {"message": f"experiment name {experiment_name} does not exist"}, 404
         try:
+            # Register this deletion to prevent watcher from cleaning up database
+            register_api_event('delete', username, "experiments", experiment_name)
             os.remove(filepath)
             return {"message": f"{experiment_name} has been deleted"}, 204
         except Exception as e:
@@ -70,6 +74,8 @@ class FileSystemHandler:
         if not filepath.exists():
             return {"message": f"workflow name {workflow_name} does not exist"}, 404
         try:
+            # Register this deletion to prevent watcher from cleaning up database
+            register_api_event('delete', username, "workflows", workflow_name)
             os.remove(filepath)
             return {"message": f"{workflow_name} has been deleted"}, 204
         except Exception as e:
@@ -80,7 +86,11 @@ class FileSystemHandler:
         if not filepath.exists():
             return {"message": f"experiment name {experiment_name} does not exist"}, 404
 
+        # Register this modification to prevent watcher from processing it
+        register_api_event('modify', username, "experiments", experiment_name)
+
         with open(filepath, 'w', encoding='utf-8') as fileobject:
+            # TODO: make sure content gets converted to DSL format before writing
             fileobject.write(json.dumps(content))
 
         return {"message": f"{experiment_name} has been updated"}, 200
@@ -90,7 +100,11 @@ class FileSystemHandler:
         if not filepath.exists():
             return {"message": f"workflow name {workflow_name} does not exist"}, 404
 
+        # Register this modification to prevent watcher from processing it
+        register_api_event('modify', username, "workflows", workflow_name)
+
         with open(filepath, 'w', encoding='utf-8') as fileobject:
+            # TODO: make sure content gets converted to DSL format before writing
             fileobject.write(json.dumps(content))
 
         return {"message": f"{workflow_name} has been updated"}, 200

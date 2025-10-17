@@ -4,6 +4,9 @@ import time
 import calendar
 from dbClient import mongo_client
 import uuid
+from config.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class WorkflowHandler(object):
@@ -53,6 +56,7 @@ class WorkflowHandler(object):
             query["create_at"] = create_time
             query["update_at"] = create_time
         self.collection_workflow.insert_one(query)
+        logger.info(f"Workflow created on MongoDB: {query}")
         return workflow_name if workflow_name else payload["name"]
 
     def delete_workflow(self, work_id):
@@ -80,6 +84,13 @@ class WorkflowHandler(object):
 
         return True
 
+    def update_workflow_name_from_file_name(self, username: str, old_workflow_name: str, new_workflow_name: str):
+        update_time = calendar.timegm(time.gmtime())
+        query = {"id_workflow": {"$regex": username}, "name": old_workflow_name}
+        new_values = {"$set": {"name": new_workflow_name, "update_at": update_time}}
+        self.collection_workflow.update_one(query, new_values)
+        return True
+
     def update_workflow_graphical_model(self, work_id, graphical_model):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_workflow": work_id}
@@ -88,6 +99,13 @@ class WorkflowHandler(object):
         }
         self.collection_workflow.update_one(query, new_values)
 
+        return True
+    
+    def update_workflow_graphical_model_from_file_name(self, username: str, workflow_name: str, graphical_model: dict):
+        update_time = calendar.timegm(time.gmtime())
+        query = {"id_workflow": {"$regex": username}, "name": workflow_name}
+        new_values = {"$set": {"graphical_model": graphical_model, "update_at": update_time}}
+        self.collection_workflow.update_one(query, new_values)
         return True
 
 

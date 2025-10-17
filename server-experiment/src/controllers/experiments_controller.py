@@ -10,14 +10,6 @@ ERROR_DUPLICATE = "Error: Duplicate name"
 @cross_origin()
 def get_experiments():
     experiments = experimentHandler.get_experiments(g.username)
-    # Check for missing files and clean up database
-    missing_files = []
-    for exp in experiments:
-        exists = fileSystemHandler.detect_missing_file(g.username, "experiments", exp["name"])
-        if not exists:
-            missing_files.append(exp["id_experiment"])
-    experimentHandler.delete_experiments(missing_files)
-    experiments = [exp for exp in experiments if exp["id_experiment"] not in missing_files]
     return {
         "message": "experiments retrieved",
         "data": {"experiments": experiments},
@@ -42,6 +34,11 @@ def create_experiment():
 @cross_origin()
 def get_experiment(experiment_id):
     experiment = experimentHandler.get_experiment(experiment_id)
+    # Check if the corresponding file exists (lazy cleanup)
+    if not fileSystemHandler.detect_missing_file(g.username, "experiments", experiment["name"]):
+        # File is missing, clean up the database entry
+        experimentHandler.delete_experiment(experiment_id)
+        return {"message": "experiment file not found", "error": "File was deleted"}, 404
     return {
         "message": "experiment retrieved",
         "data": {"experiment": experiment},

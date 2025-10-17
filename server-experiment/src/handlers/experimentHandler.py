@@ -4,6 +4,9 @@ import time
 import calendar
 from dbClient import mongo_client
 import uuid
+from config.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class ExperimentHandler(object):
@@ -60,6 +63,7 @@ class ExperimentHandler(object):
             query["create_at"] = create_time
             query["update_at"] = create_time
         self.collection_experiment.insert_one(query)
+        logger.info(f"Experiment created on MongoDB: {query}")
         return exp_name if exp_name else payload["name"]
 
     def delete_experiment(self, exp_id: str):
@@ -77,6 +81,13 @@ class ExperimentHandler(object):
         self.collection_experiment.update_one(query, new_values)
         return True
 
+    def update_experiment_name_from_file_name(self, username: str, old_experiment_name: str, new_experiment_name: str):
+        update_time = calendar.timegm(time.gmtime())
+        query = {"id_experiment": {"$regex": username}, "name": old_experiment_name}
+        new_values = {"$set": {"name": new_experiment_name, "update_at": update_time}}
+        self.collection_experiment.update_one(query, new_values)
+        return True
+
     def update_experiment_graphical_model(self, exp_id: str, steps: list):
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": exp_id}
@@ -85,6 +96,13 @@ class ExperimentHandler(object):
         }
         self.collection_experiment.update_one(query, new_values)
 
+        return True
+    
+    def update_experiment_steps_from_file_name(self, username: str, experiment_name: str, steps: dict):
+        update_time = calendar.timegm(time.gmtime())
+        query = {"id_experiment": {"$regex": username}, "name": experiment_name}
+        new_values = {"$set": {"steps": steps, "update_at": update_time}}
+        self.collection_experiment.update_one(query, new_values)
         return True
 
 
