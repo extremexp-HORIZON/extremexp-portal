@@ -1,7 +1,14 @@
 from pathlib import Path
+from typing import TYPE_CHECKING
 from watchdog.events import FileSystemEventHandler
 from config.logging_config import get_logger
 from .event_registry import should_ignore_event
+
+if TYPE_CHECKING:
+    from handlers.experimentHandler import ExperimentHandler
+    from handlers.workflowHandler import WorkflowHandler
+    from handlers.fileSystemHandler import FileSystemHandler
+    from handlers.convertorHandler import ConvertorHandler
 
 logger = get_logger(__name__)
 
@@ -13,7 +20,7 @@ class FileSystemSyncHandler(FileSystemEventHandler):
     and updates corresponding database entries.
     """
 
-    def __init__(self, experiment_handler, workflow_handler):
+    def __init__(self, experiment_handler: "ExperimentHandler", workflow_handler: "WorkflowHandler", file_system_handler: "FileSystemHandler", convertor_handler: "ConvertorHandler"):
         """
         Initialize the handler with database handlers.
 
@@ -24,6 +31,8 @@ class FileSystemSyncHandler(FileSystemEventHandler):
         super().__init__()
         self.experiment_handler = experiment_handler
         self.workflow_handler = workflow_handler
+        self.file_system_handler = file_system_handler
+        self.convertor_handler = convertor_handler
         logger.info("FileSystemSyncHandler initialized")
 
     def on_deleted(self, event):
@@ -168,7 +177,7 @@ class FileSystemSyncHandler(FileSystemEventHandler):
                 return
 
             # Process the rename based on file type
-            self._handle_file_rename(old_username, old_filename, old_parent_dir, new_username, new_filename, new_parent_dir, event.dest_path)
+            self._handle_file_move(old_username, old_filename, old_parent_dir, new_username, new_filename, new_parent_dir, event.dest_path)
 
         except Exception as e:
             logger.error(f"Error processing renamed file {event.src_path}: {str(e)}", exc_info=True)
@@ -187,20 +196,31 @@ class FileSystemSyncHandler(FileSystemEventHandler):
         try:
             logger.info(f"{file_type.capitalize()} file modified externally: {file_name} by user: {username}")
 
-            # Add file-type-specific logic here
             if file_type == "experiments":
+                # Read file content
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                # TODO: Use Convert API to get json payload from DSL content
-                # For now, we just log the modification
-                logger.debug(f"Experiment content modified: {content}")
+                steps = self.convertor_handler.dsl2experiment(file_name, content)
+                if steps:
+                    # Update the experiment handler with the new steps
+                    self.experiment_handler.update_experiment_steps_from_file_name(username, file_name, steps)
+                    logger.info(f"Successfully updated experiment {file_name} to database")
+                else:
+                    logger.error(f"Error couldn't fetch experiment steps from file content")
+                    return
                 pass
             elif file_type == "workflows":
+                # Read file content
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                # TODO: Use Convert API to get json payload from DSL content
-                # For now, we just log the modification
-                logger.debug(f"Workflow content modified: {content}")
+                graphical_model = self.convertor_handler.dsl2workflow(file_name, content)
+                if graphical_model:
+                    # Update the workflow handler with the new graphical model
+                    self.workflow_handler.update_workflow_graphical_model_from_file_name(username, file_name, graphical_model)
+                    logger.info(f"Successfully updated workflow {file_name} to database")
+                else:
+                    logger.error(f"Error couldn't fetch workflow graphical model from file content")
+                    return
                 pass
             else:
                 logger.warning(f"Unknown file type: {file_type}")
@@ -245,7 +265,7 @@ class FileSystemSyncHandler(FileSystemEventHandler):
         except Exception as e:
             logger.error(f"Error handling {file_type} creation {file_name}: {str(e)}", exc_info=True)
 
-    def _handle_file_rename(self, old_username, old_file_name, old_file_type, new_username, new_file_name, new_file_type, file_path):
+    def _handle_file_move(self, old_username, old_file_name, old_file_type, new_username, new_file_name, new_file_type, file_path):
         """
         Handle file rename for any file type (experiments, workflows, etc.).
         You can implement custom logic here (e.g., update the name in the database).
@@ -259,16 +279,52 @@ class FileSystemSyncHandler(FileSystemEventHandler):
             new_file_type: The new type of file ('experiments', 'workflows', etc.)
             file_path: Full path to the renamed file
         """
-        # FIXME: Currently system identifies rename as delete + create + modify.
+        # FIXME: Currently system identifies rename as delete + create + modify on MacOS.
         try:
             logger.info(f"{new_file_type.capitalize()} file renamed: {old_file_name} -> {new_file_name} by user: {new_username}")
 
             # Add file-type-specific logic here
             if new_file_type == "experiments":
-                self.experiment_handler.update_experiment_name_from_file_name(new_username, old_file_name, new_file_name)
+                # Check if experiment exists in the database
+                experiment = self.experiment_handler.get_experiment_from_file_name(old_username, old_file_name)
+                if not experiment:
+                    # Get JSON steps
+                    logger.info(f"Experiment to rename not found in DB, creating new entry: {old_file_name} for user: {old_username}")
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    json_steps = self.convertor_handler.dsl2experiment(new_file_name, content)
+                    payload = {
+                        "name": new_file_name,
+                        "steps": json_steps,
+                    }
+                    self.experiment_handler.create_experiment(new_username, payload)
+                    logger.info(f"Experiment created in DB after rename: {new_file_name} for user: {new_username}")
+                    return
+                else:
+                    logger.info(f"Experiment found in DB, proceeding with rename: {old_file_name} -> {new_file_name} for user: {old_username}")
+                    self.experiment_handler.update_experiment_name_from_file_name(new_username, old_file_name, new_file_name)
+                    logger.info(f"Experiment renamed in DB: {old_file_name} -> {new_file_name} for user: {new_username}")
                 pass
             elif new_file_type == "workflows":
-                self.workflow_handler.update_workflow_name_from_file_name(new_username, old_file_name, new_file_name)
+                # Check if workflow exists in the database
+                experiment = self.experiment_handler.get_experiment_from_file_name(old_username, old_file_name)
+                if not experiment:
+                    # Get JSON graphical
+                    logger.info(f"Experiment to rename not found in DB, creating new entry: {old_file_name} for user: {old_username}")
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    json_steps = self.convertor_handler.dsl2workflow(new_file_name, content)
+                    payload = {
+                        "name": new_file_name,
+                        "steps": json_steps,
+                    }
+                    self.workflow_handler.create_workflow(new_username, payload)
+                    logger.info(f"Workflow created in DB after rename: {new_file_name} for user: {new_username}")
+                    return
+                else:
+                    logger.info(f"Workflow found in DB, proceeding with rename: {old_file_name} -> {new_file_name} for user: {old_username}")
+                    self.workflow_handler.update_workflow_name_from_file_name(new_username, old_file_name, new_file_name)
+                    logger.info(f"Workflow renamed in DB: {old_file_name} -> {new_file_name} for user: {new_username}")
                 pass
             else:
                 logger.warning(f"Unknown file type: {new_file_type}")

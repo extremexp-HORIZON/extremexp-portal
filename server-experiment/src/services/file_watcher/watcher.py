@@ -1,8 +1,14 @@
 import threading
 from pathlib import Path
+from typing import TYPE_CHECKING
 from watchdog.observers import Observer
 from config.logging_config import get_logger
 from .event_handlers import FileSystemSyncHandler
+if TYPE_CHECKING:
+    from handlers.experimentHandler import ExperimentHandler
+    from handlers.workflowHandler import WorkflowHandler
+    from handlers.fileSystemHandler import FileSystemHandler
+    from handlers.convertorHandler import ConvertorHandler
 
 logger = get_logger(__name__)
 
@@ -13,7 +19,7 @@ class FileSystemWatcher:
     creations, and renames in the workspace.
     """
 
-    def __init__(self, workspace_path, experiment_handler, workflow_handler):
+    def __init__(self, workspace_path: str, experiment_handler: "ExperimentHandler", workflow_handler: "WorkflowHandler", file_system_handler: "FileSystemHandler", convertor_handler: "ConvertorHandler"):
         """
         Initialize the filesystem watcher.
 
@@ -25,6 +31,8 @@ class FileSystemWatcher:
         self.workspace_path = Path(workspace_path)
         self.experiment_handler = experiment_handler
         self.workflow_handler = workflow_handler
+        self.file_system_handler = file_system_handler
+        self.convertor_handler = convertor_handler
         self.observer = None
         self.is_running = False
         self._lock = threading.Lock()
@@ -49,7 +57,9 @@ class FileSystemWatcher:
                 # Create event handler
                 event_handler = FileSystemSyncHandler(
                     self.experiment_handler,
-                    self.workflow_handler
+                    self.workflow_handler,
+                    self.file_system_handler,
+                    self.convertor_handler
                 )
 
                 # Create observer
@@ -103,10 +113,10 @@ class FileSystemWatcher:
 
 
 # Global watcher instance
-_watcher_instance = None
+_watcher_instance: "FileSystemWatcher | None" = None
 
 
-def initialize_watcher(workspace_path, experiment_handler, workflow_handler):
+def initialize_watcher(workspace_path: str, experiment_handler: "ExperimentHandler", workflow_handler: "WorkflowHandler", file_system_handler: "FileSystemHandler", convertor_handler: "ConvertorHandler") -> "FileSystemWatcher":
     """
     Initialize the global watcher instance.
 
@@ -127,13 +137,15 @@ def initialize_watcher(workspace_path, experiment_handler, workflow_handler):
     _watcher_instance = FileSystemWatcher(
         workspace_path,
         experiment_handler,
-        workflow_handler
+        workflow_handler,
+        file_system_handler,
+        convertor_handler
     )
 
     return _watcher_instance
 
 
-def get_watcher():
+def get_watcher() -> "FileSystemWatcher | None":
     """
     Get the global watcher instance.
 

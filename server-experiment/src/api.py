@@ -1,6 +1,6 @@
 from flask import Flask, request, g
 from flask_cors import CORS, cross_origin
-from handlers import userAuthHandler, experimentHandler, workflowHandler
+from handlers import userAuthHandler, experimentHandler, workflowHandler, fileSystemHandler, convertorHandler
 from controllers import experiments, categories, tasks, workflows
 from services.file_watcher import initialize_watcher, get_watcher
 from config.logging_config import setup_logging
@@ -25,7 +25,9 @@ app.register_blueprint(workflows, url_prefix=f"{BASE_PREFIX}/workflows")
 watcher = initialize_watcher(
     workspace_path="/workspace",
     experiment_handler=experimentHandler,
-    workflow_handler=workflowHandler
+    workflow_handler=workflowHandler,
+    file_system_handler=fileSystemHandler,
+    convertor_handler=convertorHandler
 )
 watcher.start()
 

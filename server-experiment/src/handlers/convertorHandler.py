@@ -2,13 +2,17 @@ import json
 import itertools
 import requests
 from nanoid import generate
+from config.logging_config import get_logger
+from typing import Optional, Dict
 
+logger = get_logger(__name__)
 
 class ConvertorHandler:
     """ConvertorHandler class is responsible for converting the graphical model to the EMF model."""
 
     def __init__(self):
         self.url = "http://emf-cloud-service:8081/api/v2"
+        self.convert_base_url = "http://host.docker.internal:8866/api"
         self.meta_model_loc = self.__init_meta_model_location()
         self.root_type = "Specification"
         self.workflow = []
@@ -408,31 +412,50 @@ class ConvertorHandler:
         }
 
         return self.__emf_object_type(type_map.get(node["type"], None))
-    
-    def dsl2graph(project_id, experiment_name):
-        filepath = workspace_path / g.username / f"{project_id}" / "experiments" / f"{experiment_name}.xxp"
-        if not filepath.exists():
-            return {"message": f"experiment name {experiment_name} does not exist"}, 404
 
-        #TODO: read the DSL and convert it to graph_json
-        graph_json = {}
-
-        return graph_json, 200
-    
-    def graph2dsl(project_id, experiment_name):
-        filepath = workspace_path / g.username / f"{project_id}" / "experiments" / f"{experiment_name}.xxp"
-        if not filepath.exists():
-            #TODO
-            print ("creating ...")
-
+    def workflow2dsl(self, workflow_name: str, json_content: dict) -> Optional[str]:
+        logger.info(f"Converting json to DSL for workflow {workflow_name}")
+        response = requests.post(f"{self.convert_base_url}/workflow2dsl?name={workflow_name}", json=json_content)
+        if response.status_code == 200:
+            dsl_content = response.text
+            logger.info(f"Successfully converted workflow {workflow_name} to DSL")
+            return dsl_content
         else:
-            #TODO
-            print ("updating ...")
+            logger.error(f"Error converting to DSL: {response.text}")
+            return None
 
-        # TODO: read the json form data, and convert it DSL and store it
-        graph_json = request.json
+    def experiment2dsl(self, experiment_name: str, json_content: dict) -> Optional[str]:
+        logger.info(f"Converting json to DSL for experiment {experiment_name}")
+        response = requests.post(f"{self.convert_base_url}/experiment2dsl?name={experiment_name}", json=json_content)
+        if response.status_code == 200:
+            dsl_content = response.text
+            logger.info(f"Successfully converted experiment {experiment_name} to DSL")
+            return dsl_content
+        else:
+            logger.error(f"Error converting to DSL: {response.text}")
+            return None
 
-        return {"message": "not done yet"}, 201
+    def dsl2experiment(self, experiment_name: str, dsl_content: str) -> Optional[Dict]:
+        logger.info(f"Converting DSL to json for experiment {experiment_name}")
+        response = requests.post(f"{self.convert_base_url}/dsl2experiment?name={experiment_name}", data=dsl_content)
+        if response.status_code == 200:
+            json_content = response.json()
+            logger.info(f"Successfully converted DSL to json for experiment {experiment_name}")
+            return json_content
+        else:
+            logger.error(f"Error converting DSL to json: {response.text}")
+            return None
+
+    def dsl2workflow(self, workflow_name: str, dsl_content: str) -> Optional[Dict]:
+        logger.info(f"Converting DSL to json for workflow {workflow_name}")
+        response = requests.post(f"{self.convert_base_url}/dsl2workflow?name={workflow_name}", data=dsl_content)
+        if response.status_code == 200:
+            json_content = response.json()
+            logger.info(f"Successfully converted DSL to json for workflow {workflow_name}")
+            return json_content
+        else:
+            logger.error(f"Error converting DSL to json: {response.text}")
+            return None
 
 
-convertorHandler = ConvertorHandler()
+convertorHandler = ConvertorHandler() 

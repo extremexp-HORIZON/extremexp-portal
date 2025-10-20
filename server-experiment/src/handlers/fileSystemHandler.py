@@ -4,7 +4,11 @@ from pathlib import Path
 import shutil
 from datetime import datetime
 from services.file_watcher import register_api_event
+from config.logging_config import get_logger
+from handlers import convertorHandler
+import requests
 
+logger = get_logger(__name__)
 
 class FileSystemHandler:
     def __init__(self):
@@ -89,11 +93,13 @@ class FileSystemHandler:
         # Register this modification to prevent watcher from processing it
         register_api_event('modify', username, "experiments", experiment_name)
 
-        with open(filepath, 'w', encoding='utf-8') as fileobject:
-            # TODO: make sure content gets converted to DSL format before writing
-            fileobject.write(json.dumps(content))
+        dsl_content = convertorHandler.experiment2dsl(experiment_name, content)
 
-        return {"message": f"{experiment_name} has been updated"}, 200
+        if dsl_content:
+            with open(filepath, 'w', encoding='utf-8') as fileobject:
+                fileobject.write(dsl_content)
+        else:
+            return {"message": f"Error converting experiment {experiment_name} to DSL"}, 500
 
     def update_workflow(self, username: str, workflow_name: str, content: str) -> dict:
         filepath = self.workspace_path / username / "workflows" / f"{workflow_name}.xxp"
@@ -103,11 +109,13 @@ class FileSystemHandler:
         # Register this modification to prevent watcher from processing it
         register_api_event('modify', username, "workflows", workflow_name)
 
-        with open(filepath, 'w', encoding='utf-8') as fileobject:
-            # TODO: make sure content gets converted to DSL format before writing
-            fileobject.write(json.dumps(content))
+        dsl_content = convertorHandler.workflow2dsl(workflow_name, content)
 
-        return {"message": f"{workflow_name} has been updated"}, 200
+        if dsl_content:
+            with open(filepath, 'w', encoding='utf-8') as fileobject:
+                fileobject.write(dsl_content)
+        else:
+            return {"message": f"Error converting workflow {workflow_name} to DSL"}, 500
 
     def get_experiments(self, username: str) -> dict:
         experiments = [ exp for exp in (self.workspace_path / username / "experiments").glob(f"*.xxp") ]
@@ -133,24 +141,6 @@ class FileSystemHandler:
             text = dsl.read()
 
         return {"message": f"workflow {workflow_name} retrieved", "data": {"dsl": text}}, 200
-    
-    def get_experiment_last_modified(self, username: str, experiment_name: str) -> dict:
-        filepath = self.workspace_path / username / "experiments" / f"{experiment_name}.xxp"
-        if not filepath.exists():
-            return {"message": f"experiment name {experiment_name} does not exist"}, 404
-
-        last_modified_time = os.path.getmtime(filepath)
-
-        return {"message": f"experiment {experiment_name} last modified time retrieved", "data": {"last_modified": last_modified_time}}, 200
-
-    def get_workflow_last_modified(self, username: str, workflow_name: str) -> dict:
-        filepath = self.workspace_path / username / "workflows" / f"{workflow_name}.xxp"
-        if not filepath.exists():
-            return {"message": f"workflow name {workflow_name} does not exist"}, 404
-
-        last_modified_time = os.path.getmtime(filepath)
-
-        return {"message": f"workflow {workflow_name} last modified time retrieved", "data": {"last_modified": last_modified_time}}, 200
 
     def archive_experiment(self, username: str, experiment_name: str) -> dict:
         filepath = self.workspace_path / username / "experiments" / f"{experiment_name}.xxp"
