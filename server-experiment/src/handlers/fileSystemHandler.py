@@ -98,10 +98,11 @@ class FileSystemHandler:
         if dsl_content:
             with open(filepath, 'w', encoding='utf-8') as fileobject:
                 fileobject.write(dsl_content)
+            return {"message": f"experiment {experiment_name} updated successfully"}, 200
         else:
             return {"message": f"Error converting experiment {experiment_name} to DSL"}, 500
 
-    def update_workflow(self, username: str, workflow_name: str, content: str) -> dict:
+    def update_workflow(self, username: str, workflow_name: str, content: dict) -> dict:
         filepath = self.workspace_path / username / "workflows" / f"{workflow_name}.xxp"
         if not filepath.exists():
             return {"message": f"workflow name {workflow_name} does not exist"}, 404
@@ -114,6 +115,7 @@ class FileSystemHandler:
         if dsl_content:
             with open(filepath, 'w', encoding='utf-8') as fileobject:
                 fileobject.write(dsl_content)
+            return {"message": f"workflow {workflow_name} updated successfully"}, 200
         else:
             return {"message": f"Error converting workflow {workflow_name} to DSL"}, 500
 

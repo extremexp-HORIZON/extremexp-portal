@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 _ignored_events = {}
 _ignored_events_lock = threading.Lock()
 
-_IGNORE_EXPIRY_SECONDS = 5  # How long to ignore an event after it's registered
+_IGNORE_EXPIRY_SECONDS = 6  # How long to ignore an event after it's registered
 
 
 def register_api_event(event_type, username, file_type, file_name):
@@ -58,7 +58,7 @@ def should_ignore_event(event_type, username, file_type, file_name):
 
         # Check if this event should be ignored
         if key in _ignored_events:
-            del _ignored_events[key]  # Remove after first use
+            # Don't delete - let it expire naturally to handle multiple rapid events from same file write
             logger.info(f"Ignoring API-initiated {event_type}: {key}")
             return True
 
