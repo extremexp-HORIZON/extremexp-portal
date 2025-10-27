@@ -184,7 +184,16 @@ const TaskConfigPanel: React.FC<TaskConfigPanelProps> = ({ updateSideBar,onSave 
   const handleSetCurrentVariant = (id: string) => {
     const prevId = selectedNode?.data?.currentVariant;
     if(selectedNode?.data){
-      selectedNode.data.currentVariant = id;
+      // Update the node data immutably through Zustand store
+      updateNodeData(
+        {
+          ...selectedNode.data,
+          currentVariant: id,
+        },
+        selectedNodeId
+      );
+
+      // Save immediately - getCurrentGraphOnBoard now gets fresh state from Zustand
       onSave();
     }
 

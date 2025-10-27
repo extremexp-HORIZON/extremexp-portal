@@ -88,7 +88,7 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
                           implementationRef: variant.implementationRef,
                           description: variant.description,
                           hyperParameters: (variant.parameters || []).map((param: any) => {
-                            const paramValues = Array.isArray(param.values) ? param.values : [];
+                            const paramValues = Array.isArray(param.values) ? param.values : [param.values?.min, param.values?.max, param.values?.step];
                             const isNumericType = param.type === 'integer' || param.type === 'real';
                             
                             return {
@@ -254,14 +254,14 @@ export function ImportWorkflowModal({ onClose, onImport }: ImportWorkflowModalPr
                                       {task.hyperParameters.map((param, idx) => (
                                         <li key={idx}>
                                           <span className="font-medium">{param.name}</span>
-                                          {param.type === 'categorical' && param.options && (
+                                          {/* {param.type === 'categorical' && param.options && (
                                             <>: [Options: {param.options.join(', ')}]</>
                                           )}
                                           {param.type === 'number' && param.range && (
                                             <>: [Range: {param.range[0]} - {param.range[1]}]</>
-                                          )}
+                                          )} */}
                                           {param.default !== undefined && (
-                                            <> (Default: {param.default})</>
+                                            <> (Default: {String(param.values)})</>
                                           )}
                                         </li>
                                       ))}

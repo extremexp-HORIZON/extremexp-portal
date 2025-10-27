@@ -25,7 +25,7 @@ import {
   Import,
   AlertCircle,
 } from "lucide-react";
-import { WorkflowStep } from "./WorkflowStep";
+import WorkflowStep from "./WorkflowStep";
 import { ImportWorkflowModal } from "./ImportWorkflowModal";
 import {
   ExperimentSave,
@@ -285,7 +285,7 @@ function ExperimentDesigner() {
         return step;
       })
     );
-  };
+  };  
 
   const selectTask = (
     stepId: string,
@@ -293,12 +293,14 @@ function ExperimentDesigner() {
     newStepId: string,
     taskId: string
   ) => {
-    setSteps(
-      steps.map((step) => {
-        if (step.id === stepId) {
+    if (steps.findIndex(step => step.id === stepId && step.spaces.find(space => space.id === spaceId && space.steps.find(step => step.id === newStepId && step.tasks.find(task => task.id === taskId && task.selected)))) !== -1) {
+      return; // Task is already selected, do nothing
+    }
+    setSteps(steps.map((experimentStep) => {
+        if (experimentStep.id === stepId) {
           return {
-            ...step,
-            spaces: step.spaces.map((space) => {
+            ...experimentStep,
+            spaces: experimentStep.spaces.map((space) => {
               if (space.id === spaceId) {
                 return {
                   ...space,
@@ -320,7 +322,7 @@ function ExperimentDesigner() {
             }),
           };
         }
-        return step;
+        return experimentStep;
       })
     );
   };
@@ -385,12 +387,17 @@ function ExperimentDesigner() {
               if (space.id === selectedSpace) {
                 return {
                   ...space,
-                  workflow_id: workflow.id, // <-- set the workflow_id here
+                  workflow_id: workflow.id,
                   steps: [
                     ...space.steps,
                     ...workflow.steps.map((step) => ({
                       ...step,
                       id: `${step.id}-${Date.now()}`,
+                      // Ensure all tasks have the first one selected by default
+                      tasks: step.tasks.map((task, index) => ({
+                        ...task,
+                        selected: index === 0, // Select only the first task
+                      })),
                     })),
                   ],
                 };
@@ -447,7 +454,7 @@ function ExperimentDesigner() {
       .then(() => {
         message("Experiment saved successfully");
         setIsSaving(false);
-        navigate('/dashboard/experiments');
+        navigate("/dashboard/experiments");
       })
       .catch((error) => {
         message(error.response?.data?.message || error.message);
@@ -556,36 +563,41 @@ function ExperimentDesigner() {
   }
 
   const handleParamChange = (
-    stepId: string,
+    experimentStepId: string,
+    spaceId: string,
     taskId: string,
+    taskVariantId: string,
     paramName: string,
-    newValue: string | number | boolean
+    newValues: (string | number | boolean)[]
   ) => {
     setSteps((steps) =>
-      steps.map((step) =>
-        step.id === stepId
+      steps.map((experimentStep) =>
+        experimentStep.id === experimentStepId
           ? {
-              ...step,
-              spaces: step.spaces.map((space) => ({
-                ...space,
-                steps: space.steps.map((wfStep) => ({
-                  ...wfStep,
-                  tasks: wfStep.tasks.map((task) =>
-                    task.id === taskId
+              ...experimentStep,
+              spaces: experimentStep.spaces.map((space) => (
+                space.id === spaceId 
+                ? {...space, steps: space.steps.map((task) => (
+                  task.id === taskId ? {
+                  ...task,
+                  tasks: task.tasks.map((taskVariant) =>
+                    taskVariant.id === taskVariantId
                       ? {
-                          ...task,
-                          hyperParameters: task.hyperParameters.map((param) =>
+                          ...taskVariant,
+                          hyperParameters: taskVariant.hyperParameters.map((param) =>
                             param.name === paramName
-                              ? { ...param, value: newValue }
+                              ? { ...param, values: newValues }
                               : param
                           ),
                         }
-                      : task
+                      : taskVariant
                   ),
-                })),
-              })),
+                }
+                : task)),
+              }
+                : space)),
             }
-          : step
+          : experimentStep
       )
     );
   };
@@ -661,41 +673,41 @@ function ExperimentDesigner() {
               >
                 <div className="space-y-6">
                   {Array.isArray(steps) &&
-                    steps.map((step) => (
+                    steps.map((experimentStep) => (
                       <div
-                        key={step.id}
+                        key={experimentStep.id}
                         className="bg-white rounded-lg shadow-sm"
                       >
                         <div className="px-6 py-4 border-b border-gray-200 flex items-center">
                           <div className="flex items-center flex-1">
                             <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                              {step.executionOrder}
+                              {experimentStep.executionOrder}
                             </div>
                             <Boxes className="w-5 h-5 text-gray-500 mr-3" />
                             <h2 className="text-lg font-medium text-gray-900">
-                              {step.name}
+                              {experimentStep.name}
                             </h2>
-                            {getStatusIcon(step.status)}
+                            {getStatusIcon(experimentStep.status)}
                           </div>
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => addSpace(step.id)}
+                              onClick={() => addSpace(experimentStep.id)}
                               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
                             >
                               <Plus className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => toggleNodeCollapse(step.id)}
+                              onClick={() => toggleNodeCollapse(experimentStep.id)}
                               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
                             >
                               <ChevronDown
                                 className={`w-5 h-5 transform transition-transform ${
-                                  step.collapsed ? "" : "rotate-180"
+                                  experimentStep.collapsed ? "" : "rotate-180"
                                 }`}
                               />
                             </button>
                             <button
-                              onClick={() => removeNode(step.id)}
+                              onClick={() => removeNode(experimentStep.id)}
                               className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
                             >
                               <X className="w-5 h-5" />
@@ -703,17 +715,17 @@ function ExperimentDesigner() {
                           </div>
                         </div>
 
-                        {!step.collapsed && (
+                        {!experimentStep.collapsed && (
                           <div className="p-6 space-y-4">
                             <div className="flex overflow-x-auto space-x-4 pb-4 snap-x">
-                              {Array.isArray(step.spaces) &&
-                                step.spaces.map((space) => (
+                              {Array.isArray(experimentStep.spaces) &&
+                                experimentStep.spaces.map((space) => (
                                   <div
                                     key={space.id}
                                     className="border rounded-lg"
                                   >
-                                    <div className="px-4 py-3 border-b flex items-center bg-gray-50">
-                                      <div className="flex-1">
+                                    <div className="px-4 py-3 border-b flex flex-col bg-gray-50 rounded-lg">
+                                      <div className="flex flex-row justify-between w-full">
                                         <h3 className="text-md font-medium text-gray-700 flex items-center">
                                           {space.name}
                                           {getStatusIcon(space.status)}
@@ -724,93 +736,91 @@ function ExperimentDesigner() {
                                               </span>
                                             )}
                                         </h3>
-                                        <div className="mt-2 flex items-center space-x-4">
-                                          <div className="flex items-center space-x-2">
-                                            <input
-                                              type="checkbox"
-                                              checked={space.gridSearchEnabled}
-                                              onChange={() =>
-                                                toggleGridSearch(
-                                                  step.id,
-                                                  space.id
-                                                )
-                                              }
-                                              className="rounded text-blue-600"
-                                            />
-                                            <label className="text-sm text-gray-600">
-                                              Enable Search
-                                            </label>
-                                          </div>
-                                          {space.gridSearchEnabled && (
-                                            <select
-                                              value={
-                                                space.searchMethod || "grid"
-                                              }
-                                              onChange={(e) =>
-                                                changeSearchMethod(
-                                                  step.id,
-                                                  space.id,
-                                                  e.target.value as SearchMethod
-                                                )
-                                              }
-                                              className="text-sm border rounded px-2 py-1"
+                                        <div className="flex items-center space-x-2">
+                                          {!space.workflow && (
+                                            <button
+                                              onClick={() => {
+                                                setSelectedNode(experimentStep.id);
+                                                setSelectedSpace(space.id);
+                                                setIsImportingWorkflow(true);
+                                              }}
+                                              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                                              title="Import Workflow"
                                             >
-                                              <option value="grid">
-                                                Grid Search
-                                              </option>
-                                              <option value="random">
-                                                Random Search
-                                              </option>
-                                              <option value="bayesian">
-                                                Bayesian Optimization
-                                              </option>
-                                              <option value="evolutionary">
-                                                Evolutionary Algorithm
-                                              </option>
-                                            </select>
+                                              <Import className="w-4 h-4" />
+                                            </button>
                                           )}
+
+                                          <button
+                                            onClick={() =>
+                                              toggleSpaceCollapse(
+                                                experimentStep.id,
+                                                space.id
+                                              )
+                                            }
+                                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                                          >
+                                            <ChevronDown
+                                              className={`w-4 h-4 transform transition-transform ${
+                                                space.collapsed
+                                                  ? ""
+                                                  : "rotate-180"
+                                              }`}
+                                            />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              removeSpace(experimentStep.id, space.id)
+                                            }
+                                            className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </button>
                                         </div>
                                       </div>
-                                      <div className="flex items-center space-x-2">
-                                        {!space.workflow && (
-                                          <button
-                                            onClick={() => {
-                                              setSelectedNode(step.id);
-                                              setSelectedSpace(space.id);
-                                              setIsImportingWorkflow(true);
-                                            }}
-                                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                                            title="Import Workflow"
-                                          >
-                                            <Import className="w-4 h-4" />
-                                          </button>
-                                        )}
-
-                                        <button
-                                          onClick={() =>
-                                            toggleSpaceCollapse(
-                                              step.id,
-                                              space.id
-                                            )
-                                          }
-                                          className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                                        >
-                                          <ChevronDown
-                                            className={`w-4 h-4 transform transition-transform ${
-                                              space.collapsed
-                                                ? ""
-                                                : "rotate-180"
-                                            }`}
+                                      <div className="mt-2 flex items-center space-x-4">
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="checkbox"
+                                            checked={space.gridSearchEnabled}
+                                            onChange={() =>
+                                              toggleGridSearch(
+                                                experimentStep.id,
+                                                space.id
+                                              )
+                                            }
+                                            className="rounded text-blue-600"
                                           />
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            removeSpace(step.id, space.id)
-                                          }
-                                          className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
-                                        >
-                                          <X className="w-4 h-4" />
-                                        </button>
+                                          <label className="text-sm text-gray-600">
+                                            Enable Search
+                                          </label>
+                                        </div>
+                                        {space.gridSearchEnabled && (
+                                          <select
+                                            value={space.searchMethod || "grid"}
+                                            onChange={(e) =>
+                                              changeSearchMethod(
+                                                experimentStep.id,
+                                                space.id,
+                                                e.target.value as SearchMethod
+                                              )
+                                            }
+                                            className="text-sm border rounded px-2 py-1"
+                                          >
+                                            <option value="grid">
+                                              Grid Search
+                                            </option>
+                                            <option value="random">
+                                              Random Search
+                                            </option>
+                                            <option value="bayesian">
+                                              Bayesian Optimization
+                                            </option>
+                                            <option value="evolutionary">
+                                              Evolutionary Algorithm
+                                            </option>
+                                          </select>
+                                        )}
                                       </div>
                                     </div>
 
@@ -830,13 +840,15 @@ function ExperimentDesigner() {
                                               }
                                               onSelectTask={(stepId, taskId) =>
                                                 selectTask(
-                                                  step.id,
+                                                  experimentStep.id,
                                                   space.id,
                                                   stepId,
                                                   taskId
                                                 )
                                               }
-                                              onParamChange={handleParamChange}
+                                              onParamChange={(taskVariantId, paramName, newValues) => handleParamChange(
+                                                experimentStep.id, space.id, step.id, taskVariantId, paramName, newValues
+                                              )}
                                             />
                                           ))}
                                       </div>

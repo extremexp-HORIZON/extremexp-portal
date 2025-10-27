@@ -1,7 +1,7 @@
 export interface HyperParameter {
   id?: string;
   name: string;
-  type: 'integer' | 'real' | 'string' | 'boolean' | 'array' | 'blob' | 'categorical' | 'number';
+  type: 'integer' | 'string' | 'boolean' | 'range';
   default?: number | string | boolean;
   range?: [number, number];
   options?: (string | number | boolean)[];

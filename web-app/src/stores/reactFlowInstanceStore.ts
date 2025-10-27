@@ -64,7 +64,11 @@ export const useReactFlowInstanceStore = create<RFState>((set, get) => ({
     const nodes = get().nodes.map((n) =>
       n.id === nodeId ? { ...n, data } : n
     );
-    set({ nodes });
+    // Also update selectedNode if it's the same node being updated
+    const selectedNode = get().selectedNode?.id === nodeId
+      ? nodes.find((n) => n.id === nodeId) || null
+      : get().selectedNode;
+    set({ nodes, selectedNode });
   },
   updateEdgeData: (data: object, edgeId: string) => {
     const edges = get().edges.map((e) =>

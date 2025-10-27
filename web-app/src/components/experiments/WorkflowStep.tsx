@@ -12,14 +12,11 @@ interface WorkflowStepProps {
   step: WorkflowStepType;
   onRemove: (id: string) => void;
   onSelectTask: (stepId: string, taskId: string) => void;
-  onParamChange: (stepId: string, taskId: string, paramName: string, newValue: number | string | boolean) => void;
+  onParamChange: (taskId: string, paramName: string, newValues: (number | string | boolean)[]) => void;
 }
 
-export function WorkflowStep({
-  step,
-  onSelectTask,
-  onParamChange,
-}: WorkflowStepProps) {
+const WorkflowStep = (props: WorkflowStepProps) => {
+  const { step, onRemove, onSelectTask, onParamChange } = props;
   const {
     setNodeRef,
     transform,
@@ -81,3 +78,5 @@ export function WorkflowStep({
     </div>
   );
 }
+
+export default WorkflowStep;

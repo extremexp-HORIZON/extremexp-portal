@@ -69,18 +69,12 @@ export interface TaskParameterType {
   name: string;
   type: string;
   abstract: boolean;
-  values: (
-    | number
-    | string
-    | boolean
-    | {
-        min: number;
-        max: number;
-        step: number;
-        minInclusive: boolean;
-        maxInclusive: boolean;
-      }
-  )[];
+  values: number[] | string[] | boolean[] 
+  | {
+      min: number;
+      max: number;
+      step: number;
+    };
   id: string;
 }
 

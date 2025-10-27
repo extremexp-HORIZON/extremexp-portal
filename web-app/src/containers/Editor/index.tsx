@@ -101,7 +101,6 @@ const Editor = () => {
 
   const navigate = useNavigate();
   const specificationType = useLocation().pathname.split("/")[2];
-  const projID = useLocation().pathname.split("/")[3];
   const workID = useLocation().pathname.split("/")[4];
 
   const [workflow, setWorkflow] = useState<WorkflowType | TaskType>(
@@ -295,17 +294,23 @@ const Editor = () => {
 
   function getCurrentGraphOnBoard() {
     let newGraph: GraphicalModelType = defaultGraphicalModel;
+    // Get the latest nodes from Zustand store, not from stale graphicalModel
+    const currentNodes = useReactFlowInstanceStore.getState().nodes;
+    const currentEdges = useReactFlowInstanceStore.getState().edges;
+
     if (selectedTab === "main") {
-      newGraph = { nodes, edges };
+      newGraph = { nodes: currentNodes, edges: currentEdges };
     } else {
-      traverseGraphicalModel(graphicalModel, (node) => {
+      // Use latest nodes from Zustand, not graphicalModel
+      const updatedGraphicalModel = { nodes: currentNodes, edges: currentEdges };
+      traverseGraphicalModel(updatedGraphicalModel, (node) => {
         if (node.type === "task") {
           const task = node.data.variants.find(
             (t: TaskVariantType) => t.id_task === node.data.currentVariant
           );
           if (task.id_task === selectedTab) {
-            task.graphical_model = { nodes, edges };
-            newGraph = graphicalModel;
+            task.graphical_model = { nodes: currentNodes, edges: currentEdges };
+            newGraph = updatedGraphicalModel;
           }
         }
       });
