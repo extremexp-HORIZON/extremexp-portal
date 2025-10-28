@@ -77,12 +77,13 @@ def rename_experiment(experiment_id):
 @experiments.route("/<experiment_id>/update",methods=["OPTIONS", "PUT"])
 @cross_origin()
 def update_experiment_graphical_model(experiment_id):
-    experiment_name = request.json["name"]
-    steps = request.json["steps"]
+    experiment_name = request.json["experiment"]["name"]
+    steps = request.json["experiment"]["steps"]
     experimentHandler.update_experiment_graphical_model(
         experiment_id, steps
     )
-    fs_result, fs_status = fileSystemHandler.update_experiment(g.username, experiment_name, steps)
-    if fs_status != 200:
-        return {"message": "Filesystem error", "error": fs_result}, 500
+    # TODO: Integrate this when endpoints are done
+    # fs_result, fs_status = fileSystemHandler.update_experiment(g.username, experiment_name, request.json)
+    # if fs_status != 200:
+    #     return {"message": "Filesystem error", "error": fs_result}, 500
     return {"message": "experiment graphical model updated"}, 200

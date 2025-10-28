@@ -16,6 +16,14 @@ class WorkflowHandler(object):
         self.db = self.client.workflows
         self.collection_workflow = self.db.workflow
 
+    def get_some_workflows(self, workflow_ids: list[str]) -> list:
+        query = {"id_workflow": {"$in": workflow_ids}}
+        documents = self.collection_workflow.find(query).sort(
+            "update_at", pymongo.DESCENDING
+        )
+        # return documents in JSON format
+        return json.loads(json.dumps(list(documents), default=str))
+    
     def get_workflows(self, username: str) -> list:
         query = {"id_workflow": {"$regex": username}}
         documents = self.collection_workflow.find(query).sort(

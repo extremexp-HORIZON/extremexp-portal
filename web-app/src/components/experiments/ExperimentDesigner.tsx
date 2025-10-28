@@ -50,6 +50,7 @@ function ExperimentDesigner() {
   const { request: specificationRequest } = useRequest<
     ExperimentResponseType | TaskResponseType
   >();
+  const { request: someWorkflowsRequest } = useRequest<{ message: string; data: SavedWorkflow[] }>();
   const [steps, setSteps] = useState<Node[]>([]);
   const [showPopover, setShowPopover] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -285,7 +286,7 @@ function ExperimentDesigner() {
         return step;
       })
     );
-  };  
+  };
 
   const selectTask = (
     stepId: string,
@@ -293,10 +294,25 @@ function ExperimentDesigner() {
     newStepId: string,
     taskId: string
   ) => {
-    if (steps.findIndex(step => step.id === stepId && step.spaces.find(space => space.id === spaceId && space.steps.find(step => step.id === newStepId && step.tasks.find(task => task.id === taskId && task.selected)))) !== -1) {
+    if (
+      steps.findIndex(
+        (step) =>
+          step.id === stepId &&
+          step.spaces.find(
+            (space) =>
+              space.id === spaceId &&
+              space.steps.find(
+                (step) =>
+                  step.id === newStepId &&
+                  step.tasks.find((task) => task.id === taskId && task.selected)
+              )
+          )
+      ) !== -1
+    ) {
       return; // Task is already selected, do nothing
     }
-    setSteps(steps.map((experimentStep) => {
+    setSteps(
+      steps.map((experimentStep) => {
         if (experimentStep.id === stepId) {
           return {
             ...experimentStep,
@@ -461,50 +477,47 @@ function ExperimentDesigner() {
       });
   };
 
+  const handleFetchSomeWorkflows = async (): Promise<SavedWorkflow[]> => {
+    const usedWorkflows: string[] = steps
+      .flatMap((step) => step.spaces.map((space) => space.workflow_id!))
+      .filter((id) => id !== undefined);
+
+    try {
+      const response = await someWorkflowsRequest({
+        url: `/api/workflows/some`,
+        method: "POST",
+        data: { workflow_ids: usedWorkflows },
+      });
+      return response.data; 
+    } catch (error: any) {
+      message(error.response?.data?.message || error.message);
+      return []; // Return empty array on error
+    }
+  };
+
   const saveExperiment = async () => {
     const experimentToSave: ExperimentSave = {
       name: experimentName,
-      steps: steps.map(
-        (step): ExperimentStep => ({
-          ...step,
-          spaces: step.spaces.map(
-            (space): ExperimentSpace => ({
-              ...space,
-              steps: Array.isArray(space.steps)
-                ? space.steps.map((wfStep) => ({
-                    ...wfStep,
-                    tasks: Array.isArray(wfStep.tasks)
-                      ? wfStep.tasks.map((task) => ({
-                          ...task,
-                          // This will include the current param.values for each hyperParameter
-                          hyperParameters: Array.isArray(task.hyperParameters)
-                            ? task.hyperParameters.map((param) => ({
-                                ...param,
-                                // param.values is already up-to-date from WorkflowStep
-                              }))
-                            : [],
-                        }))
-                      : [],
-                  }))
-                : [],
-            })
-          ),
-        })
-      ),
+      steps: steps, // Simplified - try this first
     };
 
-    await specificationRequest({
-      url: `/api/experiments/${experimentID}/update`,
-      method: "PUT",
-      data: experimentToSave,
-    })
-      .then(() => {
-        message("Experiment saved successfully");
-        setIsSaving(false);
-      })
-      .catch((error) => {
-        message(error.response?.data?.message || error.message);
+    const workflows = await handleFetchSomeWorkflows();
+    const finalRequest = {
+      experiment: experimentToSave,
+      workflows: workflows,
+    };
+    try {
+      await specificationRequest({
+        url: `/api/experiments/${experimentID}/update`,
+        method: "PUT",
+        data: finalRequest,
       });
+
+      message("Experiment saved successfully");
+      setIsSaving(false);
+    } catch (error: any) {
+      message(error.response?.data?.message || error.message);
+    }
   };
 
   const getStatusIcon = (
@@ -575,27 +588,34 @@ function ExperimentDesigner() {
         experimentStep.id === experimentStepId
           ? {
               ...experimentStep,
-              spaces: experimentStep.spaces.map((space) => (
-                space.id === spaceId 
-                ? {...space, steps: space.steps.map((task) => (
-                  task.id === taskId ? {
-                  ...task,
-                  tasks: task.tasks.map((taskVariant) =>
-                    taskVariant.id === taskVariantId
-                      ? {
-                          ...taskVariant,
-                          hyperParameters: taskVariant.hyperParameters.map((param) =>
-                            param.name === paramName
-                              ? { ...param, values: newValues }
-                              : param
-                          ),
-                        }
-                      : taskVariant
-                  ),
-                }
-                : task)),
-              }
-                : space)),
+              spaces: experimentStep.spaces.map((space) =>
+                space.id === spaceId
+                  ? {
+                      ...space,
+                      steps: space.steps.map((task) =>
+                        task.id === taskId
+                          ? {
+                              ...task,
+                              tasks: task.tasks.map((taskVariant) =>
+                                taskVariant.id === taskVariantId
+                                  ? {
+                                      ...taskVariant,
+                                      hyperParameters:
+                                        taskVariant.hyperParameters.map(
+                                          (param) =>
+                                            param.name === paramName
+                                              ? { ...param, values: newValues }
+                                              : param
+                                        ),
+                                    }
+                                  : taskVariant
+                              ),
+                            }
+                          : task
+                      ),
+                    }
+                  : space
+              ),
             }
           : experimentStep
       )
@@ -697,7 +717,9 @@ function ExperimentDesigner() {
                               <Plus className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => toggleNodeCollapse(experimentStep.id)}
+                              onClick={() =>
+                                toggleNodeCollapse(experimentStep.id)
+                              }
                               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
                             >
                               <ChevronDown
@@ -740,7 +762,9 @@ function ExperimentDesigner() {
                                           {!space.workflow && (
                                             <button
                                               onClick={() => {
-                                                setSelectedNode(experimentStep.id);
+                                                setSelectedNode(
+                                                  experimentStep.id
+                                                );
                                                 setSelectedSpace(space.id);
                                                 setIsImportingWorkflow(true);
                                               }}
@@ -770,7 +794,10 @@ function ExperimentDesigner() {
                                           </button>
                                           <button
                                             onClick={() =>
-                                              removeSpace(experimentStep.id, space.id)
+                                              removeSpace(
+                                                experimentStep.id,
+                                                space.id
+                                              )
                                             }
                                             className="p-2 text-gray-400 hover:text-red-600 rounded-lg"
                                           >
@@ -846,9 +873,20 @@ function ExperimentDesigner() {
                                                   taskId
                                                 )
                                               }
-                                              onParamChange={(taskVariantId, paramName, newValues) => handleParamChange(
-                                                experimentStep.id, space.id, step.id, taskVariantId, paramName, newValues
-                                              )}
+                                              onParamChange={(
+                                                taskVariantId,
+                                                paramName,
+                                                newValues
+                                              ) =>
+                                                handleParamChange(
+                                                  experimentStep.id,
+                                                  space.id,
+                                                  step.id,
+                                                  taskVariantId,
+                                                  paramName,
+                                                  newValues
+                                                )
+                                              }
                                             />
                                           ))}
                                       </div>

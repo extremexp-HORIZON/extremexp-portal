@@ -51,6 +51,7 @@ export interface Space {
   searchMethod?: SearchMethod;
   searchOptions?: SearchOption[];
   workflow?: SavedWorkflow;
+  workflow_id?: string;
   workflow_overrides?: Record<string, any>; // Add workflow_overrides property
 }
 

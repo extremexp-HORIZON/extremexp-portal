@@ -30,6 +30,15 @@ def get_workflow(work_id):
         "data": {"workflow": workflow},
     }, 200
 
+@workflows.route("/some",methods=["OPTIONS", "POST"])
+@cross_origin()
+def get_some_workflows():
+    workflow_ids = request.json["workflow_ids"]
+    workflows = workflowHandler.get_some_workflows(
+        workflow_ids
+    )
+    return {"message": "Successfully fetched workflows", "data": workflows}, 200
+
 
 @workflows.route("/create", methods=["OPTIONS", "POST"])
 @cross_origin()
