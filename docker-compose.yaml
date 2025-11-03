@@ -78,7 +78,7 @@ services:
       - extremexp_network
 
   proxy-service:
-    image: ghcr.io/yagorezende/extremexp-abacproxy:dev
+    image: ghcr.io/yagorezende/extremexp-abacproxy:latest
     container_name: proxy-service
      # flask requires SIGINT to stop gracefully
      # (default stop signal from Compose is SIGTERM)
@@ -111,7 +111,7 @@ services:
       - extremexp_network
 
   access-control-service:
-    image: ghcr.io/yagorezende/extremexp_accesscontrol:dev
+    image: ghcr.io/yagorezende/extremexp_accesscontrol:latest
     container_name: access-control-service
     ports:
       - ${FLASK_AC_APP_PORT}:${FLASK_AC_APP_PORT}
