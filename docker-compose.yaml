@@ -24,7 +24,8 @@ services:
       - "8080:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start-dev
+      - ./extremexp-keycloak-import:/opt/keycloak/data/import
+    command: start-dev --import-realm --verbose
     networks:
       - extremexp_network
 
