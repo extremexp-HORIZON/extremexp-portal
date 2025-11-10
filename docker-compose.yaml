@@ -1,15 +1,30 @@
 services:
   mongo:
-    image: mongo:4.4.6
+    image: mongo:8.2.1
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
     container_name: mongo
-    restart: always
+    restart: unless-stopped
     ports:
-      - '27017:27017'
+      - "27017:27017"
     volumes:
-      - ~/mongo/data:/data/db
+      - mongo_data:/data/db
+    networks:
+      - extremexp_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.4
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    container_name: keycloak
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command: start-dev
     networks:
       - extremexp_network
 
@@ -25,7 +40,7 @@ services:
     volumes:
       - ${WORKSPACE_PATH}:/workspace
     ports:
-      - '5050:5050'
+      - "5050:5050"
     depends_on:
       access-control-service:
         condition: service_started
@@ -42,13 +57,13 @@ services:
     build: ./server-emf-cloud
     container_name: emf-cloud-service
     ports:
-      - '8081:8081'
+      - "8081:8081"
     healthcheck:
       test: curl --fail http://localhost:8081/api/v2/models || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
-      start_period: 60s    
+      start_period: 60s
     networks:
       - extremexp_network
 
@@ -64,12 +79,12 @@ services:
     image: nginx:latest
     container_name: nginx-servers
     ports:
-      - '80:80'
+      - "80:80"
     depends_on:
       - web-app
       - access-control-service
       - exp-service
-    restart: always
+    restart: unless-stopped
     environment:
       - PROXY_APP_PORT=${PROXY_APP_PORT}
     volumes:
@@ -79,12 +94,15 @@ services:
 
   proxy-service:
     image: ghcr.io/yagorezende/extremexp-abacproxy:latest
-    container_name: proxy-service
-     # flask requires SIGINT to stop gracefully
-     # (default stop signal from Compose is SIGTERM)
+    container_name:
+      proxy-service
+      # flask requires SIGINT to stop gracefully
+      # (default stop signal from Compose is SIGTERM)
     stop_signal: SIGINT
     ports:
       - ${PROXY_APP_PORT}:${PROXY_APP_PORT}
+    expose:
+      - ${PROXY_APP_PORT}
     environment:
       - FLASK_APP_HOST=${PROXY_APP_HOST}
       - FLASK_APP_PORT=${PROXY_APP_PORT}
@@ -146,3 +164,7 @@ services:
 networks:
   extremexp_network:
     driver: bridge
+
+volumes:
+  mongo_data:
+  keycloak_data:
