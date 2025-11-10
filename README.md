@@ -23,7 +23,7 @@ docker compose up keycloak
 6. In the credentials tab, regenerate the client secret and copy it to the `OIDC_RP_CLIENT_SECRET` environment variable (for example in your `.env` file).
 
 ```bash
-export CLIENT_SECRET="<PASTE_YOUR_CLIENT_SECRET_HERE>"
+export CLIENT_SECRET="PASTE_YOUR_CLIENT_SECRET_HERE"
 sed -i "s/^OIDC_RP_CLIENT_SECRET=SET_ME$/OIDC_RP_CLIENT_SECRET=$CLIENT_SECRET/" .env
 export CLIENT_SECRET=""
 ```

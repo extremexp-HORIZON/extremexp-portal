@@ -80,7 +80,7 @@ services:
     image: nginx:latest
     container_name: nginx-servers
     ports:
-      - "80:80"
+      - "8082:80"
     depends_on:
       - web-app
       - access-control-service
