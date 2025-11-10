@@ -16,8 +16,8 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.4.4
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_USERNAME}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_USER_PASSWORD}
     container_name: keycloak
     restart: unless-stopped
     ports:

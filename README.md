@@ -3,22 +3,38 @@
 ## Run locally
 
 1. Make sure that Docker is installed in your system and that the Docker deamon is running.
-2. Start keycloak server first to configure it.
+2. Copy the `.env.docker` file to `.env` and modify the environment variables as needed.
+
+```bash
+cp .env.docker .env
+# Generate random secret keys for Flask apps
+sed -i "s/^PROXY_APP_SECRET_KEY=SET_ME$/PROXY_APP_SECRET_KEY=$(openssl rand -hex 32)/" .env
+sed -i "s/^FLASK_AC_APP_SECRET_KEY=SET_ME$/FLASK_AC_APP_SECRET_KEY=$(openssl rand -hex 32)/" .env
+```
+
+3. Start keycloak server first to configure it.
 
 ```bash
 docker compose up keycloak
 ```
 
-3. Once you notice "Keycloak ... started in ...", you can visit [the extremexp client in the extremxp realm](http://localhost:8080/admin/master/console/#/extremexp/clients/8274cd37-322a-4cbe-b822-ee64f5eb3ab6/settings). You will have to login with the credentials you specified (likely `admin`/`admin`).
-4. Enable the `Authorization` setting an save. It's not enabled as the default settings cannot be imported automatically.
-5. In the credentials tab, regenerate the client secret and copy it to the `OIDC_RP_CLIENT_SECRET` environment variable (for example in your `.env` file).
-6. Start the other services.
+4. Once you notice "Keycloak ... started in ...", you can visit [the extremexp client in the extremxp realm](http://localhost:8080/admin/master/console/#/extremexp/clients/8274cd37-322a-4cbe-b822-ee64f5eb3ab6/settings). You will have to login with the credentials you specified (likely `admin`/`admin`).
+5. Enable the `Authorization` setting an save. It's not enabled as the default settings cannot be imported automatically.
+6. In the credentials tab, regenerate the client secret and copy it to the `OIDC_RP_CLIENT_SECRET` environment variable (for example in your `.env` file).
+
+```bash
+export CLIENT_SECRET="<PASTE_YOUR_CLIENT_SECRET_HERE>"
+sed -i "s/^OIDC_RP_CLIENT_SECRET=SET_ME$/OIDC_RP_CLIENT_SECRET=$CLIENT_SECRET/" .env
+export CLIENT_SECRET=""
+```
+
+7. Start the other services.
 
 ```bash
 docker compose up
 ```
 
-7. Access the app via <http://localhost/>
+8. Access the app via <http://localhost/>
 
 ## Rebuilding
 
