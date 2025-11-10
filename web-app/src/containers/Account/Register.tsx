@@ -16,7 +16,7 @@ const Register = () => {
 
   const handleRegister = () => {
     if (!username || !password) return message('username or password is empty');
-    if (!fullName || fullName.indexOf(" ") === -1) return message('not a valid full name');
+    if (!fullName) return message('not a valid full name');
     if (!email || email.indexOf("@") === -1) return message('not a valid email');
 
     if (password !== confirmPassword) return message('passwords do not match');
