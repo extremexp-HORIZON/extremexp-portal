@@ -1,6 +1,9 @@
 # ExtremeXP portal
 
-## Run locally
+## Overview
+The ExtremeXP portal acts as the main entry point for all ExtremeXP users. A registered user of the Portal can access both a Graphical (Experiments tab) and the Textual Editors (Tasks tab - aka DSL Editor) to design and specify workflows and experiments.
+
+## Installation Instructions - Local Deployment
 
 1. Make sure that Docker is installed in your system and that the Docker deamon is running.
 2. Copy the `.env.docker` file to `.env` and modify the environment variables as needed.
