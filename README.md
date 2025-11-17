@@ -1,6 +1,7 @@
 # ExtremeXP portal
 
 ## Overview
+
 The ExtremeXP portal acts as the main entry point for all ExtremeXP users. A registered user of the Portal can access both a Graphical (Experiments tab) and the Textual Editors (Tasks tab - aka DSL Editor) to design and specify workflows and experiments.
 
 ## Installation Instructions - Local Deployment
@@ -75,3 +76,11 @@ To deploy the framework on a server with an IP that is not localhost, you need t
 ![editor add task variant](./demo_images/11.editor-task-config-panel-add-variant.png)
 ![editor model save](./demo_images/12.editor-model-save.png)
 ![editor model save as](./demo_images/13.editor-model-save-as.png)
+
+## License
+
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for details.
+
+## Acknowledgements
+
+The ExtremeXP project is co-funded by the European Union Horizon Program HORIZON CL4-2022-DATA-01-01, under Grant Agreement No. 101093164
