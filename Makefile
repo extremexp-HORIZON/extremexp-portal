@@ -4,7 +4,7 @@ run-docker:
 
 .PHONY: stop-docker
 stop-docker:
-	@docker compose down 
+	@docker compose down
 
 .PHONY: reload-docker
 reload-docker:
