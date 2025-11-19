@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated, Any
@@ -11,17 +11,18 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ConfigDict
 from sqlalchemy import or_
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from starlette.middleware.base import BaseHTTPMiddleware
-from sqlmodel import Session, SQLModel, create_engine, select
-from bacinet.middleware import BacinetMiddleware
+from sqlmodel import SQLModel, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from dotenv import load_dotenv
 
 from sqlmodel_models import Category, Experiment, Task, User, Workflow
+from database import build_async_database_url
 
 load_dotenv()
 
-DEFAULT_DATABASE_URL = "postgresql+psycopg://admin:admin@localhost/extremexp"
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+DATABASE_URL = build_async_database_url()
 
 DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost:7001",
@@ -40,16 +41,20 @@ def _parse_allowed_origins(raw_origins: str | None) -> list[str]:
 
 ALLOWED_ORIGINS = _parse_allowed_origins(_cors_origins_raw)
 
-engine = create_engine(
+engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
+)
+async_session_factory = async_sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
 )
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    SQLModel.metadata.create_all(engine)
+    async with engine.begin() as connection:
+        await connection.run_sync(SQLModel.metadata.create_all)
     yield
 
 
@@ -62,7 +67,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(BacinetMiddleware)
+# app.add_middleware(BacinetMiddleware)
 
 
 class MockJWTMiddleware(BaseHTTPMiddleware):
@@ -74,12 +79,12 @@ class MockJWTMiddleware(BaseHTTPMiddleware):
 app.add_middleware(MockJWTMiddleware)
 
 
-def get_session() -> Generator[Session, None, None]:
-    with Session(engine) as session:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_factory() as session:
         yield session
 
 
-SessionDep = Annotated[Session, Depends(get_session)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 def get_current_username(request: Request) -> str:
@@ -92,17 +97,18 @@ def get_current_username(request: Request) -> str:
     return username
 
 
-def get_current_user(
+async def get_current_user(
     session: SessionDep,
     username: Annotated[str, Depends(get_current_username)],
 ) -> User:
     statement = select(User).where(User.username == username)
-    user = session.exec(statement).first()
+    result = await session.exec(statement)
+    user = result.first()
     if user is None:
         user = User(username=username, display_name=username)
         session.add(user)
-        session.commit()
-        session.refresh(user)
+        await session.commit()
+        await session.refresh(user)
     return user
 
 
@@ -110,9 +116,7 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 class UserRead(SQLModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     username: str
@@ -138,9 +142,7 @@ class CategoryUpdate(SQLModel):
 
 
 class CategoryRead(CategoryBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     is_official: bool
@@ -171,9 +173,7 @@ class TaskUpdate(SQLModel):
 
 
 class TaskRead(TaskBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     category_id: UUID
@@ -202,9 +202,7 @@ class ExperimentUpdate(SQLModel):
 
 
 class ExperimentRead(ExperimentBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -229,9 +227,7 @@ class WorkflowUpdate(SQLModel):
 
 
 class WorkflowRead(WorkflowBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -282,7 +278,7 @@ def read_current_user(user: CurrentUserDep) -> User:
 
 
 @app.get("/categories", response_model=list[CategoryRead])
-def list_categories(
+async def list_categories(
     session: SessionDep,
     user: CurrentUserDep,
 ) -> list[Category]:
@@ -300,8 +296,8 @@ def list_categories(
             Category.created_at.desc()  # pyright: ignore[reportAttributeAccessIssue]
         )
     )
-    categories = session.exec(statement).all()
-    return list(categories)
+    categories = await session.exec(statement)
+    return list(categories.all())
 
 
 @app.post(
@@ -309,16 +305,17 @@ def list_categories(
     response_model=CategoryRead,
     status_code=status.HTTP_201_CREATED,
 )
-def create_category(
+async def create_category(
     payload: CategoryCreate,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Category:
-    duplicate = session.exec(
+    result = await session.exec(
         select(Category).where(
             Category.user_id == user.id, Category.name == payload.name
         )
-    ).first()
+    )
+    duplicate = result.first()
     if duplicate:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -331,18 +328,18 @@ def create_category(
         is_official=False,
     )
     session.add(category)
-    session.commit()
-    session.refresh(category)
+    await session.commit()
+    await session.refresh(category)
     return category
 
 
 @app.get("/categories/{category_id}", response_model=CategoryRead)
-def read_category(
+async def read_category(
     category_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Category:
-    category = session.get(Category, category_id)
+    category = await session.get(Category, category_id)
     if not category or not (category.is_official or category.user_id == user.id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
@@ -351,13 +348,13 @@ def read_category(
 
 
 @app.patch("/categories/{category_id}", response_model=CategoryRead)
-def update_category(
+async def update_category(
     category_id: UUID,
     payload: CategoryUpdate,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Category:
-    category = session.get(Category, category_id)
+    category = await session.get(Category, category_id)
     if category is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
@@ -365,13 +362,14 @@ def update_category(
     _ensure_category_editable(category, user)
     data = payload.model_dump(exclude_unset=True)
     if "name" in data:
-        duplicate = session.exec(
+        result = await session.exec(
             select(Category).where(
                 Category.user_id == user.id,
                 Category.name == data["name"],
                 Category.id != category.id,
             )
-        ).first()
+        )
+        duplicate = result.first()
         if duplicate:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -380,34 +378,34 @@ def update_category(
     for field, value in data.items():
         setattr(category, field, value if value is not None else "")
     session.add(category)
-    session.commit()
-    session.refresh(category)
+    await session.commit()
+    await session.refresh(category)
     return category
 
 
 @app.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(
+async def delete_category(
     category_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Response:
-    category = session.get(Category, category_id)
+    category = await session.get(Category, category_id)
     if category is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
         )
     _ensure_category_editable(category, user)
-    session.delete(category)
-    session.commit()
+    await session.delete(category)
+    await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-def _get_category_for_task(
-    session: Session,
+async def _get_category_for_task(
+    session: AsyncSession,
     user: User,
     category_id: UUID,
 ) -> Category:
-    category = session.get(Category, category_id)
+    category = await session.get(Category, category_id)
     if category is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
@@ -429,7 +427,7 @@ def _ensure_provider_present(provider: str | None) -> None:
 
 
 @app.get("/tasks", response_model=list[TaskRead])
-def list_tasks(
+async def list_tasks(
     session: SessionDep,
     user: CurrentUserDep,
     category_id: UUID | None = None,
@@ -442,22 +440,22 @@ def list_tasks(
     )
     if category_id:
         statement = statement.where(Task.category_id == category_id)
-    tasks = session.exec(
+    tasks = await session.exec(
         statement.order_by(
             Task.created_at.desc()  # pyright: ignore[reportAttributeAccessIssue]
         )
-    ).all()
-    return list(tasks)
+    )
+    return list(tasks.all())
 
 
 @app.post("/tasks", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
-def create_task(
+async def create_task(
     payload: TaskCreate,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Task:
     _ensure_provider_present(payload.provider)
-    _get_category_for_task(session, user, payload.category_id)
+    await _get_category_for_task(session, user, payload.category_id)
     task = Task(
         name=payload.name,
         description=payload.description or "",
@@ -468,17 +466,17 @@ def create_task(
         is_official=False,
     )
     session.add(task)
-    session.commit()
-    session.refresh(task)
+    await session.commit()
+    await session.refresh(task)
     return task
 
 
-def _get_task_for_user(
-    session: Session,
+async def _get_task_for_user(
+    session: AsyncSession,
     user: User,
     task_id: UUID,
 ) -> Task:
-    task = session.get(Task, task_id)
+    task = await session.get(Task, task_id)
     if task is None or not (task.is_official or task.user_id == user.id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
@@ -487,22 +485,22 @@ def _get_task_for_user(
 
 
 @app.get("/tasks/{task_id}", response_model=TaskRead)
-def read_task(
+async def read_task(
     task_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Task:
-    return _get_task_for_user(session, user, task_id)
+    return await _get_task_for_user(session, user, task_id)
 
 
 @app.patch("/tasks/{task_id}", response_model=TaskRead)
-def update_task(
+async def update_task(
     task_id: UUID,
     payload: TaskUpdate,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Task:
-    task = _get_task_for_user(session, user, task_id)
+    task = await _get_task_for_user(session, user, task_id)
     _ensure_task_editable(task, user)
     data = payload.model_dump(exclude_unset=True)
     if "provider" in data:
@@ -512,30 +510,30 @@ def update_task(
             value = ""
         setattr(task, field, value)
     session.add(task)
-    session.commit()
-    session.refresh(task)
+    await session.commit()
+    await session.refresh(task)
     return task
 
 
 @app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(
+async def delete_task(
     task_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Response:
-    task = _get_task_for_user(session, user, task_id)
+    task = await _get_task_for_user(session, user, task_id)
     _ensure_task_editable(task, user)
-    session.delete(task)
-    session.commit()
+    await session.delete(task)
+    await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-def _get_experiment_for_user(
-    session: Session,
+async def _get_experiment_for_user(
+    session: AsyncSession,
     user: User,
     experiment_id: UUID,
 ) -> Experiment:
-    experiment = session.get(Experiment, experiment_id)
+    experiment = await session.get(Experiment, experiment_id)
     if experiment is None or experiment.user_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -545,7 +543,9 @@ def _get_experiment_for_user(
 
 
 @app.get("/experiments", response_model=list[ExperimentRead])
-def list_experiments(session: SessionDep, user: CurrentUserDep) -> list[Experiment]:
+async def list_experiments(
+    session: SessionDep, user: CurrentUserDep
+) -> list[Experiment]:
     statement = (
         select(Experiment)
         .where(Experiment.user_id == user.id)
@@ -553,8 +553,8 @@ def list_experiments(session: SessionDep, user: CurrentUserDep) -> list[Experime
             Experiment.created_at.desc()  # pyright: ignore[reportAttributeAccessIssue]
         )
     )
-    experiments = session.exec(statement).all()
-    return list(experiments)
+    experiments = await session.exec(statement)
+    return list(experiments.all())
 
 
 @app.post(
@@ -562,7 +562,7 @@ def list_experiments(session: SessionDep, user: CurrentUserDep) -> list[Experime
     response_model=ExperimentRead,
     status_code=status.HTTP_201_CREATED,
 )
-def create_experiment(
+async def create_experiment(
     payload: ExperimentCreate,
     session: SessionDep,
     user: CurrentUserDep,
@@ -574,28 +574,28 @@ def create_experiment(
         user_id=user.id,
     )
     session.add(experiment)
-    session.commit()
-    session.refresh(experiment)
+    await session.commit()
+    await session.refresh(experiment)
     return experiment
 
 
 @app.get("/experiments/{experiment_id}", response_model=ExperimentRead)
-def read_experiment(
+async def read_experiment(
     experiment_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Experiment:
-    return _get_experiment_for_user(session, user, experiment_id)
+    return await _get_experiment_for_user(session, user, experiment_id)
 
 
 @app.patch("/experiments/{experiment_id}", response_model=ExperimentRead)
-def update_experiment(
+async def update_experiment(
     experiment_id: UUID,
     payload: ExperimentUpdate,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Experiment:
-    experiment = _get_experiment_for_user(session, user, experiment_id)
+    experiment = await _get_experiment_for_user(session, user, experiment_id)
     _ensure_experiment_editable(experiment, user)
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
@@ -603,30 +603,30 @@ def update_experiment(
             value = [] if field == "steps" else {"nodes": [], "edges": []}
         setattr(experiment, field, value)
     session.add(experiment)
-    session.commit()
-    session.refresh(experiment)
+    await session.commit()
+    await session.refresh(experiment)
     return experiment
 
 
 @app.delete("/experiments/{experiment_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_experiment(
+async def delete_experiment(
     experiment_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Response:
-    experiment = _get_experiment_for_user(session, user, experiment_id)
+    experiment = await _get_experiment_for_user(session, user, experiment_id)
     _ensure_experiment_editable(experiment, user)
-    session.delete(experiment)
-    session.commit()
+    await session.delete(experiment)
+    await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-def _get_workflow_for_user(
-    session: Session,
+async def _get_workflow_for_user(
+    session: AsyncSession,
     user: User,
     workflow_id: UUID,
 ) -> Workflow:
-    workflow = session.get(Workflow, workflow_id)
+    workflow = await session.get(Workflow, workflow_id)
     if workflow is None or workflow.user_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -636,22 +636,22 @@ def _get_workflow_for_user(
 
 
 @app.get("/workflows", response_model=list[WorkflowRead])
-def list_workflows(session: SessionDep, user: CurrentUserDep) -> list[Workflow]:
+async def list_workflows(session: SessionDep, user: CurrentUserDep) -> list[Workflow]:
     statement = (
         select(Workflow)
         .where(Workflow.user_id == user.id)
         .order_by(
-            Workflow.created_at.desc() # pyright: ignore[reportAttributeAccessIssue]
+            Workflow.created_at.desc()  # pyright: ignore[reportAttributeAccessIssue]
         )
     )
-    workflows = session.exec(statement).all()
-    return list(workflows)
+    workflows = await session.exec(statement)
+    return list(workflows.all())
 
 
 @app.post(
     "/workflows", response_model=WorkflowRead, status_code=status.HTTP_201_CREATED
 )
-def create_workflow(
+async def create_workflow(
     payload: WorkflowCreate,
     session: SessionDep,
     user: CurrentUserDep,
@@ -662,48 +662,48 @@ def create_workflow(
         user_id=user.id,
     )
     session.add(workflow)
-    session.commit()
-    session.refresh(workflow)
+    await session.commit()
+    await session.refresh(workflow)
     return workflow
 
 
 @app.get("/workflows/{workflow_id}", response_model=WorkflowRead)
-def read_workflow(
+async def read_workflow(
     workflow_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Workflow:
-    return _get_workflow_for_user(session, user, workflow_id)
+    return await _get_workflow_for_user(session, user, workflow_id)
 
 
 @app.patch("/workflows/{workflow_id}", response_model=WorkflowRead)
-def update_workflow(
+async def update_workflow(
     workflow_id: UUID,
     payload: WorkflowUpdate,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Workflow:
-    workflow = _get_workflow_for_user(session, user, workflow_id)
+    workflow = await _get_workflow_for_user(session, user, workflow_id)
     _ensure_workflow_editable(workflow, user)
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
         setattr(workflow, field, value)
     session.add(workflow)
-    session.commit()
-    session.refresh(workflow)
+    await session.commit()
+    await session.refresh(workflow)
     return workflow
 
 
 @app.delete("/workflows/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_workflow(
+async def delete_workflow(
     workflow_id: UUID,
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Response:
-    workflow = _get_workflow_for_user(session, user, workflow_id)
+    workflow = await _get_workflow_for_user(session, user, workflow_id)
     _ensure_workflow_editable(workflow, user)
-    session.delete(workflow)
-    session.commit()
+    await session.delete(workflow)
+    await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

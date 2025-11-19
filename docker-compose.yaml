@@ -47,8 +47,8 @@ services:
         condition: service_started
       emf-cloud-service:
         condition: service_healthy
-      mongo:
-        condition: service_started
+      postgresql:
+        condition: service_healthy
       proxy-service:
         condition: service_started
     networks:
