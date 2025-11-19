@@ -53,6 +53,7 @@ jobs:
           pylance-version: latest-release
           working-directory: experiment-server
           venv-path: .venv
+          python-path: .venv/bin/python
 
       - name: Run Tests
         run: uv run pytest
