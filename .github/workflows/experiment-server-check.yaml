@@ -18,8 +18,8 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_USER: admin
-          POSTGRES_PASSWORD: admin
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: extremexp
         ports:
           - 5432:5432
@@ -53,3 +53,8 @@ jobs:
           pylance-version: latest-release
           working-directory: experiment-server
           venv-path: .venv
+
+      - name: Run Tests
+        run: uv run pytest
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/extremexp
