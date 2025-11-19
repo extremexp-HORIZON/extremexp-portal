@@ -1,0 +1,38 @@
+name: Checking Web App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web-app/**"
+      - ".github/workflows/web-app-check.yaml"
+  pull_request:
+    paths:
+      - "web-app/**"
+      - ".github/workflows/web-app-check.yaml"
+
+jobs:
+  check-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js 25
+        uses: actions/setup-node@v5
+        with:
+          node-version: 25
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-check-web-app-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-check-web-app-
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
