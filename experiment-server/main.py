@@ -20,10 +20,16 @@ from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from dotenv import load_dotenv
 
+import structlog
 from sqlmodel_models import Category, Experiment, Task, User, Workflow
 from database import build_async_database_url
+from logging_config import setup_logging, LoggingMiddleware
+from middleware import ConditionalBacinetMiddleware
 
 load_dotenv()
+
+setup_logging()
+logger = structlog.get_logger(__name__)
 
 DATABASE_URL = build_async_database_url()
 
@@ -66,11 +72,13 @@ async def lifespan(_: FastAPI):
 
     # Run the migration in a separate thread to avoid blocking the event loop
     await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
-    print("Database migrations applied successfully.")
+    logger.info("Database migrations applied successfully.")
     yield
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(LoggingMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -79,7 +87,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# app.add_middleware(BacinetMiddleware)
+
+
+app.add_middleware(ConditionalBacinetMiddleware)
 
 
 class MockJWTMiddleware(BaseHTTPMiddleware):
@@ -810,13 +820,14 @@ async def delete_workflow(
 def main() -> None:
     import uvicorn
 
-    print("Starting Experiment Server on http://0.0.0.0:8000")
+    logger.info("Starting Experiment Server on http://0.0.0.0:8000")
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", "8000")),
         reload=False,
+        log_config=None,
     )
 
 
