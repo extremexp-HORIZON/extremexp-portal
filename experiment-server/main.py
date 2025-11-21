@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -7,6 +8,8 @@ from datetime import datetime
 from typing import Annotated, Any
 from uuid import UUID
 
+from alembic import command
+from alembic.config import Config
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ConfigDict
@@ -25,6 +28,8 @@ load_dotenv()
 DATABASE_URL = build_async_database_url()
 
 DEFAULT_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
     "http://localhost:7001",
     "http://localhost:8082",
 ]
@@ -53,8 +58,15 @@ async_session_factory = async_sessionmaker(
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    async with engine.begin() as connection:
-        await connection.run_sync(SQLModel.metadata.create_all)
+    # Database tables are now managed by Alembic migrations
+    # Run migrations on startup
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    alembic_cfg_path = os.path.join(current_dir, "alembic.ini")
+    alembic_cfg = Config(alembic_cfg_path)
+
+    # Run the migration in a separate thread to avoid blocking the event loop
+    await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
+    print("Database migrations applied successfully.")
     yield
 
 
@@ -116,7 +128,9 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 class UserRead(SQLModel):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     username: str
@@ -142,7 +156,9 @@ class CategoryUpdate(SQLModel):
 
 
 class CategoryRead(CategoryBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     is_official: bool
@@ -173,7 +189,9 @@ class TaskUpdate(SQLModel):
 
 
 class TaskRead(TaskBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     category_id: UUID
@@ -202,7 +220,9 @@ class ExperimentUpdate(SQLModel):
 
 
 class ExperimentRead(ExperimentBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -227,7 +247,9 @@ class WorkflowUpdate(SQLModel):
 
 
 class WorkflowRead(WorkflowBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -421,7 +443,7 @@ async def _get_category_for_task(
 def _ensure_provider_present(provider: str | None) -> None:
     if not provider:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Task provider is required.",
         )
 
@@ -456,6 +478,19 @@ async def create_task(
 ) -> Task:
     _ensure_provider_present(payload.provider)
     await _get_category_for_task(session, user, payload.category_id)
+    result = await session.exec(
+        select(Task).where(
+            Task.user_id == user.id,
+            Task.category_id == payload.category_id,
+            Task.name == payload.name,
+        )
+    )
+    duplicate = result.first()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A task with this name already exists in this category.",
+        )
     task = Task(
         name=payload.name,
         description=payload.description or "",
@@ -503,6 +538,21 @@ async def update_task(
     task = await _get_task_for_user(session, user, task_id)
     _ensure_task_editable(task, user)
     data = payload.model_dump(exclude_unset=True)
+    if "name" in data:
+        result = await session.exec(
+            select(Task).where(
+                Task.user_id == user.id,
+                Task.category_id == task.category_id,
+                Task.name == data["name"],
+                Task.id != task.id,
+            )
+        )
+        duplicate = result.first()
+        if duplicate:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A task with this name already exists in this category.",
+            )
     if "provider" in data:
         _ensure_provider_present(data.get("provider"))
     for field, value in data.items():
@@ -567,6 +617,17 @@ async def create_experiment(
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Experiment:
+    result = await session.exec(
+        select(Experiment).where(
+            Experiment.user_id == user.id, Experiment.name == payload.name
+        )
+    )
+    duplicate = result.first()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An experiment with this name already exists.",
+        )
     experiment = Experiment(
         name=payload.name,
         steps=payload.steps or [],
@@ -598,6 +659,20 @@ async def update_experiment(
     experiment = await _get_experiment_for_user(session, user, experiment_id)
     _ensure_experiment_editable(experiment, user)
     data = payload.model_dump(exclude_unset=True)
+    if "name" in data:
+        result = await session.exec(
+            select(Experiment).where(
+                Experiment.user_id == user.id,
+                Experiment.name == data["name"],
+                Experiment.id != experiment.id,
+            )
+        )
+        duplicate = result.first()
+        if duplicate:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An experiment with this name already exists.",
+            )
     for field, value in data.items():
         if field in {"steps", "graphical_model"} and value is None:
             value = [] if field == "steps" else {"nodes": [], "edges": []}
@@ -656,6 +731,17 @@ async def create_workflow(
     session: SessionDep,
     user: CurrentUserDep,
 ) -> Workflow:
+    result = await session.exec(
+        select(Workflow).where(
+            Workflow.user_id == user.id, Workflow.name == payload.name
+        )
+    )
+    duplicate = result.first()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A workflow with this name already exists.",
+        )
     workflow = Workflow(
         name=payload.name,
         graphical_model=payload.graphical_model or {"nodes": [], "edges": []},
@@ -686,6 +772,20 @@ async def update_workflow(
     workflow = await _get_workflow_for_user(session, user, workflow_id)
     _ensure_workflow_editable(workflow, user)
     data = payload.model_dump(exclude_unset=True)
+    if "name" in data:
+        result = await session.exec(
+            select(Workflow).where(
+                Workflow.user_id == user.id,
+                Workflow.name == data["name"],
+                Workflow.id != workflow.id,
+            )
+        )
+        duplicate = result.first()
+        if duplicate:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A workflow with this name already exists.",
+            )
     for field, value in data.items():
         setattr(workflow, field, value)
     session.add(workflow)
@@ -709,6 +809,8 @@ async def delete_workflow(
 
 def main() -> None:
     import uvicorn
+
+    print("Starting Experiment Server on http://0.0.0.0:8000")
 
     uvicorn.run(
         "main:app",
