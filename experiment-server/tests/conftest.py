@@ -43,6 +43,47 @@ async def engine_and_schema() -> AsyncIterator[Tuple[AsyncEngine, str]]:
         await connection.execute(text(f'SET search_path TO "{schema_name}"'))
         await connection.run_sync(SQLModel.metadata.create_all)
 
+        # Add triggers
+        await connection.execute(
+            text(
+                """
+            CREATE OR REPLACE FUNCTION notify_event() RETURNS TRIGGER AS $$
+            DECLARE
+                payload JSON;
+                record_data RECORD;
+            BEGIN
+                IF (TG_OP = 'DELETE') THEN
+                    record_data = OLD;
+                ELSE
+                    record_data = NEW;
+                END IF;
+
+                payload = json_build_object(
+                    'table', TG_TABLE_NAME,
+                    'action', TG_OP,
+                    'id', record_data.id,
+                    'user_id', record_data.user_id
+                );
+                PERFORM pg_notify('db_events', payload::text);
+                RETURN NULL;
+            END;
+            $$ LANGUAGE plpgsql;
+        """
+            )
+        )
+
+        tables = ["experiment", "task", "workflow", "category"]
+        for table in tables:
+            await connection.execute(
+                text(
+                    f"""
+                CREATE TRIGGER notify_{table}_changes
+                AFTER INSERT OR UPDATE OR DELETE ON {table}
+                FOR EACH ROW EXECUTE FUNCTION notify_event();
+                """
+                )
+            )
+
     try:
         yield engine, schema_name
     finally:

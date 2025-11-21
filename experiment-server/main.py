@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -18,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from dotenv import load_dotenv
+from sse_starlette.sse import EventSourceResponse
 
 import structlog
 from sqlmodel_models import Category, Experiment, Task, User, Workflow
@@ -25,6 +27,8 @@ from database import build_async_database_url
 from logging_config import setup_logging, LoggingMiddleware
 from middleware import ConditionalBacinetMiddleware
 from auth import AuthCredentials, resolve_username
+from stream_manager import stream_manager
+from db_listener import start_db_listener
 
 load_dotenv()
 
@@ -73,7 +77,18 @@ async def lifespan(_: FastAPI):
     # Run the migration in a separate thread to avoid blocking the event loop
     await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
     logger.info("Database migrations applied successfully.")
+
+    # Start DB listener
+    listener_task = asyncio.create_task(start_db_listener())
+
     yield
+
+    # Cancel listener
+    listener_task.cancel()
+    try:
+        await listener_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(lifespan=lifespan)
@@ -123,7 +138,9 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 class UserRead(SQLModel):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     username: str
@@ -149,7 +166,9 @@ class CategoryUpdate(SQLModel):
 
 
 class CategoryRead(CategoryBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     is_official: bool
@@ -180,7 +199,9 @@ class TaskUpdate(SQLModel):
 
 
 class TaskRead(TaskBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     category_id: UUID
@@ -209,7 +230,9 @@ class ExperimentUpdate(SQLModel):
 
 
 class ExperimentRead(ExperimentBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -234,7 +257,9 @@ class WorkflowUpdate(SQLModel):
 
 
 class WorkflowRead(WorkflowBase):
-    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -790,6 +815,36 @@ async def delete_workflow(
     await session.delete(workflow)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.get("/events")
+async def events_stream(user: CurrentUserDep):
+    queue = await stream_manager.connect(user.id)
+
+    async def event_generator():
+        try:
+            while True:
+                data = await queue.get()
+                document_type = data.get("document_type")
+                user_id = data.get("user_id")
+                document_id = data.get("document_id")
+                event_type = data.get("event_type")
+                logger.debug(
+                    "Sending event to user",
+                    user_id=str(user_id),
+                    document_type=document_type,
+                    document_id=str(document_id),
+                )
+                public_event_data = {
+                    "document_type": document_type,
+                    "document_id": str(document_id),
+                    "event_type": event_type,
+                }
+                yield {"data": json.dumps(public_event_data)}
+        except asyncio.CancelledError:
+            await stream_manager.disconnect(user.id, queue)
+
+    return EventSourceResponse(event_generator())
 
 
 def main() -> None:
