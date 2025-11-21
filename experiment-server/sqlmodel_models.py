@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
+from uuid6 import uuid7
 from sqlalchemy import (
     CheckConstraint,
     Column,
@@ -45,7 +46,7 @@ class Timestamped(SQLModel, table=False):
 
 class User(Timestamped, table=True):
     id: UUID = Field(
-        default_factory=uuid4,
+        default_factory=uuid7,
         sa_column=Column(
             PGUUID(as_uuid=True),
             primary_key=True,
@@ -84,7 +85,7 @@ class Category(Timestamped, table=True):
     )
 
     id: UUID = Field(
-        default_factory=uuid4,
+        default_factory=uuid7,
         sa_column=Column(
             PGUUID(as_uuid=True),
             primary_key=True,
@@ -128,7 +129,7 @@ class Task(Timestamped, table=True):
     )
 
     id: UUID = Field(
-        default_factory=uuid4,
+        default_factory=uuid7,
         sa_column=Column(
             PGUUID(as_uuid=True),
             primary_key=True,
@@ -183,7 +184,7 @@ class Experiment(Timestamped, table=True):
     )
 
     id: UUID = Field(
-        default_factory=uuid4,
+        default_factory=uuid7,
         sa_column=Column(
             PGUUID(as_uuid=True),
             primary_key=True,
@@ -230,7 +231,7 @@ class Workflow(Timestamped, table=True):
     )
 
     id: UUID = Field(
-        default_factory=uuid4,
+        default_factory=uuid7,
         sa_column=Column(
             PGUUID(as_uuid=True),
             primary_key=True,
