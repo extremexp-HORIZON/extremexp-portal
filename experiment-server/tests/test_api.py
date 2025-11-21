@@ -16,6 +16,8 @@ from tests.conftest import DEFAULT_TEST_DB_URL
 os.environ.setdefault(
     "DATABASE_URL", os.getenv("TEST_DATABASE_URL", DEFAULT_TEST_DB_URL)
 )
+os.environ.setdefault("EXTREMEXP_AUTH_MODE", "mock")
+os.environ.setdefault("EXTREMEXP_AUTH_MOCK_USER", "test-user")
 
 from main import app, get_session
 from sqlmodel_models import Category, Experiment, Task, User, Workflow

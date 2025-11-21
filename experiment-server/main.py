@@ -10,12 +10,11 @@ from uuid import UUID
 
 from alembic import command
 from alembic.config import Config
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ConfigDict
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
-from starlette.middleware.base import BaseHTTPMiddleware
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from dotenv import load_dotenv
@@ -25,6 +24,7 @@ from sqlmodel_models import Category, Experiment, Task, User, Workflow
 from database import build_async_database_url
 from logging_config import setup_logging, LoggingMiddleware
 from middleware import ConditionalBacinetMiddleware
+from auth import AuthCredentials, resolve_username
 
 load_dotenv()
 
@@ -92,15 +92,6 @@ app.add_middleware(
 app.add_middleware(ConditionalBacinetMiddleware)
 
 
-class MockJWTMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        request.state.subject = "test-user"
-        return await call_next(request)
-
-
-app.add_middleware(MockJWTMiddleware)
-
-
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_factory() as session:
         yield session
@@ -109,14 +100,8 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-def get_current_username(request: Request) -> str:
-    username = getattr(request.state, "subject", None)
-    if not username:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        )
-    return username
+def get_current_username(credentials: AuthCredentials) -> str:
+    return resolve_username(credentials)
 
 
 async def get_current_user(
@@ -138,9 +123,7 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 class UserRead(SQLModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     username: str
@@ -166,9 +149,7 @@ class CategoryUpdate(SQLModel):
 
 
 class CategoryRead(CategoryBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     is_official: bool
@@ -199,9 +180,7 @@ class TaskUpdate(SQLModel):
 
 
 class TaskRead(TaskBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     category_id: UUID
@@ -230,9 +209,7 @@ class ExperimentUpdate(SQLModel):
 
 
 class ExperimentRead(ExperimentBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID
@@ -257,9 +234,7 @@ class WorkflowUpdate(SQLModel):
 
 
 class WorkflowRead(WorkflowBase):
-    model_config = ConfigDict(
-        from_attributes=True
-    )  # pyright: ignore[reportAssignmentType]
+    model_config = ConfigDict(from_attributes=True)  # pyright: ignore[reportAssignmentType]
 
     id: UUID
     user_id: UUID

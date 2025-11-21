@@ -1,12 +1,10 @@
 import logging
-import sys
-import structlog
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
 import time
 
-
+import structlog
+from fastapi import Request
 from rich.logging import RichHandler
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 def setup_logging():

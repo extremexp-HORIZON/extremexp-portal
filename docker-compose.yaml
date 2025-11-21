@@ -32,6 +32,8 @@ services:
   exp-service:
     build: ./server-experiment
     container_name: exp-service
+    environment:
+      - EXTREMEXP_AUTH_URL=http://access-control-service:5521/extreme_auth/api/v1/person/userinfo
     healthcheck:
       test: curl --fail http://localhost:5050/api || exit 1
       interval: 40s
