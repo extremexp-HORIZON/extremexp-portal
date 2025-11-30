@@ -943,3 +943,17 @@ export type UpdateWorkflowWorkflowsWorkflowIdPatchResponses = {
 };
 
 export type UpdateWorkflowWorkflowsWorkflowIdPatchResponse = UpdateWorkflowWorkflowsWorkflowIdPatchResponses[keyof UpdateWorkflowWorkflowsWorkflowIdPatchResponses];
+
+export type EventsStreamEventsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/events';
+};
+
+export type EventsStreamEventsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};

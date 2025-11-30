@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateCategoryCategoriesPostData, CreateCategoryCategoriesPostErrors, CreateCategoryCategoriesPostResponses, CreateExperimentExperimentsPostData, CreateExperimentExperimentsPostErrors, CreateExperimentExperimentsPostResponses, CreateTaskTasksPostData, CreateTaskTasksPostErrors, CreateTaskTasksPostResponses, CreateWorkflowWorkflowsPostData, CreateWorkflowWorkflowsPostErrors, CreateWorkflowWorkflowsPostResponses, DeleteCategoryCategoriesCategoryIdDeleteData, DeleteCategoryCategoriesCategoryIdDeleteErrors, DeleteCategoryCategoriesCategoryIdDeleteResponses, DeleteExperimentExperimentsExperimentIdDeleteData, DeleteExperimentExperimentsExperimentIdDeleteErrors, DeleteExperimentExperimentsExperimentIdDeleteResponses, DeleteTaskTasksTaskIdDeleteData, DeleteTaskTasksTaskIdDeleteErrors, DeleteTaskTasksTaskIdDeleteResponses, DeleteWorkflowWorkflowsWorkflowIdDeleteData, DeleteWorkflowWorkflowsWorkflowIdDeleteErrors, DeleteWorkflowWorkflowsWorkflowIdDeleteResponses, HealthcheckHealthzGetData, HealthcheckHealthzGetResponses, ListCategoriesCategoriesGetData, ListCategoriesCategoriesGetResponses, ListExperimentsExperimentsGetData, ListExperimentsExperimentsGetResponses, ListTasksTasksGetData, ListTasksTasksGetErrors, ListTasksTasksGetResponses, ListWorkflowsWorkflowsGetData, ListWorkflowsWorkflowsGetResponses, ReadCategoryCategoriesCategoryIdGetData, ReadCategoryCategoriesCategoryIdGetErrors, ReadCategoryCategoriesCategoryIdGetResponses, ReadCurrentUserUsersMeGetData, ReadCurrentUserUsersMeGetResponses, ReadExperimentExperimentsExperimentIdGetData, ReadExperimentExperimentsExperimentIdGetErrors, ReadExperimentExperimentsExperimentIdGetResponses, ReadTaskTasksTaskIdGetData, ReadTaskTasksTaskIdGetErrors, ReadTaskTasksTaskIdGetResponses, ReadWorkflowWorkflowsWorkflowIdGetData, ReadWorkflowWorkflowsWorkflowIdGetErrors, ReadWorkflowWorkflowsWorkflowIdGetResponses, UpdateCategoryCategoriesCategoryIdPatchData, UpdateCategoryCategoriesCategoryIdPatchErrors, UpdateCategoryCategoriesCategoryIdPatchResponses, UpdateExperimentExperimentsExperimentIdPatchData, UpdateExperimentExperimentsExperimentIdPatchErrors, UpdateExperimentExperimentsExperimentIdPatchResponses, UpdateTaskTasksTaskIdPatchData, UpdateTaskTasksTaskIdPatchErrors, UpdateTaskTasksTaskIdPatchResponses, UpdateWorkflowWorkflowsWorkflowIdPatchData, UpdateWorkflowWorkflowsWorkflowIdPatchErrors, UpdateWorkflowWorkflowsWorkflowIdPatchResponses } from './types.gen';
+import type { CreateCategoryCategoriesPostData, CreateCategoryCategoriesPostErrors, CreateCategoryCategoriesPostResponses, CreateExperimentExperimentsPostData, CreateExperimentExperimentsPostErrors, CreateExperimentExperimentsPostResponses, CreateTaskTasksPostData, CreateTaskTasksPostErrors, CreateTaskTasksPostResponses, CreateWorkflowWorkflowsPostData, CreateWorkflowWorkflowsPostErrors, CreateWorkflowWorkflowsPostResponses, DeleteCategoryCategoriesCategoryIdDeleteData, DeleteCategoryCategoriesCategoryIdDeleteErrors, DeleteCategoryCategoriesCategoryIdDeleteResponses, DeleteExperimentExperimentsExperimentIdDeleteData, DeleteExperimentExperimentsExperimentIdDeleteErrors, DeleteExperimentExperimentsExperimentIdDeleteResponses, DeleteTaskTasksTaskIdDeleteData, DeleteTaskTasksTaskIdDeleteErrors, DeleteTaskTasksTaskIdDeleteResponses, DeleteWorkflowWorkflowsWorkflowIdDeleteData, DeleteWorkflowWorkflowsWorkflowIdDeleteErrors, DeleteWorkflowWorkflowsWorkflowIdDeleteResponses, EventsStreamEventsGetData, EventsStreamEventsGetResponses, HealthcheckHealthzGetData, HealthcheckHealthzGetResponses, ListCategoriesCategoriesGetData, ListCategoriesCategoriesGetResponses, ListExperimentsExperimentsGetData, ListExperimentsExperimentsGetResponses, ListTasksTasksGetData, ListTasksTasksGetErrors, ListTasksTasksGetResponses, ListWorkflowsWorkflowsGetData, ListWorkflowsWorkflowsGetResponses, ReadCategoryCategoriesCategoryIdGetData, ReadCategoryCategoriesCategoryIdGetErrors, ReadCategoryCategoriesCategoryIdGetResponses, ReadCurrentUserUsersMeGetData, ReadCurrentUserUsersMeGetResponses, ReadExperimentExperimentsExperimentIdGetData, ReadExperimentExperimentsExperimentIdGetErrors, ReadExperimentExperimentsExperimentIdGetResponses, ReadTaskTasksTaskIdGetData, ReadTaskTasksTaskIdGetErrors, ReadTaskTasksTaskIdGetResponses, ReadWorkflowWorkflowsWorkflowIdGetData, ReadWorkflowWorkflowsWorkflowIdGetErrors, ReadWorkflowWorkflowsWorkflowIdGetResponses, UpdateCategoryCategoriesCategoryIdPatchData, UpdateCategoryCategoriesCategoryIdPatchErrors, UpdateCategoryCategoriesCategoryIdPatchResponses, UpdateExperimentExperimentsExperimentIdPatchData, UpdateExperimentExperimentsExperimentIdPatchErrors, UpdateExperimentExperimentsExperimentIdPatchResponses, UpdateTaskTasksTaskIdPatchData, UpdateTaskTasksTaskIdPatchErrors, UpdateTaskTasksTaskIdPatchResponses, UpdateWorkflowWorkflowsWorkflowIdPatchData, UpdateWorkflowWorkflowsWorkflowIdPatchErrors, UpdateWorkflowWorkflowsWorkflowIdPatchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -26,17 +26,26 @@ export const healthcheckHealthzGet = <ThrowOnError extends boolean = false>(opti
 /**
  * Read Current User
  */
-export const readCurrentUserUsersMeGet = <ThrowOnError extends boolean = false>(options?: Options<ReadCurrentUserUsersMeGetData, ThrowOnError>) => (options?.client ?? client).get<ReadCurrentUserUsersMeGetResponses, unknown, ThrowOnError>({ url: '/users/me', ...options });
+export const readCurrentUserUsersMeGet = <ThrowOnError extends boolean = false>(options?: Options<ReadCurrentUserUsersMeGetData, ThrowOnError>) => (options?.client ?? client).get<ReadCurrentUserUsersMeGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/users/me',
+    ...options
+});
 
 /**
  * List Categories
  */
-export const listCategoriesCategoriesGet = <ThrowOnError extends boolean = false>(options?: Options<ListCategoriesCategoriesGetData, ThrowOnError>) => (options?.client ?? client).get<ListCategoriesCategoriesGetResponses, unknown, ThrowOnError>({ url: '/categories', ...options });
+export const listCategoriesCategoriesGet = <ThrowOnError extends boolean = false>(options?: Options<ListCategoriesCategoriesGetData, ThrowOnError>) => (options?.client ?? client).get<ListCategoriesCategoriesGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/categories',
+    ...options
+});
 
 /**
  * Create Category
  */
 export const createCategoryCategoriesPost = <ThrowOnError extends boolean = false>(options: Options<CreateCategoryCategoriesPostData, ThrowOnError>) => (options.client ?? client).post<CreateCategoryCategoriesPostResponses, CreateCategoryCategoriesPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/categories',
     ...options,
     headers: {
@@ -48,17 +57,26 @@ export const createCategoryCategoriesPost = <ThrowOnError extends boolean = fals
 /**
  * Delete Category
  */
-export const deleteCategoryCategoriesCategoryIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteCategoryCategoriesCategoryIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteCategoryCategoriesCategoryIdDeleteResponses, DeleteCategoryCategoriesCategoryIdDeleteErrors, ThrowOnError>({ url: '/categories/{category_id}', ...options });
+export const deleteCategoryCategoriesCategoryIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteCategoryCategoriesCategoryIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteCategoryCategoriesCategoryIdDeleteResponses, DeleteCategoryCategoriesCategoryIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/categories/{category_id}',
+    ...options
+});
 
 /**
  * Read Category
  */
-export const readCategoryCategoriesCategoryIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadCategoryCategoriesCategoryIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadCategoryCategoriesCategoryIdGetResponses, ReadCategoryCategoriesCategoryIdGetErrors, ThrowOnError>({ url: '/categories/{category_id}', ...options });
+export const readCategoryCategoriesCategoryIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadCategoryCategoriesCategoryIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadCategoryCategoriesCategoryIdGetResponses, ReadCategoryCategoriesCategoryIdGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/categories/{category_id}',
+    ...options
+});
 
 /**
  * Update Category
  */
 export const updateCategoryCategoriesCategoryIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateCategoryCategoriesCategoryIdPatchData, ThrowOnError>) => (options.client ?? client).patch<UpdateCategoryCategoriesCategoryIdPatchResponses, UpdateCategoryCategoriesCategoryIdPatchErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/categories/{category_id}',
     ...options,
     headers: {
@@ -70,12 +88,17 @@ export const updateCategoryCategoriesCategoryIdPatch = <ThrowOnError extends boo
 /**
  * List Tasks
  */
-export const listTasksTasksGet = <ThrowOnError extends boolean = false>(options?: Options<ListTasksTasksGetData, ThrowOnError>) => (options?.client ?? client).get<ListTasksTasksGetResponses, ListTasksTasksGetErrors, ThrowOnError>({ url: '/tasks', ...options });
+export const listTasksTasksGet = <ThrowOnError extends boolean = false>(options?: Options<ListTasksTasksGetData, ThrowOnError>) => (options?.client ?? client).get<ListTasksTasksGetResponses, ListTasksTasksGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/tasks',
+    ...options
+});
 
 /**
  * Create Task
  */
 export const createTaskTasksPost = <ThrowOnError extends boolean = false>(options: Options<CreateTaskTasksPostData, ThrowOnError>) => (options.client ?? client).post<CreateTaskTasksPostResponses, CreateTaskTasksPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tasks',
     ...options,
     headers: {
@@ -87,17 +110,26 @@ export const createTaskTasksPost = <ThrowOnError extends boolean = false>(option
 /**
  * Delete Task
  */
-export const deleteTaskTasksTaskIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteTaskTasksTaskIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteTaskTasksTaskIdDeleteResponses, DeleteTaskTasksTaskIdDeleteErrors, ThrowOnError>({ url: '/tasks/{task_id}', ...options });
+export const deleteTaskTasksTaskIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteTaskTasksTaskIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteTaskTasksTaskIdDeleteResponses, DeleteTaskTasksTaskIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/tasks/{task_id}',
+    ...options
+});
 
 /**
  * Read Task
  */
-export const readTaskTasksTaskIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadTaskTasksTaskIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadTaskTasksTaskIdGetResponses, ReadTaskTasksTaskIdGetErrors, ThrowOnError>({ url: '/tasks/{task_id}', ...options });
+export const readTaskTasksTaskIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadTaskTasksTaskIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadTaskTasksTaskIdGetResponses, ReadTaskTasksTaskIdGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/tasks/{task_id}',
+    ...options
+});
 
 /**
  * Update Task
  */
 export const updateTaskTasksTaskIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateTaskTasksTaskIdPatchData, ThrowOnError>) => (options.client ?? client).patch<UpdateTaskTasksTaskIdPatchResponses, UpdateTaskTasksTaskIdPatchErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tasks/{task_id}',
     ...options,
     headers: {
@@ -109,12 +141,17 @@ export const updateTaskTasksTaskIdPatch = <ThrowOnError extends boolean = false>
 /**
  * List Experiments
  */
-export const listExperimentsExperimentsGet = <ThrowOnError extends boolean = false>(options?: Options<ListExperimentsExperimentsGetData, ThrowOnError>) => (options?.client ?? client).get<ListExperimentsExperimentsGetResponses, unknown, ThrowOnError>({ url: '/experiments', ...options });
+export const listExperimentsExperimentsGet = <ThrowOnError extends boolean = false>(options?: Options<ListExperimentsExperimentsGetData, ThrowOnError>) => (options?.client ?? client).get<ListExperimentsExperimentsGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/experiments',
+    ...options
+});
 
 /**
  * Create Experiment
  */
 export const createExperimentExperimentsPost = <ThrowOnError extends boolean = false>(options: Options<CreateExperimentExperimentsPostData, ThrowOnError>) => (options.client ?? client).post<CreateExperimentExperimentsPostResponses, CreateExperimentExperimentsPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/experiments',
     ...options,
     headers: {
@@ -126,17 +163,26 @@ export const createExperimentExperimentsPost = <ThrowOnError extends boolean = f
 /**
  * Delete Experiment
  */
-export const deleteExperimentExperimentsExperimentIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteExperimentExperimentsExperimentIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteExperimentExperimentsExperimentIdDeleteResponses, DeleteExperimentExperimentsExperimentIdDeleteErrors, ThrowOnError>({ url: '/experiments/{experiment_id}', ...options });
+export const deleteExperimentExperimentsExperimentIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteExperimentExperimentsExperimentIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteExperimentExperimentsExperimentIdDeleteResponses, DeleteExperimentExperimentsExperimentIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/experiments/{experiment_id}',
+    ...options
+});
 
 /**
  * Read Experiment
  */
-export const readExperimentExperimentsExperimentIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadExperimentExperimentsExperimentIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadExperimentExperimentsExperimentIdGetResponses, ReadExperimentExperimentsExperimentIdGetErrors, ThrowOnError>({ url: '/experiments/{experiment_id}', ...options });
+export const readExperimentExperimentsExperimentIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadExperimentExperimentsExperimentIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadExperimentExperimentsExperimentIdGetResponses, ReadExperimentExperimentsExperimentIdGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/experiments/{experiment_id}',
+    ...options
+});
 
 /**
  * Update Experiment
  */
 export const updateExperimentExperimentsExperimentIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateExperimentExperimentsExperimentIdPatchData, ThrowOnError>) => (options.client ?? client).patch<UpdateExperimentExperimentsExperimentIdPatchResponses, UpdateExperimentExperimentsExperimentIdPatchErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/experiments/{experiment_id}',
     ...options,
     headers: {
@@ -148,12 +194,17 @@ export const updateExperimentExperimentsExperimentIdPatch = <ThrowOnError extend
 /**
  * List Workflows
  */
-export const listWorkflowsWorkflowsGet = <ThrowOnError extends boolean = false>(options?: Options<ListWorkflowsWorkflowsGetData, ThrowOnError>) => (options?.client ?? client).get<ListWorkflowsWorkflowsGetResponses, unknown, ThrowOnError>({ url: '/workflows', ...options });
+export const listWorkflowsWorkflowsGet = <ThrowOnError extends boolean = false>(options?: Options<ListWorkflowsWorkflowsGetData, ThrowOnError>) => (options?.client ?? client).get<ListWorkflowsWorkflowsGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/workflows',
+    ...options
+});
 
 /**
  * Create Workflow
  */
 export const createWorkflowWorkflowsPost = <ThrowOnError extends boolean = false>(options: Options<CreateWorkflowWorkflowsPostData, ThrowOnError>) => (options.client ?? client).post<CreateWorkflowWorkflowsPostResponses, CreateWorkflowWorkflowsPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/workflows',
     ...options,
     headers: {
@@ -165,21 +216,39 @@ export const createWorkflowWorkflowsPost = <ThrowOnError extends boolean = false
 /**
  * Delete Workflow
  */
-export const deleteWorkflowWorkflowsWorkflowIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowWorkflowsWorkflowIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteWorkflowWorkflowsWorkflowIdDeleteResponses, DeleteWorkflowWorkflowsWorkflowIdDeleteErrors, ThrowOnError>({ url: '/workflows/{workflow_id}', ...options });
+export const deleteWorkflowWorkflowsWorkflowIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowWorkflowsWorkflowIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteWorkflowWorkflowsWorkflowIdDeleteResponses, DeleteWorkflowWorkflowsWorkflowIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/workflows/{workflow_id}',
+    ...options
+});
 
 /**
  * Read Workflow
  */
-export const readWorkflowWorkflowsWorkflowIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadWorkflowWorkflowsWorkflowIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadWorkflowWorkflowsWorkflowIdGetResponses, ReadWorkflowWorkflowsWorkflowIdGetErrors, ThrowOnError>({ url: '/workflows/{workflow_id}', ...options });
+export const readWorkflowWorkflowsWorkflowIdGet = <ThrowOnError extends boolean = false>(options: Options<ReadWorkflowWorkflowsWorkflowIdGetData, ThrowOnError>) => (options.client ?? client).get<ReadWorkflowWorkflowsWorkflowIdGetResponses, ReadWorkflowWorkflowsWorkflowIdGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/workflows/{workflow_id}',
+    ...options
+});
 
 /**
  * Update Workflow
  */
 export const updateWorkflowWorkflowsWorkflowIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowWorkflowsWorkflowIdPatchData, ThrowOnError>) => (options.client ?? client).patch<UpdateWorkflowWorkflowsWorkflowIdPatchResponses, UpdateWorkflowWorkflowsWorkflowIdPatchErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/workflows/{workflow_id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Events Stream
+ */
+export const eventsStreamEventsGet = <ThrowOnError extends boolean = false>(options?: Options<EventsStreamEventsGetData, ThrowOnError>) => (options?.client ?? client).get<EventsStreamEventsGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/events',
+    ...options
 });
