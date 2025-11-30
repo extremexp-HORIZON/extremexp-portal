@@ -26,7 +26,7 @@ from sqlmodel_models import Category, Experiment, Task, User, Workflow
 from database import build_async_database_url
 from logging_config import setup_logging, LoggingMiddleware
 from middleware import ConditionalBacinetMiddleware
-from auth import AuthCredentials, resolve_username
+from auth import TokenCredentials, UserCredentials, resolve_credentials
 from stream_manager import stream_manager
 from db_listener import start_db_listener
 
@@ -115,8 +115,12 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-def get_current_username(credentials: AuthCredentials) -> str:
-    return resolve_username(credentials)
+def get_current_username(credentials: TokenCredentials) -> str:
+    return resolve_credentials(credentials).username
+
+
+def get_current_credentials(credentials: TokenCredentials) -> UserCredentials:
+    return resolve_credentials(credentials)
 
 
 async def get_current_user(
@@ -818,13 +822,44 @@ async def delete_workflow(
 
 
 @app.get("/events")
-async def events_stream(user: CurrentUserDep):
+async def events_stream(
+    user: CurrentUserDep,
+    credentials: Annotated[UserCredentials, Depends(get_current_credentials)],
+):
     queue = await stream_manager.connect(user.id)
 
     async def event_generator():
         try:
             while True:
-                data = await queue.get()
+                # Check if token has expired
+                if credentials.is_expired:
+                    logger.info(
+                        "Token expired, closing SSE stream",
+                        user_id=str(user.id),
+                        expired_at=(
+                            credentials.expires_at.isoformat()
+                            if credentials.expires_at
+                            else None
+                        ),
+                    )
+                    yield {
+                        "event": "error",
+                        "data": json.dumps(
+                            {
+                                "type": "token_expired",
+                                "message": "Authentication token has expired",
+                            }
+                        ),
+                    }
+                    return
+
+                # Wait for next event with timeout to periodically check expiration
+                try:
+                    data = await asyncio.wait_for(queue.get(), timeout=30.0)
+                except asyncio.TimeoutError:
+                    # No event received, loop back to check expiration
+                    continue
+
                 document_type = data.get("document_type")
                 user_id = data.get("user_id")
                 document_id = data.get("document_id")
@@ -842,6 +877,8 @@ async def events_stream(user: CurrentUserDep):
                 }
                 yield {"data": json.dumps(public_event_data)}
         except asyncio.CancelledError:
+            pass
+        finally:
             await stream_manager.disconnect(user.id, queue)
 
     return EventSourceResponse(event_generator())
