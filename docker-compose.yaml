@@ -12,6 +12,12 @@ services:
       - postgresql_data:/var/lib/postgresql
     networks:
       - extremexp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.4.4
