@@ -3,13 +3,25 @@
  *
  * This file configures the auto-generated OpenAPI client with:
  * - Bearer token authentication from the auth store
- * - Automatic 401/403 handling (clears auth state)
+ * - Automatic 401/403 handling (sets sessionStorage expired flag and clears auth state)
  *
  * Call `configureClient()` once at app startup (e.g., in main.tsx).
  */
 
 import { client } from "../client/client.gen";
 import { getValidToken, useAuthStore } from "../auth/authStore";
+
+const SESSION_EXPIRED_KEY = 'session-expired';
+
+function handleAuthExpired() {
+  // Set the expired flag in sessionStorage
+  sessionStorage.setItem(SESSION_EXPIRED_KEY, 'true');
+  useAuthStore.getState().clearAuth();
+  // Redirect to auth page
+  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+    window.location.href = "/auth";
+  }
+}
 
 /**
  * Configure the API client with authentication and error handling.
@@ -28,8 +40,7 @@ export function configureClient(): void {
   // Add response interceptor to handle auth errors
   client.interceptors.response.use((response) => {
     if (response.status === 401 || response.status === 403) {
-      // Clear auth state - navigation to login is handled by useAuth hook
-      useAuthStore.getState().clearAuth();
+      handleAuthExpired();
     }
     return response;
   });

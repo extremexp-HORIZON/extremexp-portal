@@ -1,3 +1,4 @@
+// @ts-expect-error - react-jdenticon has no type declarations
 import Jdenticon from "react-jdenticon"
 import { useAuth } from "../auth"
 

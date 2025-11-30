@@ -6,6 +6,7 @@ import './index.css'
 import App from './App.tsx'
 import { AuthPage } from './components/auth'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { EventStreamProvider } from './components/EventStreamProvider'
 import { configureClient } from './api/clientConfig'
 
 // Configure API client with auth interceptors
@@ -29,7 +30,9 @@ createRoot(document.getElementById('root')!).render(
             path="/*"
             element={
               <ProtectedRoute>
-                <App />
+                <EventStreamProvider>
+                  <App />
+                </EventStreamProvider>
               </ProtectedRoute>
             }
           />

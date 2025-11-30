@@ -1,9 +1,10 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
-import { useAuth } from "../../auth";
 import logo from "../../assets/extremeXP_logo.png";
+
+const SESSION_EXPIRED_KEY = "session-expired";
 
 type AuthTab = "login" | "register";
 
@@ -74,25 +75,17 @@ export function AuthPage({
   defaultTab = "login",
   redirectTo = "/",
 }: AuthPageProps) {
-  const { isLoggedIn } = useAuth();
+  // Read sessionStorage on mount
+  const [sessionExpired, setSessionExpired] = useState(
+    () => sessionStorage.getItem(SESSION_EXPIRED_KEY) === "true"
+  );
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-
-  // Check if redirected due to session expiration
-  const sessionExpired = searchParams.has('expired');
 
   // Determine active tab from URL
   const activeTab: AuthTab = location.pathname.includes("/register")
     ? "register"
     : defaultTab;
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate(redirectTo, { replace: true });
-    }
-  }, [isLoggedIn, navigate, redirectTo]);
 
   const handleTabChange = (tab: AuthTab) => {
     if (tab === "register") {
@@ -103,6 +96,8 @@ export function AuthPage({
   };
 
   const handleLoginSuccess = () => {
+    // Clear any session expired flag on successful login
+    sessionStorage.removeItem(SESSION_EXPIRED_KEY);
     navigate(redirectTo, { replace: true });
   };
 
@@ -112,8 +107,9 @@ export function AuthPage({
   };
 
   const handleDismissSessionExpired = () => {
-    // Remove the ?expired query param
-    navigate('/auth', { replace: true });
+    // Clear the session expired flag
+    sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+    setSessionExpired(false);
   };
 
   return (

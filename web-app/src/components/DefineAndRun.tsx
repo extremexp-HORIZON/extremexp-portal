@@ -167,7 +167,7 @@ export default function DefineAndRun() {
                   </svg>
                   <span>
                     {(createExperimentMutation.error as Error & { detail?: string }).detail ||
-                      createExperimentMutation.error.message ||
+                      (createExperimentMutation.error as Error).message ||
                       "An error occurred"}
                   </span>
                 </div>
