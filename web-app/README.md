@@ -1,56 +1,54 @@
-# React + TypeScript + Vite
+# Web App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend for the ExtremeXP Portal built with React 19, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** with TypeScript
+- **Vite 7** for bundling
+- **Tailwind CSS 4** + **DaisyUI 5** for styling
+- **TanStack Query** for server state
+- **Zustand** for client state
+- **React Router** for navigation
+- **Ky** for HTTP requests
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-};
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
-
-## Build
-
-**Develope**
-
-```
+```bash
 npm install
-```
-
-```
 npm run dev
 ```
 
-**Deploy**
+## Scripts
 
-```
-npm install
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm run openapi-ts` | Generate API client from OpenAPI spec |
+
+## API Client Generation
+
+The app uses [@hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) to generate a typed API client from the backend's OpenAPI schema:
+
+```bash
+npm run openapi-ts
 ```
 
-```
-npm run build
-```
+This requires the backend to be running at `http://localhost:8000`.
 
-```
-npm run preview
+## Project Structure
+
+```text
+src/
+├── api/          # API utilities
+├── auth/         # Authentication logic
+├── client/       # Generated OpenAPI client
+├── components/   # React components
+├── hooks/        # Custom hooks
+├── stores/       # Zustand stores
+└── assets/       # Static assets
 ```

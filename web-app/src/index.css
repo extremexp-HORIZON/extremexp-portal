@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@import "@fontsource/roboto";
+
+@plugin "daisyui" {
+  themes: light --default;
+  /* disable daisyUI spam */
+  logs: false;
+}
+
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  color-scheme: light;
+
+  /* Custom primary color */
+  --color-primary: #46A3FF;
+  --color-primary-content: #ffffff;
+}
+
+@theme {
+  --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /*--font-display: "Comic Sans MS", cursive, sans-serif;*/
+}
