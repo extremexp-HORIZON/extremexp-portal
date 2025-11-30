@@ -12,6 +12,7 @@ const Repository = () => {
   // const isProgress = location.pathname.includes('/progress');
   const isIntents = location.pathname.includes('/intents');
   const isDDM = location.pathname.includes('/ddm');
+  const isExecution = location.pathname.includes('/execution');
   const experimentSelectedClass = isExperiments ? 'selected' : '';
   const workflowsSelectedClass = isWorkflows ? 'selected' : '';
   const taskSelectedClass = isTask ? 'selected' : '';
@@ -19,6 +20,7 @@ const Repository = () => {
   // const progressSelectedClass = isProgress ? 'selected' : '';
   const intentsSelectedClass = isIntents ? 'selected' : '';
   const ddmSelectedClass = isDDM ? 'selected' : '';
+  const executionSelectedClass = isExecution ? 'selected' : '';
 
   const navigate = useNavigate();
 
@@ -89,6 +91,14 @@ const Repository = () => {
             >
               <span className="iconfont">&#xe653;</span>
               <p>DDM</p>
+            </div>
+          </Link>
+          <Link to={'/dashboard/execution'}>
+            <div
+                className={`repository__panel__items__item ${executionSelectedClass}`}
+            >
+              <span className="iconfont">&#xe653;</span>
+              <p>Execution</p>
             </div>
           </Link>
         </div>

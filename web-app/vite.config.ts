@@ -18,8 +18,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
-      }
-
+      },
+      '/execution': {
+        target: 'http://localhost:5556',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/execution/, ''),
+      },
     }
   },
 });

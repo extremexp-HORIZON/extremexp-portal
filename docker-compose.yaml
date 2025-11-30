@@ -13,21 +13,21 @@ services:
     networks:
       - extremexp_network
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.4.4
-    environment:
-      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_USERNAME}
-      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_USER_PASSWORD}
-    container_name: keycloak
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    volumes:
-      - keycloak_data:/opt/keycloak/data
-      - ./extremexp-keycloak-import:/opt/keycloak/data/import
-    command: start-dev --import-realm --verbose
-    networks:
-      - extremexp_network
+  # keycloak:
+  #   image: quay.io/keycloak/keycloak:26.4.4
+  #   environment:
+  #     - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_USERNAME}
+  #     - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_USER_PASSWORD}
+  #   container_name: keycloak
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - keycloak_data:/opt/keycloak/data
+  #     - ./extremexp-keycloak-import:/opt/keycloak/data/import
+  #   command: start-dev --import-realm --verbose
+  #   networks:
+  #     - extremexp_network
 
   exp-service:
     build: ./server-experiment
@@ -80,7 +80,7 @@ services:
     image: nginx:latest
     container_name: nginx-servers
     ports:
-      - "8082:80"
+      - "80:80"
     depends_on:
       - web-app
       - access-control-service
@@ -94,6 +94,7 @@ services:
       - extremexp_network
 
   proxy-service:
+    platform: linux/amd64
     image: ghcr.io/yagorezende/extremexp-abacproxy:latest
     container_name:
       proxy-service
@@ -130,6 +131,7 @@ services:
       - extremexp_network
 
   access-control-service:
+    platform: linux/amd64
     image: ghcr.io/yagorezende/extremexp_accesscontrol:latest
     container_name: access-control-service
     ports:
@@ -168,4 +170,4 @@ networks:
 
 volumes:
   mongo_data:
-  keycloak_data:
+  # keycloak_data:

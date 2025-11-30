@@ -355,6 +355,16 @@ const DynamicTable = (props: DynamicTableProps) => {
                 />
               </td>
             </tr>
+            <tr>
+              <td className="value">
+                <span
+                  className="iconfont delete-param"
+                  onClick={onValueDelete(0)}
+                >
+                  &#xe600;
+                </span>
+              </td>
+            </tr>
           </tbody>
         </table>
       ) : null}

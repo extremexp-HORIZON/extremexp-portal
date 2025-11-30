@@ -64,6 +64,8 @@ function ExperimentDesigner() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // TODO: If param is integer dont allow comma
+
   // --- Routing ---
   const projID = useLocation().pathname.split("/")[3];
   const experimentID = useLocation().pathname.split("/")[4];

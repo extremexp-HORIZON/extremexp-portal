@@ -18,6 +18,8 @@ import {
   UpdateExperimentNameResponseType,
   DeleteExperimentResponseType,
 } from '../../../types/requests';
+import { useAccountStore } from '../../../stores/accountStore';
+import axios from 'axios';
 
 const ProjectExperiment = () => {
   const [experiments, setExperiments] = useState<ExperimentType[]>([defaultExperiment]);
@@ -41,6 +43,23 @@ const ProjectExperiment = () => {
     useRequest<DeleteExperimentResponseType>();
 
   const navigate = useNavigate();
+
+  const handleRunButtom = async (experimentName: string) => {
+    const username = useAccountStore.getState().username;
+
+    try {
+      await axios.post('/execution/exp/run', {
+        username: username,
+        exp_name: experimentName,
+      });
+
+      navigate('/dashboard/execution');
+    } catch (error) {
+      console.error('Error running experiment:', error);
+      message('Failed to run experiment');
+    }
+  };
+
 
   const getExperiments = useCallback(() => {
     experimentsRequest({
@@ -254,6 +273,7 @@ const ProjectExperiment = () => {
                   <button
                     className="analyze_button"
                     title="run experiment"
+                    onClick={() => handleRunButtom(specification.name)}
                   >
                     run
                   </button>

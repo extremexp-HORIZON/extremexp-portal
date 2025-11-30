@@ -426,7 +426,7 @@ class ConvertorHandler:
 
     def experiment2dsl(self, experiment_name: str, json_content: dict) -> Optional[str]:
         logger.info(f"Converting json to DSL for experiment {experiment_name}")
-        response = requests.post(f"{self.convert_base_url}/experiment2dsl?name={experiment_name}", json=json_content)
+        response = requests.post(f"{self.convert_base_url}/experiment2dsl?scope=experiment", json=json_content)
         if response.status_code == 200:
             dsl_content = response.text
             logger.info(f"Successfully converted experiment {experiment_name} to DSL")
@@ -434,7 +434,7 @@ class ConvertorHandler:
         else:
             logger.error(f"Error converting to DSL: {response.text}")
             return None
-
+    # TODO: Fix this once the convertor service is updated to handle experiment conversion
     def dsl2experiment(self, experiment_name: str, dsl_content: str) -> Optional[Dict]:
         logger.info(f"Converting DSL to json for experiment {experiment_name}")
         response = requests.post(f"{self.convert_base_url}/dsl2experiment?name={experiment_name}", data=dsl_content)
@@ -445,7 +445,7 @@ class ConvertorHandler:
         else:
             logger.error(f"Error converting DSL to json: {response.text}")
             return None
-
+    # TODO: Fix this once the convertor service is updated to handle experiment conversion
     def dsl2workflow(self, workflow_name: str, dsl_content: str) -> Optional[Dict]:
         logger.info(f"Converting DSL to json for workflow {workflow_name}")
         response = requests.post(f"{self.convert_base_url}/dsl2workflow?name={workflow_name}", data=dsl_content)

@@ -82,8 +82,7 @@ def update_experiment_graphical_model(experiment_id):
     experimentHandler.update_experiment_graphical_model(
         experiment_id, steps
     )
-    # TODO: Integrate this when endpoints are done
-    # fs_result, fs_status = fileSystemHandler.update_experiment(g.username, experiment_name, request.json)
-    # if fs_status != 200:
-    #     return {"message": "Filesystem error", "error": fs_result}, 500
+    fs_result, fs_status = fileSystemHandler.update_experiment(g.username, experiment_name, request.json)
+    if fs_status != 200:
+        return {"message": "Filesystem error", "error": fs_result}, 500
     return {"message": "experiment graphical model updated"}, 200
