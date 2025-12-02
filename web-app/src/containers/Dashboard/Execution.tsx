@@ -30,7 +30,7 @@ const Execution = () => {
   );
   const [selectedExperiment, setSelectedExperiment] = useState<string>("");
 
-  const username = useAccountStore((state) => state.username);
+  const {token, username} = useAccountStore((state) => state);
 
   const fetchQueueStatus = useCallback(async () => {
     try {
@@ -160,7 +160,7 @@ const Execution = () => {
 
   const handleVisualize = (experimentId: string) => {
     window.open(
-      `https://vis.extremexp-icom.intracom-telecom.com/${experimentId}`,
+      `https://vis.extremexp-icom.intracom-telecom.com/external/${token}/${experimentId}`,
       "_blank"
     );
   };
