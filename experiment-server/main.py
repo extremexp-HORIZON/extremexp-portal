@@ -42,6 +42,10 @@ DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "http://localhost:7001",
     "http://localhost:8082",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:7001",
+    "http://127.0.0.1:8082",
 ]
 _cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS")
 
@@ -827,6 +831,7 @@ async def events_stream(
     credentials: Annotated[UserCredentials, Depends(get_current_credentials)],
 ):
     queue = await stream_manager.connect(user.id)
+    logger.info("SSE client connected", user_id=str(user.id))
 
     async def event_generator():
         try:
@@ -876,7 +881,8 @@ async def events_stream(
                     "event_type": event_type,
                 }
                 yield {"data": json.dumps(public_event_data)}
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as e:
+            logger.info("SSE cancelled", user_id=str(user.id), error=str(e))
             pass
         finally:
             await stream_manager.disconnect(user.id, queue)
