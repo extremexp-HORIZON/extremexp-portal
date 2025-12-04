@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:8.2.1
+    image: mongo:4.4
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
@@ -13,31 +13,10 @@ services:
     networks:
       - extremexp_network
 
-  # keycloak:
-  #   image: quay.io/keycloak/keycloak:26.4.4
-  #   environment:
-  #     - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_USERNAME}
-  #     - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_USER_PASSWORD}
-  #   container_name: keycloak
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8080:8080"
-  #   volumes:
-  #     - keycloak_data:/opt/keycloak/data
-  #     - ./extremexp-keycloak-import:/opt/keycloak/data/import
-  #   command: start-dev --import-realm --verbose
-  #   networks:
-  #     - extremexp_network
 
   exp-service:
     build: ./server-experiment
     container_name: exp-service
-    healthcheck:
-      test: curl --fail http://localhost:5050/api || exit 1
-      interval: 40s
-      timeout: 30s
-      retries: 3
-      start_period: 60s
     volumes:
       - ${WORKSPACE_PATH}:/workspace
     ports:
@@ -164,6 +143,17 @@ services:
     networks:
       - extremexp_network
 
+  dms-api:
+    build: ./extremexp-dms
+    container_name: dms-api
+    ports:
+      - "8866:8866"
+    environment:
+      - SERVER_PORT=8866
+      - JAVA_OPTS=-Xms256m -Xmx1g
+    networks:
+      - extremexp_network
+
 networks:
   extremexp_network:
     driver: bridge
@@ -171,3 +161,4 @@ networks:
 volumes:
   mongo_data:
   # keycloak_data:
+ 
