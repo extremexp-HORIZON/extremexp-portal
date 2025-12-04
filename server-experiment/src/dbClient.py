@@ -5,5 +5,5 @@ username = "admin"
 password = "admin"
 
 mongo_client = pymongo.MongoClient(
-    "mongodb://{user}:{pwd}@mongo:27017/".format(user=username, pwd=password)
+    f"mongodb://{username}:{password}@mongo:27017/?authSource=admin"
 )

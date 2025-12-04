@@ -12,7 +12,7 @@ class ConvertorHandler:
 
     def __init__(self):
         self.url = "http://emf-cloud-service:8081/api/v2"
-        self.convert_base_url = "http://host.docker.internal:8866/api"
+        self.convert_base_url = "http://dms-api:8866/api"
         self.meta_model_loc = self.__init_meta_model_location()
         self.root_type = "Specification"
         self.workflow = []
