@@ -4,6 +4,7 @@ import { login } from '../../stores/accountStore';
 import useRequest from '../../hooks/useRequest';
 import { LoginResponseType } from '../../types/requests';
 import { message } from '../../utils/message';
+import axios from 'axios';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -28,6 +29,7 @@ const Login = () => {
         const token = response?.access_token;
         if (token) {
           login(username, token);
+          axios.get("/api/tasks/setup-workspace/" + username)
           navigate('/dashboard/experiments');
         }
       })

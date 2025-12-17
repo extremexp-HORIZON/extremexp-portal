@@ -15,6 +15,14 @@ class FileSystemHandler:
         self.workspace_path = Path("/workspace")
         self.archives_path = Path("/archives")
 
+    def create_user_workspace(self, username: str) -> None:
+        user_workspace = self.workspace_path / username
+        experiments_path = user_workspace / "experiments"
+        workflows_path = user_workspace / "workflows"
+
+        os.makedirs(experiments_path, exist_ok=True)
+        os.makedirs(workflows_path, exist_ok=True)
+
     def create_experiment(self, username: str, exp_name: str) -> dict:
         filepath = self.workspace_path / username / "experiments" / f"{exp_name}.xxp"
         if filepath.exists():

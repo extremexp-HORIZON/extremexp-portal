@@ -1,12 +1,21 @@
 from flask import Blueprint, request, Response, g
 from flask_cors import cross_origin
-from handlers import taskHandler, experimentHandler, convertorHandler
+from handlers import taskHandler, experimentHandler, convertorHandler, fileSystemHandler
 
 tasks = Blueprint("tasks", __name__)
 
 ERROR_DUPLICATE = "Error: Duplicate name"
 ERROR_NOT_FOUND = "Error: Not found"
 
+
+# TASKS
+@tasks.route("/setup-workspace/<username>", methods=["GET"])
+@cross_origin()
+def setup_workspace(username):
+    fileSystemHandler.create_user_workspace(username)
+    return {
+        "message": f"workspace setup for user {username}",
+    }, 200
 
 # TASKS
 @tasks.route("/<category_id>/all", methods=["GET"])
