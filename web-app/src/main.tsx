@@ -8,9 +8,15 @@ import { AuthPage } from './components/auth'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { EventStreamProvider } from './components/EventStreamProvider'
 import { configureClient } from './api/clientConfig'
+import { initializeDALTokenFromStorage } from './dal-client'
 
 // Configure API client with auth interceptors
 configureClient()
+
+// Initialize DAL client with stored token (if any)
+// NOTE: This is a temporary PoC solution. Token is stored in sessionStorage
+// which is not secure for production use.
+initializeDALTokenFromStorage()
 
 const queryClient = new QueryClient()
 
