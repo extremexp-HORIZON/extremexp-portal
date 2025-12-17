@@ -4,13 +4,13 @@ import { login } from '../../stores/accountStore';
 import useRequest from '../../hooks/useRequest';
 import { LoginResponseType } from '../../types/requests';
 import { message } from '../../utils/message';
-import axios from 'axios';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const { request: loginRequest } = useRequest<LoginResponseType>();
+  const { request: setupWorkspaceRequest } = useRequest();
 
   const navigate = useNavigate();
 
@@ -29,8 +29,18 @@ const Login = () => {
         const token = response?.access_token;
         if (token) {
           login(username, token);
-          axios.get("/api/tasks/setup-workspace/" + username)
-          navigate('/dashboard/experiments');
+          setupWorkspaceRequest({
+            url: `/api/tasks/setup-workspace/${username}`,
+            method: 'GET',
+          })
+          .then(() => {
+            navigate('/dashboard/experiments');
+          })
+          .catch((error) => {
+            console.error('Failed to setup workspace:', error);
+            // Still navigate even if workspace setup fails
+            navigate('/dashboard/experiments');
+          });
         }
       })
       .catch((error) => {
