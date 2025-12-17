@@ -7,9 +7,15 @@ import {
   createWorkflowWorkflowsPostMutation,
 } from "../client/@tanstack/react-query.gen"
 import type { WorkflowRead } from "../client/types.gen"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useCallback } from "react"
 import Pagination, { PAGE_SIZE } from "./Pagination"
 import { useSearchFilterStore, createNameFilter } from "../stores/useSearchFilterStore"
+import { useSortStore, sortItems } from "../stores/useSortStore"
+import SortableHeader from "./SortableHeader"
+import { useResettablePagination } from "../hooks"
+
+/** Context key for workflows table sorting */
+const SORT_CONTEXT = "workflows"
 
 const ACTION_ICONS = [
   {
@@ -54,44 +60,6 @@ const ACTION_ICONS = [
   },
 ]
 
-function FilterIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-3.5 text-neutral-400"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      viewBox="0 0 20 20"
-    >
-      <path
-        d="M3 5h14M6 10h8M9 15h4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function SortIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-3 text-neutral-400"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      viewBox="0 0 12 12"
-    >
-      <path
-        d="M3 4l3-3 3 3M3 8l3 3 3-3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
 function generateUniqueCopyName(baseName: string, existingNames: string[]): string {
   // Remove existing " (copy)" or " (copy N)" suffix to get the base
   const baseWithoutCopy = baseName.replace(/ \(copy( \d+)?\)$/, "")
@@ -135,14 +103,24 @@ export default function WorkflowsTable() {
   const queryClient = useQueryClient()
   const [editingWorkflow, setEditingWorkflow] = useState<WorkflowRead | null>(null)
   const [deletingWorkflow, setDeletingWorkflow] = useState<WorkflowRead | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
+  const filterText = useSearchFilterStore((state) => state.filterText)
+  const sortConfig = useSortStore((state) => state.sorts[SORT_CONTEXT])
+  const resetKey = useMemo(
+    () => `${filterText}::${sortConfig?.key ?? ""}::${sortConfig?.direction ?? ""}`,
+    [filterText, sortConfig?.key, sortConfig?.direction],
+  )
+  const [currentPage, setCurrentPage] = useResettablePagination(resetKey)
+  const toggleSort = useSortStore((state) => state.toggleSort)
 
   const { data: workflows, isLoading, error } = useQuery({
     ...listWorkflowsWorkflowsGetOptions(),
   })
 
-  // Get filter from global store
-  const filterText = useSearchFilterStore((state) => state.filterText)
+  // Handler for sort toggle
+  const handleSort = useCallback(
+    (key: string) => toggleSort(SORT_CONTEXT, key),
+    [toggleSort]
+  )
 
   const updateMutation = useMutation({
     ...updateWorkflowWorkflowsWorkflowIdPatchMutation(),
@@ -174,16 +152,17 @@ export default function WorkflowsTable() {
     return workflows.filter((wf) => nameFilter(wf.name))
   }, [workflows, filterText])
 
-  // Reset to page 1 when filter changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filterText])
+  // Sort filtered workflows
+  const sortedWorkflows = useMemo(
+    () => sortItems(filteredWorkflows, sortConfig),
+    [filteredWorkflows, sortConfig]
+  )
 
-  // Paginate filtered workflows
+  // Paginate sorted workflows
   const paginatedWorkflows = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE
-    return filteredWorkflows.slice(startIndex, startIndex + PAGE_SIZE)
-  }, [filteredWorkflows, currentPage])
+    return sortedWorkflows.slice(startIndex, startIndex + PAGE_SIZE)
+  }, [sortedWorkflows, currentPage])
 
   const handleAction = (action: string, workflow: WorkflowRead) => {
     switch (action) {
@@ -219,24 +198,28 @@ export default function WorkflowsTable() {
           <thead className="bg-success/10 text-xs font-medium uppercase tracking-wide text-neutral-600">
             <tr>
               <th className="w-auto">
-                <span className="flex items-center gap-2">
-                  Name
-                  <FilterIcon />
-                </span>
+                <SortableHeader
+                  label="Name"
+                  sortKey="name"
+                  currentDirection={sortConfig?.key === "name" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th className="w-44">
-                <span className="flex items-center gap-2">
-                  Created Time
-                  <FilterIcon />
-                  <SortIcon />
-                </span>
+                <SortableHeader
+                  label="Created Time"
+                  sortKey="created_at"
+                  currentDirection={sortConfig?.key === "created_at" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th className="w-44">
-                <span className="flex items-center gap-2">
-                  Last updated Time
-                  <FilterIcon />
-                  <SortIcon />
-                </span>
+                <SortableHeader
+                  label="Last updated Time"
+                  sortKey="updated_at"
+                  currentDirection={sortConfig?.key === "updated_at" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th className="w-40 text-right">
                 <span>Action</span>

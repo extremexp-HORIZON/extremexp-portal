@@ -11,3 +11,10 @@ export {
   createNameFilter,
   selectFilterText,
 } from "./useSearchFilterStore";
+export {
+  useSortStore,
+  selectSort,
+  sortItems,
+  type SortDirection,
+  type SortConfig,
+} from "./useSortStore";

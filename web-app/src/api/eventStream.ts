@@ -74,44 +74,50 @@ export function createEventStream(
   // Start the stream in an async IIFE
   (async () => {
     try {
-      console.log("aaaa 0");
       const response = await api.get("events");
-      console.log("aaaa 0.5");
       callbacks.onOpen?.();
-      console.log("aaaa 1");
 
-      // @ts-ignore - ReadableStream is async iterable in modern browsers
-      for await (const event of parseServerSentEvents(response)) {
-        console.log("aaaa 2");
-        /*if (abortController.signal.aborted) {
-          break;
-        }*/
-        console.log("aaaa 3");
+      const stream = parseServerSentEvents(response);
+      const reader = stream.getReader();
+      const abortListener = () => {
+        reader.cancel().catch(() => undefined);
+      };
+      abortController.signal.addEventListener("abort", abortListener);
 
-        try {
-          const parsedEvent = parseEvent(event);
-          console.log("aaaa 3.5", parsedEvent);
-          if (parsedEvent) {
+      try {
+        while (!abortController.signal.aborted) {
+          const { value: event, done } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          try {
+            const parsedEvent = parseEvent(event);
+            if (!parsedEvent) {
+              continue;
+            }
+
             if ("type" in parsedEvent && parsedEvent.type === "token_expired") {
               callbacks.onError?.(parsedEvent as ServerErrorEvent);
               break;
-            } else {
-              callbacks.onEvent?.(parsedEvent as ServerEvent);
             }
+
+            callbacks.onEvent?.(parsedEvent as ServerEvent);
+          } catch (parseError) {
+            console.warn("Failed to parse SSE event:", parseError, event);
           }
-        } catch (parseError) {
-          console.warn("Failed to parse SSE event:", parseError, event);
         }
+      } finally {
+        abortController.signal.removeEventListener("abort", abortListener);
+        reader.releaseLock();
       }
     } catch (error) {
-      console.error("aaaa 4", error);
       // Only report errors if not aborted intentionally
       if (!abortController.signal.aborted) {
         callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
       }
     } finally {
-      console.log('close');
-      //callbacks.onClose?.();
+      callbacks.onClose?.();
     }
   })();
 

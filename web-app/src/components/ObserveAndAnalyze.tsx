@@ -1,9 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import { dalExperimentsListOptions, useDALToken, type DALExperiment } from '../dal-client';
 import DALTokenPrompt from './DALTokenPrompt';
 import Pagination, { PAGE_SIZE } from './Pagination';
 import { useSearchFilterStore, createNameFilter } from '../stores/useSearchFilterStore';
+import { useSortStore, sortItems } from '../stores/useSortStore';
+import SortableHeader from './SortableHeader';
+import { useResettablePagination } from '../hooks';
+
+/** Context key for DAL experiments table sorting */
+const SORT_CONTEXT = "dalExperiments";
 
 type ExperimentStatus = 'Completed' | 'Running' | 'Error' | 'Pending' | 'Unknown';
 
@@ -47,44 +53,6 @@ const ACTION_ICONS = [
     path: 'M6 7h12l-1 12H7L6 7zm5-3h2l1 1h5v2H4V5h5l1-1z',
   },
 ];
-
-function FilterIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-3.5 text-neutral-400"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      viewBox="0 0 20 20"
-    >
-      <path
-        d="M3 5h14M6 10h8M9 15h4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function SortIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-3 text-neutral-400"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      viewBox="0 0 12 12"
-    >
-      <path
-        d="M3 4l3-3 3 3M3 8l3 3 3-3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function StatusBadge({ status }: { status: string }) {
   // Normalize status to our known statuses
@@ -176,6 +144,30 @@ function calculateDuration(start: string | undefined, end: string | undefined): 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   } catch {
     return '—';
+  }
+}
+
+/**
+ * Calculate duration in milliseconds between start and end.
+ * If end is missing, uses current time (matches display behavior).
+ */
+function calculateDurationMs(start: string | undefined, end: string | undefined): number | null {
+  if (!start) return null;
+
+  try {
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+
+    const startMs = startDate.getTime();
+    const endMs = endDate.getTime();
+    if (Number.isNaN(startMs) || Number.isNaN(endMs)) return null;
+
+    const diffMs = endMs - startMs;
+    if (diffMs < 0) return null;
+
+    return diffMs;
+  } catch {
+    return null;
   }
 }
 
@@ -384,27 +376,48 @@ function ExperimentsEmpty() {
  * Experiments table with real data
  */
 function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
-  const [currentPage, setCurrentPage] = useState(1);
-
   // Get filter from global store
   const filterText = useSearchFilterStore((state) => state.filterText);
 
+  // Get sort from global store
+  const sortConfig = useSortStore((state) => state.sorts[SORT_CONTEXT]);
+  const resetKey = useMemo(
+    () => `${filterText}::${sortConfig?.key ?? ""}::${sortConfig?.direction ?? ""}`,
+    [filterText, sortConfig?.key, sortConfig?.direction],
+  );
+  const [currentPage, setCurrentPage] = useResettablePagination(resetKey);
+  const toggleSort = useSortStore((state) => state.toggleSort);
+
+  // Handler for sort toggle
+  const handleSort = useCallback(
+    (key: string) => toggleSort(SORT_CONTEXT, key),
+    [toggleSort]
+  );
+
   // Filter experiments by name using the global search filter
+  // Also add computed progress field for sorting
   const filteredExperiments = useMemo(() => {
     const nameFilter = createNameFilter(filterText);
-    return experiments.filter((exp) => nameFilter(exp.name || exp.id));
+    return experiments
+      .filter((exp) => nameFilter(exp.name || exp.id))
+      .map((exp) => ({
+        ...exp,
+        progress: getProgress(exp),
+        durationMs: calculateDurationMs(exp.start, exp.end),
+      }));
   }, [experiments, filterText]);
 
-  // Reset to page 1 when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterText]);
+  // Sort filtered experiments
+  const sortedExperiments = useMemo(
+    () => sortItems(filteredExperiments, sortConfig),
+    [filteredExperiments, sortConfig]
+  );
 
-  // Paginate filtered experiments
+  // Paginate sorted experiments
   const paginatedExperiments = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredExperiments.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredExperiments, currentPage]);
+    return sortedExperiments.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [sortedExperiments, currentPage]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -413,38 +426,52 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
           <thead className="bg-success/10 text-xs font-medium uppercase tracking-wide text-neutral-600">
             <tr>
               <th>
-                <span className="flex items-center gap-2">
-                  Name
-                  <FilterIcon />
-                </span>
+                <SortableHeader
+                  label="Name"
+                  sortKey="name"
+                  currentDirection={sortConfig?.key === "name" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th>
-                <span className="flex items-center gap-2">
-                  Status
-                  <FilterIcon />
-                </span>
+                <SortableHeader
+                  label="Status"
+                  sortKey="status"
+                  currentDirection={sortConfig?.key === "status" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th>
-                <span className="flex items-center gap-2">
-                  Started Time
-                  <FilterIcon />
-                  <SortIcon />
-                </span>
+                <SortableHeader
+                  label="Started Time"
+                  sortKey="start"
+                  currentDirection={sortConfig?.key === "start" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th>
-                <span className="flex items-center gap-2">
-                  Duration
-                  <SortIcon />
-                </span>
+                <SortableHeader
+                  label="Duration"
+                  sortKey="durationMs"
+                  currentDirection={sortConfig?.key === "durationMs" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th>
-                <span className="flex items-center gap-2">Progress</span>
+                <SortableHeader
+                  label="Progress"
+                  sortKey="progress"
+                  currentDirection={sortConfig?.key === "progress" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th>
-                <span className="flex items-center gap-2">
-                  Intent
-                  <FilterIcon />
-                </span>
+                <SortableHeader
+                  label="Intent"
+                  sortKey="intent"
+                  currentDirection={sortConfig?.key === "intent" ? sortConfig.direction : null}
+                  onSort={handleSort}
+                />
               </th>
               <th className="text-right">Action</th>
             </tr>
@@ -457,45 +484,42 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                 </td>
               </tr>
             ) : (
-              paginatedExperiments.map((experiment) => {
-                const progress = getProgress(experiment);
-                return (
-                  <tr key={experiment.id} className="hover:bg-base-200/60">
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-link text-sm text-neutral"
-                      >
-                        {experiment.name || experiment.id}
-                      </button>
-                    </td>
-                    <td>
-                      <StatusBadge status={experiment.status} />
-                    </td>
-                    <td>{formatDateTime(experiment.start)}</td>
-                    <td>{calculateDuration(experiment.start, experiment.end)}</td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <progress
-                          className="progress progress-info w-24"
-                          value={progress}
-                          max={100}
-                          aria-label={`${progress}% progress`}
-                        />
-                        <span className="text-xs font-semibold text-neutral-600">{progress}%</span>
-                      </div>
-                    </td>
-                    <td>{experiment.intent || '—'}</td>
-                    <td>
-                      <div className="join justify-end">
-                        {ACTION_ICONS.map((icon) => (
-                          <ActionIconButton key={icon.label} {...icon} />
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+              paginatedExperiments.map((experiment) => (
+                <tr key={experiment.id} className="hover:bg-base-200/60">
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-link text-sm text-neutral"
+                    >
+                      {experiment.name || experiment.id}
+                    </button>
+                  </td>
+                  <td>
+                    <StatusBadge status={experiment.status} />
+                  </td>
+                  <td>{formatDateTime(experiment.start)}</td>
+                  <td>{calculateDuration(experiment.start, experiment.end)}</td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <progress
+                        className="progress progress-info w-24"
+                        value={experiment.progress}
+                        max={100}
+                        aria-label={`${experiment.progress}% progress`}
+                      />
+                      <span className="text-xs font-semibold text-neutral-600">{experiment.progress}%</span>
+                    </div>
+                  </td>
+                  <td>{experiment.intent || '—'}</td>
+                  <td>
+                    <div className="join justify-end">
+                      {ACTION_ICONS.map((icon) => (
+                        <ActionIconButton key={icon.label} {...icon} />
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
