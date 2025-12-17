@@ -7,7 +7,7 @@ const Intents = () => {
     <>
       <div className="page dashboard__page">
         <iframe width="100%" height="100%" style={{border:'none'}}
-            src="https://quarry-dev.essi.upc.edu/intent2Workflow"
+            src={`${import.meta.env.INTENTS_URL}/intent2Workflow`}
         ></iframe>
       </div>
     </>
