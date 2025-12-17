@@ -6,6 +6,8 @@ import Pagination, { PAGE_SIZE } from './Pagination';
 import { useSearchFilterStore, createNameFilter } from '../stores/useSearchFilterStore';
 import { useSortStore, sortItems } from '../stores/useSortStore';
 import SortableHeader from './SortableHeader';
+import TimeDisplay from './TimeDisplay';
+import DurationDisplay from './DurationDisplay';
 import { useResettablePagination } from '../hooks';
 
 /** Context key for DAL experiments table sorting */
@@ -42,15 +44,33 @@ const STATUS_STYLES: Record<
 const ACTION_ICONS = [
   {
     label: 'View run overview',
-    path: 'M4 5a1 1 0 011-1h10a1 1 0 011 1v10H4V5zm-1 12h14v2H3v-2zm9-6H9v2h3v-2zm2-6h-2v2h2V5zM9 5H7v2h2V5z',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="9" y1="21" x2="9" y2="9" />
+      </svg>
+    ),
   },
   {
     label: 'Inspect run details',
-    path: 'M5 3h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm0 2v10h10V5H5zm2 2h6v2H7V7zm0 4h6v2H7v-2z',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <line x1="7" y1="8" x2="17" y2="8" />
+        <line x1="7" y1="12" x2="17" y2="12" />
+        <line x1="7" y1="16" x2="13" y2="16" />
+      </svg>
+    ),
   },
   {
     label: 'Delete run',
-    path: 'M6 7h12l-1 12H7L6 7zm5-3h2l1 1h5v2H4V5h5l1-1z',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+    ),
   },
 ];
 
@@ -67,16 +87,16 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ActionIconButton({ label, path }: { label: string; path: string }) {
+function ActionIconButton({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
     <button
       type="button"
-      className="join-item btn btn-ghost btn-circle btn-sm text-info hover:bg-info/10"
+      className="inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
       aria-label={label}
     >
-      <svg aria-hidden="true" className="size-4" viewBox="0 0 20 20" fill="currentColor">
-        <path d={path} />
-      </svg>
+      <span className="size-4 [&>svg]:size-full">
+        {icon}
+      </span>
     </button>
   );
 }
@@ -101,50 +121,6 @@ function normalizeStatus(status: string | undefined): ExperimentStatus {
     return 'Pending';
   }
   return 'Unknown';
-}
-
-/**
- * Format date string for display
- */
-function formatDateTime(dateString: string | undefined): string {
-  if (!dateString) return '—';
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-  } catch {
-    return dateString;
-  }
-}
-
-/**
- * Calculate duration between start and end dates
- */
-function calculateDuration(start: string | undefined, end: string | undefined): string {
-  if (!start) return '—';
-
-  try {
-    const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
-
-    const diffMs = endDate.getTime() - startDate.getTime();
-    if (diffMs < 0) return '—';
-
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  } catch {
-    return '—';
-  }
 }
 
 /**
@@ -497,8 +473,12 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                   <td>
                     <StatusBadge status={experiment.status} />
                   </td>
-                  <td>{formatDateTime(experiment.start)}</td>
-                  <td>{calculateDuration(experiment.start, experiment.end)}</td>
+                  <td>
+                    <TimeDisplay time={experiment.start} />
+                  </td>
+                  <td>
+                    <DurationDisplay start={experiment.start} end={experiment.end} />
+                  </td>
                   <td>
                     <div className="flex items-center gap-2">
                       <progress
@@ -512,7 +492,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                   </td>
                   <td>{experiment.intent || '—'}</td>
                   <td>
-                    <div className="join justify-end">
+                    <div className="flex justify-end gap-1.5">
                       {ACTION_ICONS.map((icon) => (
                         <ActionIconButton key={icon.label} {...icon} />
                       ))}

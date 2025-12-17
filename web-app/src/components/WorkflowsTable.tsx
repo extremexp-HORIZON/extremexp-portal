@@ -12,6 +12,7 @@ import Pagination, { PAGE_SIZE } from "./Pagination"
 import { useSearchFilterStore, createNameFilter } from "../stores/useSearchFilterStore"
 import { useSortStore, sortItems } from "../stores/useSortStore"
 import SortableHeader from "./SortableHeader"
+import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
 
 /** Context key for workflows table sorting */
@@ -251,11 +252,11 @@ export default function WorkflowsTable() {
                       {workflow.name}
                     </button>
                   </td>
-                  <td className="text-sm text-neutral-700">
-                    {new Date(workflow.created_at).toLocaleString()}
+                  <td>
+                    <TimeDisplay time={workflow.created_at} />
                   </td>
-                  <td className="text-sm text-neutral-700">
-                    {new Date(workflow.updated_at).toLocaleString()}
+                  <td>
+                    <TimeDisplay time={workflow.updated_at} />
                   </td>
                   <td>
                     <div className="flex justify-end gap-1.5">

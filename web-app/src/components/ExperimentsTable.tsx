@@ -12,6 +12,7 @@ import Pagination, { PAGE_SIZE } from "./Pagination"
 import { useSearchFilterStore, createNameFilter } from "../stores/useSearchFilterStore"
 import { useSortStore, sortItems } from "../stores/useSortStore"
 import SortableHeader from "./SortableHeader"
+import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
 
 /** Context key for experiments table sorting */
@@ -272,11 +273,11 @@ export default function ExperimentsTable() {
                       {experiment.name}
                     </button>
                   </td>
-                  <td className="text-sm text-neutral-700">
-                    {new Date(experiment.created_at).toLocaleString()}
+                  <td>
+                    <TimeDisplay time={experiment.created_at} />
                   </td>
-                  <td className="text-sm text-neutral-700">
-                    {new Date(experiment.updated_at).toLocaleString()}
+                  <td>
+                    <TimeDisplay time={experiment.updated_at} />
                   </td>
                   {/* <td>
                   <WorkflowThumbnail />
