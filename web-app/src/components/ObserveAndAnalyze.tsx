@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo } from 'react';
 import { dalExperimentsListOptions, useDALToken, type DALExperiment } from '../dal-client';
 import DALTokenPrompt from './DALTokenPrompt';
+import Pagination, { PAGE_SIZE } from './Pagination';
 
 type ExperimentStatus = 'Completed' | 'Running' | 'Error' | 'Pending' | 'Unknown';
 
@@ -385,6 +387,14 @@ function ExperimentsEmpty() {
  * Experiments table with real data
  */
 function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Paginate experiments
+  const paginatedExperiments = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return experiments.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [experiments, currentPage]);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto rounded-lg border border-base-200">
@@ -430,11 +440,12 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
             </tr>
           </thead>
           <tbody className="text-sm text-neutral-700">
-            {experiments.map((experiment, index) => {
+            {paginatedExperiments.map((experiment, index) => {
               const progress = getProgress(experiment);
+              const globalIndex = (currentPage - 1) * PAGE_SIZE + index + 1;
               return (
                 <tr key={experiment.id} className="hover:bg-base-200/60">
-                  <td className="text-center text-neutral-500">{index + 1}</td>
+                  <td className="text-center text-neutral-500">{globalIndex}</td>
                   <td>
                     <button
                       type="button"
@@ -473,45 +484,11 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
           </tbody>
         </table>
       </div>
-
-      {/* Pagination - commented out for now
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-neutral-500">1-{experiments.length} of {experiments.length} items</p>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="join">
-            <button type="button" className="join-item btn btn-sm" aria-label="Previous page">
-              «
-            </button>
-            <button type="button" className="join-item btn btn-sm btn-active">
-              1
-            </button>
-            <button type="button" className="join-item btn btn-sm" aria-label="Next page">
-              »
-            </button>
-          </div>
-          <button type="button" className="btn btn-sm w-24 justify-between gap-2 normal-case">
-            <span>10/page</span>
-            <svg
-              aria-hidden="true"
-              className="size-4 text-neutral-500"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              viewBox="0 0 20 20"
-            >
-              <path d="M6 8l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      */}
-
-      {/* Simple count display */}
-      <div className="flex justify-end">
-        <p className="text-sm text-neutral-500">
-          Showing {experiments.length} experiment{experiments.length !== 1 ? 's' : ''}
-        </p>
-      </div>
+      <Pagination
+        totalItems={experiments.length}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

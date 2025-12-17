@@ -7,7 +7,8 @@ import {
   updateExperimentExperimentsExperimentIdPatchMutation,
 } from "../client/@tanstack/react-query.gen"
 import type { ExperimentRead } from "../client/types.gen"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import Pagination, { PAGE_SIZE } from "./Pagination"
 
 const ACTION_ICONS = [
   {
@@ -166,6 +167,7 @@ export default function ExperimentsTable() {
   const queryClient = useQueryClient()
   const [editingExperiment, setEditingExperiment] = useState<ExperimentRead | null>(null)
   const [deletingExperiment, setDeletingExperiment] = useState<ExperimentRead | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data: experiments, isLoading, error } = useQuery({
     ...listExperimentsExperimentsGetOptions(),
@@ -193,6 +195,13 @@ export default function ExperimentsTable() {
       queryClient.invalidateQueries({ queryKey: listExperimentsExperimentsGetQueryKey() })
     },
   })
+
+  // Paginate experiments
+  const paginatedExperiments = useMemo(() => {
+    if (!experiments) return []
+    const startIndex = (currentPage - 1) * PAGE_SIZE
+    return experiments.slice(startIndex, startIndex + PAGE_SIZE)
+  }, [experiments, currentPage])
 
   const handleAction = (action: string, experiment: ExperimentRead) => {
     switch (action) {
@@ -267,7 +276,7 @@ export default function ExperimentsTable() {
                 </td>
               </tr>
             ) : (
-              experiments?.map((experiment) => (
+              paginatedExperiments.map((experiment) => (
                 <tr key={experiment.id}>
                   <td className="text-sm">
                     <button
@@ -304,6 +313,11 @@ export default function ExperimentsTable() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        totalItems={experiments?.length ?? 0}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Rename Modal */}
       {editingExperiment && (

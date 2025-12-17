@@ -7,7 +7,8 @@ import {
   createWorkflowWorkflowsPostMutation,
 } from "../client/@tanstack/react-query.gen"
 import type { WorkflowRead } from "../client/types.gen"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import Pagination, { PAGE_SIZE } from "./Pagination"
 
 const ACTION_ICONS = [
   {
@@ -133,6 +134,7 @@ export default function WorkflowsTable() {
   const queryClient = useQueryClient()
   const [editingWorkflow, setEditingWorkflow] = useState<WorkflowRead | null>(null)
   const [deletingWorkflow, setDeletingWorkflow] = useState<WorkflowRead | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data: workflows, isLoading, error } = useQuery({
     ...listWorkflowsWorkflowsGetOptions(),
@@ -160,6 +162,13 @@ export default function WorkflowsTable() {
       queryClient.invalidateQueries({ queryKey: listWorkflowsWorkflowsGetQueryKey() })
     },
   })
+
+  // Paginate workflows
+  const paginatedWorkflows = useMemo(() => {
+    if (!workflows) return []
+    const startIndex = (currentPage - 1) * PAGE_SIZE
+    return workflows.slice(startIndex, startIndex + PAGE_SIZE)
+  }, [workflows, currentPage])
 
   const handleAction = (action: string, workflow: WorkflowRead) => {
     switch (action) {
@@ -227,7 +236,7 @@ export default function WorkflowsTable() {
                 </td>
               </tr>
             ) : (
-              workflows?.map((workflow) => (
+              paginatedWorkflows.map((workflow) => (
                 <tr key={workflow.id}>
                   <td className="text-sm">
                     <button
@@ -261,6 +270,11 @@ export default function WorkflowsTable() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        totalItems={workflows?.length ?? 0}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Rename Modal */}
       {editingWorkflow && (
