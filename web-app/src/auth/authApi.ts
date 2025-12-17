@@ -1,5 +1,6 @@
 import { publicApi, parseHttpError } from "./http";
 import { useAuthStore } from "./authStore";
+import { setDALAccessToken } from "../dal-client";
 import type {
   LoginCredentials,
   RegisterCredentials,
@@ -7,6 +8,11 @@ import type {
   RegisterResponse,
   ApiError,
 } from "./types";
+
+/**
+ * Session storage key for DAL access token (must match useDALToken.ts)
+ */
+const DAL_TOKEN_STORAGE_KEY = 'dal-access-token';
 
 const AUTH_BASE = "extreme_auth/api/v1/person";
 
@@ -71,10 +77,13 @@ export async function register(
 
 /**
  * Log out the current user.
- * Clears all auth state from the store and local storage.
+ * Clears all auth state from the store, local storage, and DAL access token.
  */
 export function logout(): void {
   useAuthStore.getState().clearAuth();
+  // Clear DAL access token from sessionStorage and client module
+  sessionStorage.removeItem(DAL_TOKEN_STORAGE_KEY);
+  setDALAccessToken(undefined);
 }
 
 /**

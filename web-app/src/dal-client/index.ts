@@ -1,5 +1,5 @@
 // DAL API Client
-// Minimal client for fetching experiments from the DAL (Data Access Layer) API
+// Minimal client for fetching experiments from the DAL API
 
 // Client setup
 export { createDALClient, getDALClient, setDALAccessToken, getDALAccessToken } from './client';

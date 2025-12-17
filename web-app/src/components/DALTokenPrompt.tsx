@@ -54,7 +54,7 @@ export default function DALTokenPrompt({ onTokenSet }: DALTokenPromptProps) {
         </div>
         <h3 className="text-lg font-semibold text-neutral-900">DAL Access Token Required</h3>
         <p className="max-w-sm text-sm text-neutral-600">
-          To view experiments from the Data Access Layer, please provide your access token.
+          To view experiments from DAL, please provide your access token.
         </p>
       </div>
 
