@@ -7,8 +7,9 @@ import {
   updateExperimentExperimentsExperimentIdPatchMutation,
 } from "../client/@tanstack/react-query.gen"
 import type { ExperimentRead } from "../client/types.gen"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Pagination, { PAGE_SIZE } from "./Pagination"
+import { useSearchFilterStore, createNameFilter } from "../stores/useSearchFilterStore"
 
 const ACTION_ICONS = [
   {
@@ -173,6 +174,9 @@ export default function ExperimentsTable() {
     ...listExperimentsExperimentsGetOptions(),
   })
 
+  // Get filter from global store
+  const filterText = useSearchFilterStore((state) => state.filterText)
+
   const updateMutation = useMutation({
     ...updateExperimentExperimentsExperimentIdPatchMutation(),
     onSuccess: () => {
@@ -196,12 +200,23 @@ export default function ExperimentsTable() {
     },
   })
 
-  // Paginate experiments
-  const paginatedExperiments = useMemo(() => {
+  // Filter experiments by name using the global search filter
+  const filteredExperiments = useMemo(() => {
     if (!experiments) return []
+    const nameFilter = createNameFilter(filterText)
+    return experiments.filter((exp) => nameFilter(exp.name))
+  }, [experiments, filterText])
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterText])
+
+  // Paginate filtered experiments
+  const paginatedExperiments = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE
-    return experiments.slice(startIndex, startIndex + PAGE_SIZE)
-  }, [experiments, currentPage])
+    return filteredExperiments.slice(startIndex, startIndex + PAGE_SIZE)
+  }, [filteredExperiments, currentPage])
 
   const handleAction = (action: string, experiment: ExperimentRead) => {
     switch (action) {
@@ -275,6 +290,12 @@ export default function ExperimentsTable() {
                   No experiments yet. Create one to get started.
                 </td>
               </tr>
+            ) : filteredExperiments.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-8 text-neutral-500">
+                  No experiments match your filter. Try adjusting your search.
+                </td>
+              </tr>
             ) : (
               paginatedExperiments.map((experiment) => (
                 <tr key={experiment.id}>
@@ -314,7 +335,7 @@ export default function ExperimentsTable() {
         </table>
       </div>
       <Pagination
-        totalItems={experiments?.length ?? 0}
+        totalItems={filteredExperiments.length}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
       />

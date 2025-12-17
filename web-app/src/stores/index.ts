@@ -6,3 +6,8 @@ export {
   selectLatestEventForDocument,
   type ConnectionStatus,
 } from "./useEventStore";
+export {
+  useSearchFilterStore,
+  createNameFilter,
+  selectFilterText,
+} from "./useSearchFilterStore";

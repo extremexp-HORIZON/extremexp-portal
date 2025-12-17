@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { dalExperimentsListOptions, useDALToken, type DALExperiment } from '../dal-client';
 import DALTokenPrompt from './DALTokenPrompt';
 import Pagination, { PAGE_SIZE } from './Pagination';
+import { useSearchFilterStore, createNameFilter } from '../stores/useSearchFilterStore';
 
 type ExperimentStatus = 'Completed' | 'Running' | 'Error' | 'Pending' | 'Unknown';
 
@@ -197,10 +198,9 @@ function ExperimentsTableSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto rounded-lg border border-base-200">
-        <table className="table w-full">
-          <thead className="bg-success/10 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+        <table className="table table-compact w-full">
+          <thead className="bg-success/10 text-xs font-medium uppercase tracking-wide text-neutral-600">
             <tr>
-              <th className="w-12 text-center">#</th>
               <th>Name</th>
               <th>Status</th>
               <th>Started Time</th>
@@ -213,9 +213,6 @@ function ExperimentsTableSkeleton() {
           <tbody>
             {[1, 2, 3, 4, 5].map((i) => (
               <tr key={i} className="animate-pulse">
-                <td className="text-center">
-                  <div className="skeleton h-4 w-4 mx-auto" />
-                </td>
                 <td>
                   <div className="skeleton h-4 w-32" />
                 </td>
@@ -389,19 +386,32 @@ function ExperimentsEmpty() {
 function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Paginate experiments
+  // Get filter from global store
+  const filterText = useSearchFilterStore((state) => state.filterText);
+
+  // Filter experiments by name using the global search filter
+  const filteredExperiments = useMemo(() => {
+    const nameFilter = createNameFilter(filterText);
+    return experiments.filter((exp) => nameFilter(exp.name || exp.id));
+  }, [experiments, filterText]);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterText]);
+
+  // Paginate filtered experiments
   const paginatedExperiments = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return experiments.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [experiments, currentPage]);
+    return filteredExperiments.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredExperiments, currentPage]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto rounded-lg border border-base-200">
-        <table className="table w-full">
-          <thead className="bg-success/10 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+        <table className="table table-compact w-full">
+          <thead className="bg-success/10 text-xs font-medium uppercase tracking-wide text-neutral-600">
             <tr>
-              <th className="w-12 text-center">#</th>
               <th>
                 <span className="flex items-center gap-2">
                   Name
@@ -440,52 +450,58 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
             </tr>
           </thead>
           <tbody className="text-sm text-neutral-700">
-            {paginatedExperiments.map((experiment, index) => {
-              const progress = getProgress(experiment);
-              const globalIndex = (currentPage - 1) * PAGE_SIZE + index + 1;
-              return (
-                <tr key={experiment.id} className="hover:bg-base-200/60">
-                  <td className="text-center text-neutral-500">{globalIndex}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-link px-0 text-sm text-info no-underline text-left"
-                    >
-                      {experiment.name || experiment.id}
-                    </button>
-                  </td>
-                  <td>
-                    <StatusBadge status={experiment.status} />
-                  </td>
-                  <td>{formatDateTime(experiment.start)}</td>
-                  <td>{calculateDuration(experiment.start, experiment.end)}</td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <progress
-                        className="progress progress-info w-24"
-                        value={progress}
-                        max={100}
-                        aria-label={`${progress}% progress`}
-                      />
-                      <span className="text-xs font-semibold text-neutral-600">{progress}%</span>
-                    </div>
-                  </td>
-                  <td>{experiment.intent || '—'}</td>
-                  <td>
-                    <div className="join justify-end">
-                      {ACTION_ICONS.map((icon) => (
-                        <ActionIconButton key={icon.label} {...icon} />
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {filteredExperiments.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-8 text-neutral-500">
+                  No experiments match your filter. Try adjusting your search.
+                </td>
+              </tr>
+            ) : (
+              paginatedExperiments.map((experiment) => {
+                const progress = getProgress(experiment);
+                return (
+                  <tr key={experiment.id} className="hover:bg-base-200/60">
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-link text-sm text-neutral"
+                      >
+                        {experiment.name || experiment.id}
+                      </button>
+                    </td>
+                    <td>
+                      <StatusBadge status={experiment.status} />
+                    </td>
+                    <td>{formatDateTime(experiment.start)}</td>
+                    <td>{calculateDuration(experiment.start, experiment.end)}</td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <progress
+                          className="progress progress-info w-24"
+                          value={progress}
+                          max={100}
+                          aria-label={`${progress}% progress`}
+                        />
+                        <span className="text-xs font-semibold text-neutral-600">{progress}%</span>
+                      </div>
+                    </td>
+                    <td>{experiment.intent || '—'}</td>
+                    <td>
+                      <div className="join justify-end">
+                        {ACTION_ICONS.map((icon) => (
+                          <ActionIconButton key={icon.label} {...icon} />
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
       <Pagination
-        totalItems={experiments.length}
+        totalItems={filteredExperiments.length}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
       />

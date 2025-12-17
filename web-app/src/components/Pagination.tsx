@@ -1,5 +1,3 @@
-import { useMemo } from "react"
-
 /** Default page size for all tables */
 export const PAGE_SIZE = 10
 
@@ -23,18 +21,15 @@ export default function Pagination({
   onPageChange,
   pageSize = PAGE_SIZE,
 }: PaginationProps) {
-  const totalPages = useMemo(
-    () => Math.ceil(totalItems / pageSize),
-    [totalItems, pageSize]
-  )
-
   // Don't render if items fit on one page
   if (totalItems <= pageSize) {
     return null
   }
 
+  const totalPages = Math.ceil(totalItems / pageSize)
+
   // Generate page numbers to display
-  const pageNumbers = useMemo(() => {
+  const pageNumbers = (() => {
     const pages: (number | "ellipsis")[] = []
 
     if (totalPages <= 7) {
@@ -67,7 +62,7 @@ export default function Pagination({
     }
 
     return pages
-  }, [totalPages, currentPage])
+  })()
 
   const startItem = (currentPage - 1) * pageSize + 1
   const endItem = Math.min(currentPage * pageSize, totalItems)

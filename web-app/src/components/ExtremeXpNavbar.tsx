@@ -1,6 +1,8 @@
+// Search box extracted to its own component
 // @ts-expect-error - react-jdenticon has no type declarations
 import Jdenticon from "react-jdenticon"
 import { useAuth } from "../auth"
+import SearchFilterInput from "./SearchFilterInput"
 
 export default function ExtremeXpNavbar() {
   const { username, logout } = useAuth()
@@ -18,10 +20,12 @@ export default function ExtremeXpNavbar() {
           ExtremeXP
         </a>
       </div>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-3">
+        {/* Global Search Box */}
+        <SearchFilterInput />
         <div className="dropdown dropdown-end" id="user-menu">
           <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-            <div className="w-[38px] h-[38px] rounded-full overflow-hidden bg-black no-shrink">
+            <div className="w-9.5 h-9.5 rounded-full overflow-hidden bg-black no-shrink">
               <div className="relative right-1 bottom-1">
                 <Jdenticon size="46" value={username || "user"} />
               </div>

@@ -7,8 +7,9 @@ import {
   createWorkflowWorkflowsPostMutation,
 } from "../client/@tanstack/react-query.gen"
 import type { WorkflowRead } from "../client/types.gen"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Pagination, { PAGE_SIZE } from "./Pagination"
+import { useSearchFilterStore, createNameFilter } from "../stores/useSearchFilterStore"
 
 const ACTION_ICONS = [
   {
@@ -140,6 +141,9 @@ export default function WorkflowsTable() {
     ...listWorkflowsWorkflowsGetOptions(),
   })
 
+  // Get filter from global store
+  const filterText = useSearchFilterStore((state) => state.filterText)
+
   const updateMutation = useMutation({
     ...updateWorkflowWorkflowsWorkflowIdPatchMutation(),
     onSuccess: () => {
@@ -163,12 +167,23 @@ export default function WorkflowsTable() {
     },
   })
 
-  // Paginate workflows
-  const paginatedWorkflows = useMemo(() => {
+  // Filter workflows by name using the global search filter
+  const filteredWorkflows = useMemo(() => {
     if (!workflows) return []
+    const nameFilter = createNameFilter(filterText)
+    return workflows.filter((wf) => nameFilter(wf.name))
+  }, [workflows, filterText])
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterText])
+
+  // Paginate filtered workflows
+  const paginatedWorkflows = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE
-    return workflows.slice(startIndex, startIndex + PAGE_SIZE)
-  }, [workflows, currentPage])
+    return filteredWorkflows.slice(startIndex, startIndex + PAGE_SIZE)
+  }, [filteredWorkflows, currentPage])
 
   const handleAction = (action: string, workflow: WorkflowRead) => {
     switch (action) {
@@ -235,6 +250,12 @@ export default function WorkflowsTable() {
                   No workflows yet. Create one to get started.
                 </td>
               </tr>
+            ) : filteredWorkflows.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-8 text-neutral-500">
+                  No workflows match your filter. Try adjusting your search.
+                </td>
+              </tr>
             ) : (
               paginatedWorkflows.map((workflow) => (
                 <tr key={workflow.id}>
@@ -271,7 +292,7 @@ export default function WorkflowsTable() {
         </table>
       </div>
       <Pagination
-        totalItems={workflows?.length ?? 0}
+        totalItems={filteredWorkflows.length}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
       />
