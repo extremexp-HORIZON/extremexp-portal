@@ -1,18 +1,18 @@
-name: Checking Experiment Server
+name: Checking Portal Server
 
 on:
   push:
     branches: [main]
     paths:
-      - "experiment-server/**"
-      - ".github/workflows/experiment-server-check.yaml"
+      - "portal-server/**"
+      - ".github/workflows/portal-server-check.yaml"
   pull_request:
     paths:
-      - "experiment-server/**"
-      - ".github/workflows/experiment-server-check.yaml"
+      - "portal-server/**"
+      - ".github/workflows/portal-server-check.yaml"
 
 jobs:
-  check-experiment-server:
+  check-portal-server:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -30,7 +30,7 @@ jobs:
           --health-retries 5
     defaults:
       run:
-        working-directory: experiment-server
+        working-directory: portal-server
     steps:
       - uses: actions/checkout@v5
 
@@ -45,13 +45,13 @@ jobs:
       - name: Run Ruff
         uses: astral-sh/ruff-action@v3
         with:
-          src: experiment-server
+          src: portal-server
 
       - name: Run Pyright
         uses: jakebailey/pyright-action@v2
         with:
           pylance-version: latest-release
-          working-directory: experiment-server
+          working-directory: portal-server
           python-path: .venv/bin/python
 
       - name: Run Tests

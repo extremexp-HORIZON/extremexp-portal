@@ -1,6 +1,6 @@
 # Migration TODOs
 
-This document outlines the remaining tasks to complete the migration from the old Flask/MongoDB server (`old-to-migrate-server-experiment`) to the new FastAPI/PostgreSQL server (`experiment-server`).
+This document outlines the remaining tasks to complete the migration from the old Flask/MongoDB server (`old-to-migrate-server-experiment`) to the new FastAPI/PostgreSQL server (`portal-server`).
 
 ## ⚠️ Missing Features (Review Required)
 
