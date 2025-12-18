@@ -117,60 +117,60 @@ export function AuthPage({
     <div className="flex min-h-screen flex-col bg-base-200">
       <div className="hero flex-1">
         <div className="hero-content w-full max-w-5xl flex-col lg:flex-row-reverse lg:gap-12">
-        {/* Left side: Branding */}
-        <div className="text-center lg:text-left lg:flex-1">
-          <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
-            <img
-              src={logo}
-              alt="ExtremeXP Logo"
-              className="h-16 w-auto"
-            />
-            <h1 className="text-4xl font-bold text-primary">ExtremeXP</h1>
-          </div>
-          <h2 className="text-3xl font-bold mb-4">
-            {activeTab === "login" ? "Welcome back!" : "Join us today!"}
-          </h2>
-          <p className="py-4 text-base-content/70">
-            {activeTab === "login"
-              ? "Sign in to access your experiments, workflows, and project dashboards."
-              : "Create an account to start managing your machine learning experiments and workflows."}
-          </p>
-        </div>
-
-        {/* Right side: Auth Form Card */}
-        <div className="card w-full max-w-md shrink-0 bg-base-100 shadow-2xl">
-          <div className="card-body">
-            {/* Session Expired Alert */}
-            {sessionExpired && (
-              <SessionExpiredAlert onDismiss={handleDismissSessionExpired} />
-            )}
-
-            {/* Tab Navigation */}
-            <div role="tablist" className="tabs tabs-box mb-6">
-              <button
-                role="tab"
-                className={`tab flex-1 ${activeTab === "login" ? "tab-active" : ""}`}
-                onClick={() => handleTabChange("login")}
-              >
-                Login
-              </button>
-              <button
-                role="tab"
-                className={`tab flex-1 ${activeTab === "register" ? "tab-active" : ""}`}
-                onClick={() => handleTabChange("register")}
-              >
-                Register
-              </button>
+          {/* Left side: Branding */}
+          <div className="text-center lg:text-left lg:flex-1">
+            <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
+              <img
+                src={logo}
+                alt="ExtremeXP Logo"
+                className="h-16 w-auto"
+              />
+              <h1 className="text-4xl font-bold text-primary">ExtremeXP</h1>
             </div>
-
-            {/* Form Content */}
-            {activeTab === "login" ? (
-              <LoginForm onSuccess={handleLoginSuccess} />
-            ) : (
-              <RegisterForm onSuccess={handleRegisterSuccess} />
-            )}
+            <h2 className="text-3xl font-bold mb-4">
+              {activeTab === "login" ? "Welcome back!" : "Join us today!"}
+            </h2>
+            <p className="py-4 text-base-content/70">
+              {activeTab === "login"
+                ? "Sign in to access your experiments, workflows, and project dashboards."
+                : "Create an account to start managing your machine learning experiments and workflows."}
+            </p>
           </div>
-        </div>
+
+          {/* Right side: Auth Form Card */}
+          <div className="card w-full max-w-md shrink-0 bg-base-100 shadow-2xl">
+            <div className="card-body">
+              {/* Session Expired Alert */}
+              {sessionExpired && (
+                <SessionExpiredAlert onDismiss={handleDismissSessionExpired} />
+              )}
+
+              {/* Tab Navigation */}
+              <div role="tablist" className="tabs tabs-box mb-6">
+                <button
+                  role="tab"
+                  className={`tab flex-1 ${activeTab === "login" ? "tab-active" : ""}`}
+                  onClick={() => handleTabChange("login")}
+                >
+                  Login
+                </button>
+                <button
+                  role="tab"
+                  className={`tab flex-1 ${activeTab === "register" ? "tab-active" : ""}`}
+                  onClick={() => handleTabChange("register")}
+                >
+                  Register
+                </button>
+              </div>
+
+              {/* Form Content */}
+              {activeTab === "login" ? (
+                <LoginForm onSuccess={handleLoginSuccess} />
+              ) : (
+                <RegisterForm onSuccess={handleRegisterSuccess} />
+              )}
+            </div>
+          </div>
         </div>
       </div>
       <footer className="py-4 text-center text-xs text-base-content/60">

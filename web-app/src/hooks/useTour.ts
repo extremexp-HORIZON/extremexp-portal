@@ -38,6 +38,13 @@ const TOUR_STEPS = [
       description: "Monitor running experiments and analyze results.",
     },
   },
+  {
+    element: '[data-tour="search-filter"]',
+    popover: {
+      title: "Search & Filter",
+      description: "Quickly find experiments by name. Type to filter the list in real-time.",
+    },
+  },
 ]
 
 export function useTour() {

@@ -65,7 +65,7 @@ export default function SearchFilterInput(props: SearchFilterInputProps) {
     .join(" ")
 
   return (
-    <label className={labelClassName}>
+    <label className={labelClassName} data-tour="search-filter">
       <svg
         className="h-4 w-4 opacity-50"
         xmlns="http://www.w3.org/2000/svg"
