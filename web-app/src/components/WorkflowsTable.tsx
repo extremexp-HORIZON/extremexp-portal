@@ -14,14 +14,15 @@ import { useSortStore, sortItems } from "../stores/useSortStore"
 import SortableHeader from "./SortableHeader"
 import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
+import { getWorkflowCodeEditorUrl } from "../config"
 
 /** Context key for workflows table sorting */
 const SORT_CONTEXT = "workflows"
 
 const ACTION_ICONS = [
   {
-    label: "View code",
-    action: "view_code",
+    label: "Code editor",
+    action: "code_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="16 18 22 12 16 6" />
@@ -81,15 +82,35 @@ function ActionIconButton({
   label,
   icon,
   onClick,
+  href,
 }: {
   label: string
   icon: React.ReactNode
   onClick?: () => void
+  href?: string
 }) {
+  const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        aria-label={label}
+      >
+        <span className="size-4 [&>svg]:size-full">
+          {icon}
+        </span>
+      </a>
+    )
+  }
+
   return (
     <button
       type="button"
-      className="inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+      className={className}
       aria-label={label}
       onClick={onClick}
     >
@@ -184,8 +205,23 @@ export default function WorkflowsTable() {
         })
         break
       }
+      // External link actions are handled via href, not onClick
+      case "code_editor":
+        break
       default:
         console.log(`Action ${action} not implemented yet`)
+    }
+  }
+
+  /**
+   * Get the href for external link actions
+   */
+  const getActionHref = (action: string, workflow: WorkflowRead): string | undefined => {
+    switch (action) {
+      case "code_editor":
+        return getWorkflowCodeEditorUrl(workflow.id)
+      default:
+        return undefined
     }
   }
 
@@ -263,7 +299,9 @@ export default function WorkflowsTable() {
                       {ACTION_ICONS.map((icon) => (
                         <ActionIconButton
                           key={icon.label}
-                          {...icon}
+                          label={icon.label}
+                          icon={icon.icon}
+                          href={getActionHref(icon.action, workflow)}
                           onClick={() => handleAction(icon.action, workflow)}
                         />
                       ))}

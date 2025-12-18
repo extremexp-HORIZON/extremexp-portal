@@ -9,6 +9,7 @@ import SortableHeader from './SortableHeader';
 import TimeDisplay from './TimeDisplay';
 import DurationDisplay from './DurationDisplay';
 import { useResettablePagination } from '../hooks';
+import { externalLinks, getGamificationUrl, getExperimentCardUrl } from '../config';
 
 /** Context key for DAL experiments table sorting */
 const SORT_CONTEXT = "dalExperiments";
@@ -43,7 +44,8 @@ const STATUS_STYLES: Record<
 
 const ACTION_ICONS = [
   {
-    label: 'View run overview',
+    label: 'Gamification',
+    action: 'gamification',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -53,7 +55,8 @@ const ACTION_ICONS = [
     ),
   },
   {
-    label: 'Inspect run details',
+    label: 'Experiment card',
+    action: 'experiment_card',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -65,6 +68,7 @@ const ACTION_ICONS = [
   },
   {
     label: 'Delete run',
+    action: 'delete',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="3 6 5 6 21 6"></polyline>
@@ -87,18 +91,47 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ActionIconButton({ label, icon }: { label: string; icon: React.ReactNode }) {
+function ActionIconButton({
+  label,
+  icon,
+  onClick,
+  href,
+}: {
+  label: string
+  icon: React.ReactNode
+  onClick?: () => void
+  href?: string
+}) {
+  const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        aria-label={label}
+      >
+        <span className="size-4 [&>svg]:size-full">
+          {icon}
+        </span>
+      </a>
+    )
+  }
+
   return (
     <button
       type="button"
-      className="inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+      className={className}
       aria-label={label}
+      onClick={onClick}
     >
       <span className="size-4 [&>svg]:size-full">
         {icon}
       </span>
     </button>
-  );
+  )
 }
 
 /**
@@ -395,6 +428,34 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
     return sortedExperiments.slice(startIndex, startIndex + PAGE_SIZE);
   }, [sortedExperiments, currentPage]);
 
+  /**
+   * Get the href for external link actions
+   */
+  const getActionHref = (action: string, experiment: DALExperiment): string | undefined => {
+    switch (action) {
+      case "gamification":
+        return getGamificationUrl(experiment.id);
+      case "experiment_card":
+        return getExperimentCardUrl(experiment.id);
+      default:
+        return undefined;
+    }
+  };
+
+  /**
+   * Handle non-link actions
+   */
+  const handleAction = (action: string, _experiment: DALExperiment) => {
+    switch (action) {
+      case "gamification":
+      case "experiment_card":
+        // Handled via href
+        break;
+      default:
+        console.log(`Action ${action} not implemented yet`);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto rounded-lg border border-base-200">
@@ -494,7 +555,13 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                   <td>
                     <div className="flex justify-end gap-1.5">
                       {ACTION_ICONS.map((icon) => (
-                        <ActionIconButton key={icon.label} {...icon} />
+                        <ActionIconButton
+                          key={icon.label}
+                          label={icon.label}
+                          icon={icon.icon}
+                          href={getActionHref(icon.action, experiment)}
+                          onClick={() => handleAction(icon.action, experiment)}
+                        />
                       ))}
                     </div>
                   </td>
@@ -574,22 +641,68 @@ export default function ObserveAndAnalyze() {
           <h2 className="text-2xl font-semibold leading-tight text-neutral-900">
             Observe &amp; analyze
           </h2>
-          <div
-            role="tablist"
-            aria-label="Define and run tabs"
-            className="tabs tabs-border"
-          >
-            <button
-              key="experiments-tab"
-              type="button"
-              role="tab"
-              aria-selected={true}
-              aria-controls="experiments-panel"
-              id="experiments-tab"
-              className="tab px-7 tab-active text-blue-500"
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div
+              role="tablist"
+              aria-label="Observe and analyze tabs"
+              className="tabs tabs-border"
             >
-              Experiments
-            </button>
+              <button
+                key="experiments-tab"
+                type="button"
+                role="tab"
+                aria-selected={true}
+                aria-controls="experiments-panel"
+                id="experiments-tab"
+                className="tab px-7 tab-active text-blue-500"
+              >
+                Experiments
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <a
+                href={externalLinks.gamificationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white"
+              >
+                <svg
+                  className="size-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="8" r="6" />
+                  <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+                </svg>
+                Gamification
+              </a>
+              <a
+                href={externalLinks.experimentCardUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white"
+              >
+                <svg
+                  className="size-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="3" y1="15" x2="21" y2="15" />
+                  <line x1="12" y1="3" x2="12" y2="21" />
+                </svg>
+                Cards
+              </a>
+            </div>
           </div>
         </header>
 

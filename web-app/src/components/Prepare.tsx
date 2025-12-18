@@ -1,21 +1,25 @@
 import type { ImgHTMLAttributes, ReactElement } from "react"
 import AccessControlPng from "../assets/access-control.png";
 import DataManagementPng from "../assets/data-management.png";
+import { externalLinks } from "../config";
 
 type PrepareItem = {
   title: string
+  href: string
   Icon: (props: ImgHTMLAttributes<HTMLImageElement>) => ReactElement
 }
 
 const PREPARE_ITEMS: PrepareItem[] = [
   {
     title: "Access control policy editor",
+    href: externalLinks.accessControlPolicyEditorUrl,
     Icon: (props) => (
       <img src={AccessControlPng} alt="" {...props} aria-hidden="true" />
     ),
   },
   {
     title: "Data managment, upload, annotate",
+    href: externalLinks.dataManagementUploadAnnotateUrl,
     Icon: (props) => (
       <img src={DataManagementPng} alt="" {...props} aria-hidden="true" />
     ),
@@ -28,10 +32,12 @@ export default function Prepare() {
       <div className="card-body gap-5 p-6">
         <h2 className="text-2xl font-semibold leading-tight text-neutral-900">Prepare</h2>
         <div className="grid gap-4 md:grid-cols-2">
-          {PREPARE_ITEMS.map(({ title, Icon }) => (
-            <button
+          {PREPARE_ITEMS.map(({ title, href, Icon }) => (
+            <a
               key={title}
-              type="button"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn flex h-auto rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white space-between"
             >
               <span className="text-left flex items-center w-full">
@@ -45,7 +51,7 @@ export default function Prepare() {
                   <path d="m8 5 4 5-4 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
-            </button>
+            </a>
           ))}
         </div>
       </div>

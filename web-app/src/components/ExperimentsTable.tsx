@@ -14,6 +14,11 @@ import { useSortStore, sortItems } from "../stores/useSortStore"
 import SortableHeader from "./SortableHeader"
 import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
+import {
+  getExperimentGraphicalEditorUrl,
+  getExperimentCodeEditorUrl,
+  getExperimentScheduleUrl,
+} from "../config"
 
 /** Context key for experiments table sorting */
 const SORT_CONTEXT = "experiments"
@@ -21,7 +26,7 @@ const SORT_CONTEXT = "experiments"
 const ACTION_ICONS = [
   {
     label: "Run experiment",
-    action: "run",
+    action: "schedule",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="5 3 19 12 5 21 5 3" />
@@ -29,8 +34,8 @@ const ACTION_ICONS = [
     ),
   },
   {
-    label: "View code",
-    action: "view_code",
+    label: "Code editor",
+    action: "code_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="16 18 22 12 16 6" />
@@ -39,8 +44,8 @@ const ACTION_ICONS = [
     ),
   },
   {
-    label: "Target metrics",
-    action: "metrics",
+    label: "Graphical editor",
+    action: "graphical_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -85,15 +90,35 @@ function ActionIconButton({
   label,
   icon,
   onClick,
+  href,
 }: {
   label: string
   icon: React.ReactNode
   onClick?: () => void
+  href?: string
 }) {
+  const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        aria-label={label}
+      >
+        <span className="size-4 [&>svg]:size-full">
+          {icon}
+        </span>
+      </a>
+    )
+  }
+
   return (
     <button
       type="button"
-      className="inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+      className={className}
       aria-label={label}
       onClick={onClick}
     >
@@ -185,6 +210,22 @@ export default function ExperimentsTable() {
     return sortedExperiments.slice(startIndex, startIndex + PAGE_SIZE)
   }, [sortedExperiments, currentPage])
 
+  /**
+   * Get the href for external link actions
+   */
+  const getActionHref = (action: string, experiment: ExperimentRead): string | undefined => {
+    switch (action) {
+      case "graphical_editor":
+        return getExperimentGraphicalEditorUrl(experiment.id)
+      case "code_editor":
+        return getExperimentCodeEditorUrl(experiment.id)
+      case "schedule":
+        return getExperimentScheduleUrl(experiment.id)
+      default:
+        return undefined
+    }
+  }
+
   const handleAction = (action: string, experiment: ExperimentRead) => {
     switch (action) {
       case "delete":
@@ -205,6 +246,11 @@ export default function ExperimentsTable() {
         })
         break
       }
+      // External link actions are handled via href, not onClick
+      case "graphical_editor":
+      case "code_editor":
+      case "schedule":
+        break
       default:
         console.log(`Action ${action} not implemented yet`)
     }
@@ -287,7 +333,9 @@ export default function ExperimentsTable() {
                       {ACTION_ICONS.map((icon) => (
                         <ActionIconButton
                           key={icon.label}
-                          {...icon}
+                          label={icon.label}
+                          icon={icon.icon}
+                          href={getActionHref(icon.action, experiment)}
                           onClick={() => handleAction(icon.action, experiment)}
                         />
                       ))}
