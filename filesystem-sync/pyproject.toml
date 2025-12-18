@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "filesystem-sync"
 version = "0.1.0"
@@ -67,3 +71,6 @@ include = ["src", "tests"]
 typeCheckingMode = "standard"
 reportMissingImports = true
 reportMissingTypeStubs = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/filesystem_sync"]
