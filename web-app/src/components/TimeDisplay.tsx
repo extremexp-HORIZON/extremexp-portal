@@ -11,7 +11,7 @@ function formatRFC3339Local(date: Date): string {
   const minutes = pad(date.getMinutes());
   const seconds = pad(date.getSeconds());
 
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
