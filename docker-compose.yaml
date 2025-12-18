@@ -35,9 +35,9 @@ services:
     networks:
       - extremexp_network
 
-  experiment-server:
-    build: ./experiment-server
-    container_name: experiment-server
+  portal-server:
+    build: ./portal-server
+    container_name: portal-server
     environment:
       EXTREMEXP_AUTH_URL: http://access-control-service:5521/extreme_auth/api/v1/person/userinfo
       POSTGRES_USER: ${POSTGRES_USER}
@@ -94,7 +94,7 @@ services:
     depends_on:
       - web-app
       - access-control-service
-      - experiment-server
+      - portal-server
     restart: unless-stopped
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
