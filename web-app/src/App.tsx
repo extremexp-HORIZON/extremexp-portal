@@ -5,6 +5,7 @@ import QuickStart from "./components/QuickStart"
 import WelcomeMessage from "./components/WelcomeMessage"
 import DefineAndRun from "./components/DefineAndRun"
 import ObserveAndAnalyze from "./components/ObserveAndAnalyze"
+import { Footer } from "./components/Footer"
 import { useWelcomeMessageStore } from "./stores/useWelcomeMessageStore"
 import { useTour } from "./hooks/useTour"
 
@@ -26,6 +27,7 @@ function App() {
           <ObserveAndAnalyze />
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

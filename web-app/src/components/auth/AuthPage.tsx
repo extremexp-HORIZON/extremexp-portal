@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import logo from "../../assets/extremeXP_logo.png";
+import { externalLinks } from "../../config/externalLinks";
 
 const SESSION_EXPIRED_KEY = "session-expired";
 
@@ -113,8 +114,9 @@ export function AuthPage({
   };
 
   return (
-    <div className="hero min-h-screen bg-base-200">
-      <div className="hero-content w-full max-w-5xl flex-col lg:flex-row-reverse lg:gap-12">
+    <div className="flex min-h-screen flex-col bg-base-200">
+      <div className="hero flex-1">
+        <div className="hero-content w-full max-w-5xl flex-col lg:flex-row-reverse lg:gap-12">
         {/* Left side: Branding */}
         <div className="text-center lg:text-left lg:flex-1">
           <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
@@ -169,7 +171,27 @@ export function AuthPage({
             )}
           </div>
         </div>
+        </div>
       </div>
+      <footer className="py-4 text-center text-xs text-base-content/60">
+        <a
+          href={externalLinks.projectPageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          ExtremeXP Project
+        </a>
+        <span className="mx-2">•</span>
+        <a
+          href={externalLinks.privacyPolicyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          Privacy Policy
+        </a>
+      </footer>
     </div>
   );
 }
