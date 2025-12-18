@@ -22,7 +22,7 @@
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.68.0",
     "react-jdenticon": "^1.5.0",
-    "react-router-dom": "^7.10.1",
+    "react-router-dom": "^7.11.0",
     "tailwindcss": "^4.1.18",
     "zustand": "^5.0.9"
   },
