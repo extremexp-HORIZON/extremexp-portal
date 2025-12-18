@@ -31,12 +31,18 @@ def convert_pg_notification_to_user_event(payload: str) -> DBEvent:
         logger.warning("Unknown action in payload", action=action)
         raise ValueError(f"Unknown action: {action}")
 
-    return DBEvent(
-        document_type=data["table"],
-        document_id=document_id,
-        user_id=target_user_id,
-        event_type=event_type,
-    )
+    event: DBEvent = {
+        "document_type": data["table"],
+        "document_id": document_id,
+        "user_id": target_user_id,
+        "event_type": event_type,
+    }
+
+    # Include name if present (backward compatible)
+    if "name" in data and data["name"] is not None:
+        event["name"] = data["name"]
+
+    return event
 
 
 async def handle_notifications(

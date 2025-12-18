@@ -16,7 +16,7 @@ import signal
 import structlog
 
 from filesystem_sync.config import get_config
-from filesystem_sync.conversion import close_conversion_client
+from filesystem_sync.conversion import close_conversion_client, close_emf_client
 from filesystem_sync.db import (
     DatabaseListener,
     DBEvent,
@@ -133,6 +133,12 @@ class Application:
         except Exception as e:
             logger.error("Error closing conversion client", error=str(e))
 
+        # Close EMF client
+        try:
+            await close_emf_client()
+        except Exception as e:
+            logger.error("Error closing EMF client", error=str(e))
+
         # Close database connection
         try:
             await close_db()
@@ -162,7 +168,9 @@ class Application:
             return
 
         try:
-            await self._file_to_db_sync.handle_file_event(event_type, path_info, old_path_info)
+            await self._file_to_db_sync.handle_file_event(
+                event_type, path_info, old_path_info
+            )
         except Exception as e:
             logger.error(
                 "Error handling file event",

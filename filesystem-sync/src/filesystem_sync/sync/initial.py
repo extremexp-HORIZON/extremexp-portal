@@ -233,9 +233,28 @@ class InitialSync:
             )
             return False
 
-        # Convert DSL to JSON
+        # Convert DSL to JSON with error handling
         if content.strip():
-            result = await self._conversion.dsl_to_json(file_type, name, content)
+            try:
+                result = await self._conversion.dsl_to_json(file_type, name, content)
+            except Exception as e:
+                logger.error(
+                    "Conversion crashed during initial sync",
+                    username=username,
+                    file_type=file_type,
+                    name=name,
+                    error=str(e),
+                    exc_info=True,
+                )
+                # Write error file for unexpected errors
+                self._file_ops.write_error(
+                    username,
+                    file_type,
+                    name,
+                    f"Conversion crashed: {e}",
+                )
+                return False
+
             if not result.success:
                 logger.error(
                     "Conversion failed during initial sync",
@@ -255,6 +274,9 @@ class InitialSync:
             json_data = result.data
         else:
             json_data = {} if file_type == "workflows" else []
+
+        # Clear any previous error file on successful conversion
+        self._file_ops.delete_error(username, file_type, name)
 
         # Upsert to database
         try:

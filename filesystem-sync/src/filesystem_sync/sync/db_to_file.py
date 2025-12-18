@@ -69,7 +69,9 @@ class DatabaseToFileSync:
         elif event.action == DBEventType.UPDATE:
             await self._handle_update(file_type, event.entity_id, event.user_id)
         elif event.action == DBEventType.DELETE:
-            await self._handle_delete(file_type, event.entity_id, event.user_id)
+            await self._handle_delete(
+                file_type, event.entity_id, event.user_id, event.name
+            )
 
     async def _get_entity_and_user(
         self,
@@ -142,8 +144,29 @@ class DatabaseToFileSync:
             )
             return
 
-        # Convert JSON to DSL
-        result = await self._conversion.json_to_dsl(file_type, name, json_data or {})
+        # Convert JSON to DSL with error handling
+        try:
+            result = await self._conversion.json_to_dsl(
+                file_type, name, json_data or {}
+            )
+        except Exception as e:
+            logger.error(
+                "Unexpected error during conversion for DB insert",
+                username=username,
+                file_type=file_type,
+                name=name,
+                error=str(e),
+                exc_info=True,
+            )
+            # Write error file
+            self._file_ops.write_error(
+                username,
+                file_type,
+                name,
+                f"Conversion crashed: {e}",
+            )
+            return
+
         if not result.success:
             logger.error(
                 "Conversion failed for DB insert",
@@ -152,6 +175,14 @@ class DatabaseToFileSync:
                 name=name,
                 error=str(result.error),
             )
+            # Write error file with conversion error details
+            if result.error:
+                self._file_ops.write_error(
+                    username,
+                    file_type,
+                    name,
+                    result.error.to_error_file_content(),
+                )
             return
 
         dsl_content = result.data if isinstance(result.data, str) else ""
@@ -162,6 +193,8 @@ class DatabaseToFileSync:
         # Write file
         success = self._file_ops.write(username, file_type, name, dsl_content)
         if success:
+            # Clear any previous error file on success
+            self._file_ops.delete_error(username, file_type, name)
             logger.info(
                 "Successfully synced DB insert to file",
                 username=username,
@@ -210,8 +243,29 @@ class DatabaseToFileSync:
             )
             return
 
-        # Convert JSON to DSL
-        result = await self._conversion.json_to_dsl(file_type, name, json_data or {})
+        # Convert JSON to DSL with error handling
+        try:
+            result = await self._conversion.json_to_dsl(
+                file_type, name, json_data or {}
+            )
+        except Exception as e:
+            logger.error(
+                "Unexpected error during conversion for DB update",
+                username=username,
+                file_type=file_type,
+                name=name,
+                error=str(e),
+                exc_info=True,
+            )
+            # Write error file
+            self._file_ops.write_error(
+                username,
+                file_type,
+                name,
+                f"Conversion crashed: {e}",
+            )
+            return
+
         if not result.success:
             logger.error(
                 "Conversion failed for DB update",
@@ -220,6 +274,14 @@ class DatabaseToFileSync:
                 name=name,
                 error=str(result.error),
             )
+            # Write error file with conversion error details
+            if result.error:
+                self._file_ops.write_error(
+                    username,
+                    file_type,
+                    name,
+                    result.error.to_error_file_content(),
+                )
             return
 
         dsl_content = result.data if isinstance(result.data, str) else ""
@@ -230,6 +292,8 @@ class DatabaseToFileSync:
         # Write file
         success = self._file_ops.write(username, file_type, name, dsl_content)
         if success:
+            # Clear any previous error file on success
+            self._file_ops.delete_error(username, file_type, name)
             logger.info(
                 "Successfully synced DB update to file",
                 username=username,
@@ -249,17 +313,15 @@ class DatabaseToFileSync:
         file_type: Literal["experiments", "workflows"],
         entity_id: UUID,
         user_id: UUID,
+        name: str | None = None,
     ) -> None:
         """Handle database DELETE - delete file."""
         logger.info(
             "Processing DB delete",
             file_type=file_type,
             entity_id=str(entity_id),
+            name=name,
         )
-
-        # For delete, we can't get the entity name from DB anymore
-        # We need to find the file by scanning or use cached info
-        # The DB notification includes user_id but not the entity name
 
         # Get username
         async with get_async_session() as session:
@@ -270,27 +332,49 @@ class DatabaseToFileSync:
                     user_id=str(user_id),
                 )
                 return
-            _username = user.username  # noqa: F841
+            username = user.username
 
-        # Since the entity is already deleted, we can't get its name from DB
-        # The NOTIFY payload only contains id and user_id
-        #
-        # This is a limitation - we'd need to either:
-        # 1. Include the name in the NOTIFY payload (requires trigger change)
-        # 2. Cache entity names when we see them
-        # 3. Scan files and compare with DB
-        #
-        # For now, log a warning. In practice, most deletes will be
-        # API-initiated (which means file deletion happens there too),
-        # so this code path may rarely be hit.
+        # If we have the name from the NOTIFY payload, we can delete the file
+        if name is not None:
+            # Check if this event should be ignored (file-initiated)
+            if self._registry.should_ignore("delete", username, file_type, name):
+                logger.debug(
+                    "Ignoring DB delete (file-initiated)",
+                    username=username,
+                    file_type=file_type,
+                    name=name,
+                )
+                return
 
-        logger.warning(
-            "DB delete received but cannot determine file name from deleted record. "
-            "File may need manual cleanup if API did not delete it.",
-            user_id=str(user_id),
-            entity_id=str(entity_id),
-            file_type=file_type,
-        )
+            # Register event to prevent loop
+            self._registry.register("delete", username, file_type, name)
+
+            # Delete the file
+            success = self._file_ops.delete(username, file_type, name)
+            if success:
+                logger.info(
+                    "Successfully deleted file for DB delete",
+                    username=username,
+                    file_type=file_type,
+                    name=name,
+                )
+            else:
+                logger.warning(
+                    "File not found or could not be deleted for DB delete",
+                    username=username,
+                    file_type=file_type,
+                    name=name,
+                )
+        else:
+            # Legacy behavior: name not available in NOTIFY payload
+            # This can happen with older trigger versions
+            logger.warning(
+                "DB delete received but entity name not in NOTIFY payload. "
+                "File may need manual cleanup if API did not delete it.",
+                user_id=str(user_id),
+                entity_id=str(entity_id),
+                file_type=file_type,
+            )
 
     async def sync_entity_to_file(
         self,
@@ -322,10 +406,22 @@ class DatabaseToFileSync:
                     file_type=file_type,
                     name=name,
                 )
+                # Write error file with conversion error details
+                if result.error:
+                    self._file_ops.write_error(
+                        username,
+                        file_type,
+                        name,
+                        result.error.to_error_file_content(),
+                    )
                 return False
 
             dsl_content = result.data if isinstance(result.data, str) else ""
-            return self._file_ops.write(username, file_type, name, dsl_content)
+            success = self._file_ops.write(username, file_type, name, dsl_content)
+            if success:
+                # Clear any previous error file on success
+                self._file_ops.delete_error(username, file_type, name)
+            return success
         except Exception as e:
             logger.error(
                 "Failed to sync entity to file",
@@ -333,5 +429,13 @@ class DatabaseToFileSync:
                 file_type=file_type,
                 name=name,
                 error=str(e),
+                exc_info=True,
+            )
+            # Write error file for unexpected errors
+            self._file_ops.write_error(
+                username,
+                file_type,
+                name,
+                f"Sync failed: {e}",
             )
             return False

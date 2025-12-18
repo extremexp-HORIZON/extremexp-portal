@@ -34,9 +34,7 @@ class FileSystemWatcher:
     def __init__(
         self,
         workspace_path: Path | None = None,
-        sync_callback: (
-            Callable[[str, PathInfo, PathInfo | None], Awaitable[None]] | None
-        ) = None,
+        sync_callback: (Callable[[str, PathInfo, PathInfo | None], Awaitable[None]] | None) = None,
         loop: asyncio.AbstractEventLoop | None = None,
     ):
         """
@@ -103,9 +101,7 @@ class FileSystemWatcher:
                 try:
                     self._loop = asyncio.get_running_loop()
                 except RuntimeError as err:
-                    raise RuntimeError(
-                        "Event loop not set and no running loop found"
-                    ) from err
+                    raise RuntimeError("Event loop not set and no running loop found") from err
 
             try:
                 # Ensure workspace exists

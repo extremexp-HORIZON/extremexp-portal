@@ -82,6 +82,8 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+      emf-cloud-service:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - extremexp_network

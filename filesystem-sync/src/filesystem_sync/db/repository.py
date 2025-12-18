@@ -31,9 +31,7 @@ class Repository:
     async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
         """Get a user by username."""
         result = await session.execute(
-            select(User).where(
-                User.username == username
-            )  # pyright: ignore[reportArgumentType]
+            select(User).where(User.username == username)  # pyright: ignore[reportArgumentType]
         )
         return result.scalar_one_or_none()
 
@@ -41,9 +39,7 @@ class Repository:
     async def get_user_by_id(session: AsyncSession, user_id: UUID) -> User | None:
         """Get a user by ID."""
         result = await session.execute(
-            select(User).where(
-                User.id == user_id
-            )  # pyright: ignore[reportArgumentType]
+            select(User).where(User.id == user_id)  # pyright: ignore[reportArgumentType]
         )
         return result.scalar_one_or_none()
 
@@ -80,28 +76,20 @@ class Repository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def get_experiment_by_id(
-        session: AsyncSession, experiment_id: UUID
-    ) -> Experiment | None:
+    async def get_experiment_by_id(session: AsyncSession, experiment_id: UUID) -> Experiment | None:
         """Get an experiment by ID."""
         result = await session.execute(
-            select(Experiment).where(
-                Experiment.id == experiment_id
-            )  # pyright: ignore[reportArgumentType]
+            select(Experiment).where(Experiment.id == experiment_id)  # pyright: ignore[reportArgumentType]
         )
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def list_experiments_for_user(
-        session: AsyncSession, user_id: UUID
-    ) -> list[Experiment]:
+    async def list_experiments_for_user(session: AsyncSession, user_id: UUID) -> list[Experiment]:
         """List all experiments for a user."""
         result = await session.execute(
             select(Experiment)
             .where(Experiment.user_id == user_id)  # pyright: ignore[reportArgumentType]
-            .order_by(
-                Experiment.updated_at.desc()
-            )  # pyright: ignore[reportAttributeAccessIssue]
+            .order_by(Experiment.updated_at.desc())  # pyright: ignore[reportAttributeAccessIssue]
         )
         return list(result.scalars().all())
 
@@ -168,9 +156,7 @@ class Repository:
             return await Repository.create_experiment(
                 session, user_id, name, steps, graphical_model
             )
-        return await Repository.update_experiment(
-            session, experiment, steps, graphical_model
-        )
+        return await Repository.update_experiment(session, experiment, steps, graphical_model)
 
     @staticmethod
     async def delete_experiment(session: AsyncSession, experiment: Experiment) -> None:
@@ -184,9 +170,7 @@ class Repository:
         await session.flush()
 
     @staticmethod
-    async def delete_experiment_by_name(
-        session: AsyncSession, user_id: UUID, name: str
-    ) -> bool:
+    async def delete_experiment_by_name(session: AsyncSession, user_id: UUID, name: str) -> bool:
         """Delete an experiment by name. Returns True if deleted, False if not found."""
         experiment = await Repository.get_experiment_by_name(session, user_id, name)
         if experiment is None:
@@ -210,28 +194,20 @@ class Repository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def get_workflow_by_id(
-        session: AsyncSession, workflow_id: UUID
-    ) -> Workflow | None:
+    async def get_workflow_by_id(session: AsyncSession, workflow_id: UUID) -> Workflow | None:
         """Get a workflow by ID."""
         result = await session.execute(
-            select(Workflow).where(
-                Workflow.id == workflow_id
-            )  # pyright: ignore[reportArgumentType]
+            select(Workflow).where(Workflow.id == workflow_id)  # pyright: ignore[reportArgumentType]
         )
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def list_workflows_for_user(
-        session: AsyncSession, user_id: UUID
-    ) -> list[Workflow]:
+    async def list_workflows_for_user(session: AsyncSession, user_id: UUID) -> list[Workflow]:
         """List all workflows for a user."""
         result = await session.execute(
             select(Workflow)
             .where(Workflow.user_id == user_id)  # pyright: ignore[reportArgumentType]
-            .order_by(
-                Workflow.updated_at.desc()
-            )  # pyright: ignore[reportAttributeAccessIssue]
+            .order_by(Workflow.updated_at.desc())  # pyright: ignore[reportAttributeAccessIssue]
         )
         return list(result.scalars().all())
 
@@ -289,9 +265,7 @@ class Repository:
         """Create or update a workflow."""
         workflow = await Repository.get_workflow_by_name(session, user_id, name)
         if workflow is None:
-            return await Repository.create_workflow(
-                session, user_id, name, graphical_model
-            )
+            return await Repository.create_workflow(session, user_id, name, graphical_model)
         return await Repository.update_workflow(session, workflow, graphical_model)
 
     @staticmethod
@@ -306,9 +280,7 @@ class Repository:
         await session.flush()
 
     @staticmethod
-    async def delete_workflow_by_name(
-        session: AsyncSession, user_id: UUID, name: str
-    ) -> bool:
+    async def delete_workflow_by_name(session: AsyncSession, user_id: UUID, name: str) -> bool:
         """Delete a workflow by name. Returns True if deleted, False if not found."""
         workflow = await Repository.get_workflow_by_name(session, user_id, name)
         if workflow is None:

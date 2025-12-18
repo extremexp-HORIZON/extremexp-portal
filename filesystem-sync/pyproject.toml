@@ -17,6 +17,7 @@ dependencies = [
   "structlog>=24.0.0",
   "python-dotenv>=1.0.0",
   "uuid6>=2024.7.10",
+  "nanoid>=2.0.0",
   # CLI
   "click>=8.1.0",
   # Async PostgreSQL LISTEN/NOTIFY

@@ -307,13 +307,9 @@ class FileToDatabaseSync:
                 return
 
             if file_type == "experiments":
-                deleted = await Repository.delete_experiment_by_name(
-                    session, user.id, file_name
-                )
+                deleted = await Repository.delete_experiment_by_name(session, user.id, file_name)
             else:
-                deleted = await Repository.delete_workflow_by_name(
-                    session, user.id, file_name
-                )
+                deleted = await Repository.delete_workflow_by_name(session, user.id, file_name)
 
             if deleted:
                 logger.info(
@@ -381,17 +377,11 @@ class FileToDatabaseSync:
                         old_name=old_file_name,
                         new_name=new_file_name,
                     )
-                    await self._handle_create(
-                        new_username, new_file_type, new_file_name
-                    )
+                    await self._handle_create(new_username, new_file_type, new_file_name)
                     return
-                await Repository.update_experiment(
-                    session, experiment, name=new_file_name
-                )
+                await Repository.update_experiment(session, experiment, name=new_file_name)
             else:
-                workflow = await Repository.get_workflow_by_name(
-                    session, user.id, old_file_name
-                )
+                workflow = await Repository.get_workflow_by_name(session, user.id, old_file_name)
                 if workflow is None:
                     # Workflow doesn't exist - treat as create
                     logger.info(
@@ -399,9 +389,7 @@ class FileToDatabaseSync:
                         old_name=old_file_name,
                         new_name=new_file_name,
                     )
-                    await self._handle_create(
-                        new_username, new_file_type, new_file_name
-                    )
+                    await self._handle_create(new_username, new_file_type, new_file_name)
                     return
                 await Repository.update_workflow(session, workflow, name=new_file_name)
 

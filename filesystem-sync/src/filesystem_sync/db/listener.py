@@ -38,6 +38,7 @@ class DBEvent:
     action: DBEventType
     entity_id: UUID
     user_id: UUID
+    name: str | None = None  # Optional: included when available (especially for DELETE)
 
 
 # Type alias for event handlers
@@ -104,20 +105,28 @@ class DatabaseListener:
                 logger.warning("Invalid UUID in DB event", error=str(e), data=data)
                 return
 
+            # Extract name if present (optional, for backward compatibility)
+            name = data.get("name")
+
             event = DBEvent(
                 table=table,
                 action=action,
                 entity_id=entity_id,
                 user_id=user_id,
+                name=name,
             )
 
             # Call the handler
             await self.handler(event)
 
         except json.JSONDecodeError:
-            logger.error("Failed to decode DB notification payload", payload=notification.payload)
+            logger.error(
+                "Failed to decode DB notification payload", payload=notification.payload
+            )
         except Exception as e:
-            logger.error("Error processing DB notification", error=str(e), exc_info=True)
+            logger.error(
+                "Error processing DB notification", error=str(e), exc_info=True
+            )
 
     async def _run_listener(self) -> None:
         """Run the listener loop with reconnection handling."""
@@ -141,7 +150,9 @@ class DatabaseListener:
                 break
             except Exception as e:
                 if self._running:
-                    logger.error("Database listener error, retrying in 5s...", error=str(e))
+                    logger.error(
+                        "Database listener error, retrying in 5s...", error=str(e)
+                    )
                     await asyncio.sleep(5)
                 else:
                     break
