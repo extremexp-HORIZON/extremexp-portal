@@ -164,7 +164,7 @@ class FileSystemHandler:
         shutil.move(filepath , destination_path)
 
         return {"message": f"{experiment_name} has been archived"}, 200
-    
+
     def detect_missing_file(self, username: str, fileType: str, fileName: str) -> bool:
         filePath = self.workspace_path / username / fileType / f"{fileName}.xxp"
         return filePath.exists()
