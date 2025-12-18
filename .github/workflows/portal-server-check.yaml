@@ -40,7 +40,7 @@ jobs:
           enable-cache: true
 
       - name: Install the project
-        run: uv sync --locked --dev
+        run: uv sync --locked --all-extras
 
       - name: Run Ruff
         uses: astral-sh/ruff-action@v3
