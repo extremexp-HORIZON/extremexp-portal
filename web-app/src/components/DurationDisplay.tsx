@@ -46,6 +46,18 @@ function humanizeDuration(diffMs: number): string {
   return 'less than a second';
 }
 
+/**
+ * Parse and validate date input
+ */
+function parseDate(input: string | Date): Date | null {
+  try {
+    const date = typeof input === 'string' ? new Date(input) : input;
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+}
+
 interface DurationDisplayProps {
   /** ISO date string or Date object for the start time */
   start: string | Date | undefined;
@@ -64,31 +76,17 @@ export default function DurationDisplay({ start, end, fallback = '—' }: Durati
     return <span className="text-xs text-neutral-500">{fallback}</span>;
   }
 
-  let startDate: Date;
-  let endDate: Date;
-  const isOngoing = !end;
-  let isValid = true;
-
-  try {
-    startDate = typeof start === 'string' ? new Date(start) : start;
-    if (isNaN(startDate.getTime())) {
-      isValid = false;
-    } else if (end) {
-      endDate = typeof end === 'string' ? new Date(end) : end;
-      if (isNaN(endDate.getTime())) {
-        isValid = false;
-      }
-    } else {
-      endDate = new Date();
-    }
-  } catch {
-    isValid = false;
-  }
-
-  if (!isValid) {
+  const startDate = parseDate(start);
+  if (!startDate) {
     return <span className="text-xs text-neutral-500">{fallback}</span>;
   }
 
+  const endDate = end ? parseDate(end) : new Date();
+  if (!endDate) {
+    return <span className="text-xs text-neutral-500">{fallback}</span>;
+  }
+
+  const isOngoing = !end;
   const diffMs = endDate.getTime() - startDate.getTime();
   if (diffMs < 0) {
     return <span className="text-xs text-neutral-500">{fallback}</span>;

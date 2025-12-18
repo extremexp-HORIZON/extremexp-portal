@@ -43,6 +43,18 @@ function humanizeTime(date: Date): string {
   return isFuture ? 'in a few seconds' : 'just now';
 }
 
+/**
+ * Parse and validate date input
+ */
+function parseDate(input: string | Date): Date | null {
+  try {
+    const date = typeof input === 'string' ? new Date(input) : input;
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+}
+
 interface TimeDisplayProps {
   /** ISO date string or Date object */
   time: string | Date | undefined;
@@ -58,19 +70,8 @@ export default function TimeDisplay({ time, fallback = '—' }: TimeDisplayProps
     return <span className="text-xs text-neutral-500">{fallback}</span>;
   }
 
-  let date: Date;
-  let isValid = true;
-
-  try {
-    date = typeof time === 'string' ? new Date(time) : time;
-    if (isNaN(date.getTime())) {
-      isValid = false;
-    }
-  } catch {
-    isValid = false;
-  }
-
-  if (!isValid) {
+  const date = parseDate(time);
+  if (!date) {
     return <span className="text-xs text-neutral-500">{fallback}</span>;
   }
 
