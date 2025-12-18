@@ -1,17 +1,23 @@
 services:
-  mongo:
-    image: mongo:8.2.1
+  postgresql:
+    image: postgres:18
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin
-    container_name: mongo
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo_data:/data/db
+      - postgresql_data:/var/lib/postgresql
     networks:
       - extremexp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.4.4
@@ -29,26 +35,30 @@ services:
     networks:
       - extremexp_network
 
-  exp-service:
-    build: ./server-experiment
-    container_name: exp-service
+  portal-server:
+    build: ./portal-server
+    container_name: portal-server
+    environment:
+      EXTREMEXP_AUTH_URL: http://access-control-service:5521/extreme_auth/api/v1/person/userinfo
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgresql
     healthcheck:
-      test: curl --fail http://localhost:5050/api || exit 1
+      test: curl --fail http://localhost:5050/healthz || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
       start_period: 60s
-    volumes:
-      - ${WORKSPACE_PATH}:/workspace
     ports:
-      - "5050:5050"
+      - "8000:8000"
     depends_on:
       access-control-service:
         condition: service_started
       emf-cloud-service:
         condition: service_healthy
-      mongo:
-        condition: service_started
+      postgresql:
+        condition: service_healthy
       proxy-service:
         condition: service_started
     networks:
@@ -72,7 +82,7 @@ services:
     build: ./web-app
     container_name: web-app
     ports:
-      - "7001:7001"
+      - "7001:8080"
     networks:
       - extremexp_network
 
@@ -84,10 +94,8 @@ services:
     depends_on:
       - web-app
       - access-control-service
-      - exp-service
+      - portal-server
     restart: unless-stopped
-    environment:
-      - PROXY_APP_PORT=${PROXY_APP_PORT}
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
@@ -169,3 +177,4 @@ networks:
 volumes:
   mongo_data:
   keycloak_data:
+  postgresql_data:

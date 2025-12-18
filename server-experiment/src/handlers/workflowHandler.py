@@ -23,7 +23,7 @@ class WorkflowHandler(object):
         )
         # return documents in JSON format
         return json.loads(json.dumps(list(documents), default=str))
-    
+
     def get_workflows(self, username: str) -> list:
         query = {"id_workflow": {"$regex": username}}
         documents = self.collection_workflow.find(query).sort(
@@ -31,7 +31,7 @@ class WorkflowHandler(object):
         )
         # return documents in JSON format
         return json.loads(json.dumps(list(documents), default=str))
-    
+
 
     def workflow_exists(self, work_id: str) -> bool:
         query = {"id_workflow": work_id}
@@ -105,7 +105,7 @@ class WorkflowHandler(object):
         self.collection_workflow.update_one(query, new_values)
 
         return True
-    
+
     def update_workflow_graphical_model_from_file_name(self, username: str, workflow_name: str, graphical_model: dict) -> bool:
         update_time = calendar.timegm(time.gmtime())
         query = {"id_workflow": {"$regex": username}, "name": workflow_name}

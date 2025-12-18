@@ -1,101 +1,30 @@
-import './styles/app.scss';
-// import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-
-import Home from './containers/Home';
-import Account from './containers/Account';
-import Login from './containers/Account/Login';
-import Register from './containers/Account/Register';
-import Dashboard from './containers/Dashboard';
-import Experiments from './containers/Dashboard/Experiments';
-import Workflows from './containers/Dashboard/Workflows';
-import Progress from './containers/Dashboard/Progress';
-import Intents from './containers/Dashboard/Intents';
-import DDM from './containers/Dashboard/DDM';
-import ReusableTasks from './containers/Dashboard/ReusableTasks';
-import Project from './components/dashboard/Workflow';
-import ProjectExperiment from './components/dashboard/Experiment';
-import Tasks from './containers/Dashboard/Tasks';
-import Category from './components/dashboard/Task';
-import Editor from './containers/Editor';
-import Execution from './containers/Execution';
-import ExperimentDesigner from './components/experiments/ExperimentDesigner';
-
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Home />,
-  },
-  {
-    path: '/account/',
-    element: <Account />,
-    children: [
-      {
-        path: '/account/login',
-        element: <Login />,
-      },
-      {
-        path: '/account/register',
-        element: <Register />,
-      },
-    ],
-  },
-  {
-    path: '/dashboard/',
-    element: <Dashboard />,
-    children: [
-      {
-        path: '/dashboard/experiments',
-        element: <ProjectExperiment />,
-      },
-      {
-        path: '/dashboard/workflows',
-        element: <Project />,
-      },
-      {
-        path: '/dashboard/categories',
-        element: <Tasks />,
-        children: [
-          {
-            path: '/dashboard/categories/:categoryID/tasks',
-            element: <Category />,
-          },
-        ],
-      },
-      {
-        path: '/dashboard/reusable_tasks',
-        element: <ReusableTasks />,
-      },
-      {
-        path: '/dashboard/progress',
-        element: <Progress />,
-      },
-      {
-        path: '/dashboard/intents',
-        element: <Intents />,
-      },
-      {
-        path: '/dashboard/ddm',
-        element: <DDM />,
-      },
-    ],
-  },
-  {
-    path: '/editor/:type/:projID/:workflowID',
-    element: <Editor />,
-  },
-  {
-    path: '/execution/convert/:projID/:experimentID',
-    element: <Execution />,
-  },
-  {
-    path: '/editor/experiment/:projID/:experimentID',
-    element: <ExperimentDesigner />,
-  },
-]);
+import "./App.css"
+import { Routes, Route } from "react-router-dom"
+import { MainLayout } from "./components/MainLayout"
+import { Dashboard } from "./components/Dashboard"
+import { ExternalFrame } from "./components/ExternalFrame"
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route index element={<Dashboard />} />
+        {/* External tool routes - each tool type has its own route for proper history */}
+        {/* Management tools (no params) */}
+        <Route path="access-control" element={<ExternalFrame />} />
+        <Route path="data-management" element={<ExternalFrame />} />
+        {/* Experiment tools (require experimentId) */}
+        <Route path="experiment/:experimentId/graphical-editor" element={<ExternalFrame />} />
+        <Route path="experiment/:experimentId/code-editor" element={<ExternalFrame />} />
+        <Route path="experiment/:experimentId/schedule" element={<ExternalFrame />} />
+        {/* Workflow tools (require workflowId) */}
+        <Route path="workflow/:workflowId/code-editor" element={<ExternalFrame />} />
+        {/* Observe & Analyze tools (optional experimentId) */}
+        <Route path="gamification/:experimentId?" element={<ExternalFrame />} />
+        <Route path="experiment-card/:experimentId?" element={<ExternalFrame />} />
+      </Route>
+    </Routes>
+  )
 }
 
-export default App;
+export default App

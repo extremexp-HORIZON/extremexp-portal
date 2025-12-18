@@ -1,25 +1,8 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import tailwindcss from '@tailwindcss/vite';
 
-// https://vitejs.dev/config/
-
+// https://vite.dev/config/
 export default defineConfig({
-  // base: '/',
-  plugins: [react()],
-  server: {
-    host: '0.0.0.0',
-    port: 7001, // you can replace this port with any port
-    watch: {
-      usePolling: true,
-    },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5050',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      }
-
-    }
-  },
-});
+  plugins: [react(), tailwindcss()],
+})

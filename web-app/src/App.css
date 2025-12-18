@@ -1,0 +1,4 @@
+/* driver.js tour - minimal overrides */
+.driver-popover {
+  max-width: 320px;
+}

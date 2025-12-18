@@ -92,7 +92,7 @@ class ExperimentHandler(object):
         self.collection_experiment.update_one(query, new_values)
 
         return True
-    
+
     def update_experiment_steps_from_file_name(self, username: str, experiment_name: str, steps: dict) -> bool:
         update_time = calendar.timegm(time.gmtime())
         query = {"id_experiment": {"$regex": username}, "name": experiment_name}
