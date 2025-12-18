@@ -67,22 +67,25 @@ export default function DurationDisplay({ start, end, fallback = '—' }: Durati
   let startDate: Date;
   let endDate: Date;
   const isOngoing = !end;
+  let isValid = true;
 
   try {
     startDate = typeof start === 'string' ? new Date(start) : start;
     if (isNaN(startDate.getTime())) {
-      return <span className="text-xs text-neutral-500">{fallback}</span>;
-    }
-
-    if (end) {
+      isValid = false;
+    } else if (end) {
       endDate = typeof end === 'string' ? new Date(end) : end;
       if (isNaN(endDate.getTime())) {
-        return <span className="text-xs text-neutral-500">{fallback}</span>;
+        isValid = false;
       }
     } else {
       endDate = new Date();
     }
   } catch {
+    isValid = false;
+  }
+
+  if (!isValid) {
     return <span className="text-xs text-neutral-500">{fallback}</span>;
   }
 

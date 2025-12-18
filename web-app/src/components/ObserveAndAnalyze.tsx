@@ -466,7 +466,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
   /**
    * Handle non-link actions
    */
-  const handleAction = (action: string, _experiment: DALExperiment) => {
+  const handleAction = (action: string) => {
     switch (action) {
       case "gamification":
       case "experiment_card":
@@ -585,7 +585,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                             toolId={linkInfo?.toolId}
                             params={linkInfo?.params}
                             externalUrl={linkInfo?.externalUrl}
-                            onClick={() => handleAction(icon.action, experiment)}
+                            onClick={() => handleAction(icon.action)}
                           />
                         );
                       })}

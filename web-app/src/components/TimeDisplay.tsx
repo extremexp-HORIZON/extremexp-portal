@@ -59,12 +59,18 @@ export default function TimeDisplay({ time, fallback = '—' }: TimeDisplayProps
   }
 
   let date: Date;
+  let isValid = true;
+
   try {
     date = typeof time === 'string' ? new Date(time) : time;
     if (isNaN(date.getTime())) {
-      return <span className="text-xs text-neutral-500">{fallback}</span>;
+      isValid = false;
     }
   } catch {
+    isValid = false;
+  }
+
+  if (!isValid) {
     return <span className="text-xs text-neutral-500">{fallback}</span>;
   }
 
