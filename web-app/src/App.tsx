@@ -1,34 +1,29 @@
 import "./App.css"
-import ExtremeXpNavbar from "./components/ExtremeXpNavbar"
-import Prepare from "./components/Prepare"
-import QuickStart from "./components/QuickStart"
-import WelcomeMessage from "./components/WelcomeMessage"
-import DefineAndRun from "./components/DefineAndRun"
-import ObserveAndAnalyze from "./components/ObserveAndAnalyze"
-import { Footer } from "./components/Footer"
-import { useWelcomeMessageStore } from "./stores/useWelcomeMessageStore"
-import { useTour } from "./hooks/useTour"
+import { Routes, Route } from "react-router-dom"
+import { MainLayout } from "./components/MainLayout"
+import { Dashboard } from "./components/Dashboard"
+import { ExternalFrame } from "./components/ExternalFrame"
 
 function App() {
-  const isWelcomeDisabled = useWelcomeMessageStore((state) => state.isDisabled)
-  const { startTour } = useTour()
-
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 bg-base-100 shadow-sm">
-        <ExtremeXpNavbar />
-      </header>
-      <main className="flex-1 overflow-y-auto bg-blue-50">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
-          {!isWelcomeDisabled && <WelcomeMessage onTour={startTour} />}
-          <QuickStart />
-          <Prepare />
-          <DefineAndRun />
-          <ObserveAndAnalyze />
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route index element={<Dashboard />} />
+        {/* External tool routes - each tool type has its own route for proper history */}
+        {/* Management tools (no params) */}
+        <Route path="access-control" element={<ExternalFrame />} />
+        <Route path="data-management" element={<ExternalFrame />} />
+        {/* Experiment tools (require experimentId) */}
+        <Route path="experiment/:experimentId/graphical-editor" element={<ExternalFrame />} />
+        <Route path="experiment/:experimentId/code-editor" element={<ExternalFrame />} />
+        <Route path="experiment/:experimentId/schedule" element={<ExternalFrame />} />
+        {/* Workflow tools (require workflowId) */}
+        <Route path="workflow/:workflowId/code-editor" element={<ExternalFrame />} />
+        {/* Observe & Analyze tools (optional experimentId) */}
+        <Route path="gamification/:experimentId?" element={<ExternalFrame />} />
+        <Route path="experiment-card/:experimentId?" element={<ExternalFrame />} />
+      </Route>
+    </Routes>
   )
 }
 

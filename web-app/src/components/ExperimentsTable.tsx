@@ -18,10 +18,19 @@ import {
   getExperimentGraphicalEditorUrl,
   getExperimentCodeEditorUrl,
   getExperimentScheduleUrl,
+  type ExternalToolId,
 } from "../config"
+import { ExternalLinkButton } from "./ExternalLinkButton"
 
 /** Context key for experiments table sorting */
 const SORT_CONTEXT = "experiments"
+
+/** Map action names to external tool IDs */
+const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
+  schedule: "experiment-schedule",
+  code_editor: "experiment-code-editor",
+  graphical_editor: "experiment-graphical-editor",
+}
 
 const ACTION_ICONS = [
   {
@@ -90,28 +99,32 @@ function ActionIconButton({
   label,
   icon,
   onClick,
-  href,
+  toolId,
+  params,
+  externalUrl,
 }: {
   label: string
   icon: React.ReactNode
   onClick?: () => void
-  href?: string
+  toolId?: ExternalToolId
+  params?: Record<string, string | number>
+  externalUrl?: string
 }) {
   const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
 
-  if (href) {
+  if (toolId && externalUrl) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+      <ExternalLinkButton
+        toolId={toolId}
+        params={params}
+        externalUrl={externalUrl}
         className={className}
         aria-label={label}
       >
         <span className="size-4 [&>svg]:size-full">
           {icon}
         </span>
-      </a>
+      </ExternalLinkButton>
     )
   }
 
@@ -211,19 +224,30 @@ export default function ExperimentsTable() {
   }, [sortedExperiments, currentPage])
 
   /**
-   * Get the href for external link actions
+   * Get the external link info for an action
    */
-  const getActionHref = (action: string, experiment: ExperimentRead): string | undefined => {
+  const getExternalLinkInfo = (action: string, experiment: ExperimentRead) => {
+    const toolId = ACTION_TO_TOOL_ID[action]
+    if (!toolId) return undefined
+
+    const params = { experimentId: String(experiment.id) }
+    let externalUrl: string
+
     switch (action) {
       case "graphical_editor":
-        return getExperimentGraphicalEditorUrl(experiment.id)
+        externalUrl = getExperimentGraphicalEditorUrl(experiment.id)
+        break
       case "code_editor":
-        return getExperimentCodeEditorUrl(experiment.id)
+        externalUrl = getExperimentCodeEditorUrl(experiment.id)
+        break
       case "schedule":
-        return getExperimentScheduleUrl(experiment.id)
+        externalUrl = getExperimentScheduleUrl(experiment.id)
+        break
       default:
         return undefined
     }
+
+    return { toolId, params, externalUrl }
   }
 
   const handleAction = (action: string, experiment: ExperimentRead) => {
@@ -330,15 +354,20 @@ export default function ExperimentsTable() {
                 </td> */}
                   <td>
                     <div className="flex justify-end gap-1.5">
-                      {ACTION_ICONS.map((icon) => (
-                        <ActionIconButton
-                          key={icon.label}
-                          label={icon.label}
-                          icon={icon.icon}
-                          href={getActionHref(icon.action, experiment)}
-                          onClick={() => handleAction(icon.action, experiment)}
-                        />
-                      ))}
+                      {ACTION_ICONS.map((icon) => {
+                        const linkInfo = getExternalLinkInfo(icon.action, experiment)
+                        return (
+                          <ActionIconButton
+                            key={icon.label}
+                            label={icon.label}
+                            icon={icon.icon}
+                            toolId={linkInfo?.toolId}
+                            params={linkInfo?.params}
+                            externalUrl={linkInfo?.externalUrl}
+                            onClick={() => handleAction(icon.action, experiment)}
+                          />
+                        )
+                      })}
                     </div>
                   </td>
                 </tr>

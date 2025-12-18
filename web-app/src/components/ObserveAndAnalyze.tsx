@@ -9,10 +9,17 @@ import SortableHeader from './SortableHeader';
 import TimeDisplay from './TimeDisplay';
 import DurationDisplay from './DurationDisplay';
 import { useResettablePagination } from '../hooks';
-import { externalLinks, getGamificationUrl, getExperimentCardUrl } from '../config';
+import { externalLinks, getGamificationUrl, getExperimentCardUrl, type ExternalToolId } from '../config';
+import { ExternalLinkButton } from './ExternalLinkButton';
 
 /** Context key for DAL experiments table sorting */
 const SORT_CONTEXT = "dalExperiments";
+
+/** Map action names to external tool IDs */
+const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
+  gamification: "gamification",
+  experiment_card: "experiment-card",
+};
 
 type ExperimentStatus = 'Completed' | 'Running' | 'Error' | 'Pending' | 'Unknown';
 
@@ -95,28 +102,32 @@ function ActionIconButton({
   label,
   icon,
   onClick,
-  href,
+  toolId,
+  params,
+  externalUrl,
 }: {
   label: string
   icon: React.ReactNode
   onClick?: () => void
-  href?: string
+  toolId?: ExternalToolId
+  params?: Record<string, string | number>
+  externalUrl?: string
 }) {
   const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
 
-  if (href) {
+  if (toolId && externalUrl) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+      <ExternalLinkButton
+        toolId={toolId}
+        params={params}
+        externalUrl={externalUrl}
         className={className}
         aria-label={label}
       >
         <span className="size-4 [&>svg]:size-full">
           {icon}
         </span>
-      </a>
+      </ExternalLinkButton>
     )
   }
 
@@ -429,17 +440,27 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
   }, [sortedExperiments, currentPage]);
 
   /**
-   * Get the href for external link actions
+   * Get the external link info for an action
    */
-  const getActionHref = (action: string, experiment: DALExperiment): string | undefined => {
+  const getExternalLinkInfo = (action: string, experiment: DALExperiment) => {
+    const toolId = ACTION_TO_TOOL_ID[action];
+    if (!toolId) return undefined;
+
+    const params = { experimentId: String(experiment.id) };
+    let externalUrl: string;
+
     switch (action) {
       case "gamification":
-        return getGamificationUrl(experiment.id);
+        externalUrl = getGamificationUrl(experiment.id);
+        break;
       case "experiment_card":
-        return getExperimentCardUrl(experiment.id);
+        externalUrl = getExperimentCardUrl(experiment.id);
+        break;
       default:
         return undefined;
     }
+
+    return { toolId, params, externalUrl };
   };
 
   /**
@@ -554,15 +575,20 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                   <td>{experiment.intent || '—'}</td>
                   <td>
                     <div className="flex justify-end gap-1.5">
-                      {ACTION_ICONS.map((icon) => (
-                        <ActionIconButton
-                          key={icon.label}
-                          label={icon.label}
-                          icon={icon.icon}
-                          href={getActionHref(icon.action, experiment)}
-                          onClick={() => handleAction(icon.action, experiment)}
-                        />
-                      ))}
+                      {ACTION_ICONS.map((icon) => {
+                        const linkInfo = getExternalLinkInfo(icon.action, experiment);
+                        return (
+                          <ActionIconButton
+                            key={icon.label}
+                            label={icon.label}
+                            icon={icon.icon}
+                            toolId={linkInfo?.toolId}
+                            params={linkInfo?.params}
+                            externalUrl={linkInfo?.externalUrl}
+                            onClick={() => handleAction(icon.action, experiment)}
+                          />
+                        );
+                      })}
                     </div>
                   </td>
                 </tr>
@@ -660,10 +686,9 @@ export default function ObserveAndAnalyze() {
               </button>
             </div>
             <div className="flex gap-2">
-              <a
-                href={externalLinks.gamificationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <ExternalLinkButton
+                toolId="gamification"
+                externalUrl={externalLinks.gamificationUrl}
                 className="btn rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white"
               >
                 <svg
@@ -679,11 +704,10 @@ export default function ObserveAndAnalyze() {
                   <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
                 </svg>
                 Gamification
-              </a>
-              <a
-                href={externalLinks.experimentCardUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              </ExternalLinkButton>
+              <ExternalLinkButton
+                toolId="experiment-card"
+                externalUrl={externalLinks.experimentCardUrl}
                 className="btn rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white"
               >
                 <svg
@@ -701,7 +725,7 @@ export default function ObserveAndAnalyze() {
                   <line x1="12" y1="3" x2="12" y2="21" />
                 </svg>
                 Cards
-              </a>
+              </ExternalLinkButton>
             </div>
           </div>
         </header>

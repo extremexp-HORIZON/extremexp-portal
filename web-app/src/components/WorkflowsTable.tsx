@@ -14,10 +14,16 @@ import { useSortStore, sortItems } from "../stores/useSortStore"
 import SortableHeader from "./SortableHeader"
 import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
-import { getWorkflowCodeEditorUrl } from "../config"
+import { getWorkflowCodeEditorUrl, type ExternalToolId } from "../config"
+import { ExternalLinkButton } from "./ExternalLinkButton"
 
 /** Context key for workflows table sorting */
 const SORT_CONTEXT = "workflows"
+
+/** Map action names to external tool IDs */
+const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
+  code_editor: "workflow-code-editor",
+}
 
 const ACTION_ICONS = [
   {
@@ -82,28 +88,32 @@ function ActionIconButton({
   label,
   icon,
   onClick,
-  href,
+  toolId,
+  params,
+  externalUrl,
 }: {
   label: string
   icon: React.ReactNode
   onClick?: () => void
-  href?: string
+  toolId?: ExternalToolId
+  params?: Record<string, string | number>
+  externalUrl?: string
 }) {
   const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
 
-  if (href) {
+  if (toolId && externalUrl) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+      <ExternalLinkButton
+        toolId={toolId}
+        params={params}
+        externalUrl={externalUrl}
         className={className}
         aria-label={label}
       >
         <span className="size-4 [&>svg]:size-full">
           {icon}
         </span>
-      </a>
+      </ExternalLinkButton>
     )
   }
 
@@ -214,15 +224,24 @@ export default function WorkflowsTable() {
   }
 
   /**
-   * Get the href for external link actions
+   * Get the external link info for an action
    */
-  const getActionHref = (action: string, workflow: WorkflowRead): string | undefined => {
+  const getExternalLinkInfo = (action: string, workflow: WorkflowRead) => {
+    const toolId = ACTION_TO_TOOL_ID[action]
+    if (!toolId) return undefined
+
+    const params = { workflowId: String(workflow.id) }
+    let externalUrl: string
+
     switch (action) {
       case "code_editor":
-        return getWorkflowCodeEditorUrl(workflow.id)
+        externalUrl = getWorkflowCodeEditorUrl(workflow.id)
+        break
       default:
         return undefined
     }
+
+    return { toolId, params, externalUrl }
   }
 
   if (isLoading) return <div>Loading...</div>
@@ -296,15 +315,20 @@ export default function WorkflowsTable() {
                   </td>
                   <td>
                     <div className="flex justify-end gap-1.5">
-                      {ACTION_ICONS.map((icon) => (
-                        <ActionIconButton
-                          key={icon.label}
-                          label={icon.label}
-                          icon={icon.icon}
-                          href={getActionHref(icon.action, workflow)}
-                          onClick={() => handleAction(icon.action, workflow)}
-                        />
-                      ))}
+                      {ACTION_ICONS.map((icon) => {
+                        const linkInfo = getExternalLinkInfo(icon.action, workflow)
+                        return (
+                          <ActionIconButton
+                            key={icon.label}
+                            label={icon.label}
+                            icon={icon.icon}
+                            toolId={linkInfo?.toolId}
+                            params={linkInfo?.params}
+                            externalUrl={linkInfo?.externalUrl}
+                            onClick={() => handleAction(icon.action, workflow)}
+                          />
+                        )
+                      })}
                     </div>
                   </td>
                 </tr>

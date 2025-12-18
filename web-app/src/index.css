@@ -21,3 +21,8 @@
   --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   /*--font-display: "Comic Sans MS", cursive, sans-serif;*/
 }
+
+/* Always show vertical scrollbar to prevent layout shift when navigating */
+html {
+  overflow-y: scroll;
+}

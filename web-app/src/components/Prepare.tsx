@@ -1,25 +1,29 @@
 import type { ImgHTMLAttributes, ReactElement } from "react"
 import AccessControlPng from "../assets/access-control.png";
 import DataManagementPng from "../assets/data-management.png";
-import { externalLinks } from "../config";
+import { externalLinks, type ExternalToolId } from "../config";
+import { ExternalLinkButton } from "./ExternalLinkButton";
 
 type PrepareItem = {
   title: string
-  href: string
+  toolId: ExternalToolId
+  externalUrl: string
   Icon: (props: ImgHTMLAttributes<HTMLImageElement>) => ReactElement
 }
 
 const PREPARE_ITEMS: PrepareItem[] = [
   {
     title: "Access control policy editor",
-    href: externalLinks.accessControlPolicyEditorUrl,
+    toolId: "access-control",
+    externalUrl: externalLinks.accessControlPolicyEditorUrl,
     Icon: (props) => (
       <img src={AccessControlPng} alt="" {...props} aria-hidden="true" />
     ),
   },
   {
     title: "Data managment, upload, annotate",
-    href: externalLinks.dataManagementUploadAnnotateUrl,
+    toolId: "data-management",
+    externalUrl: externalLinks.dataManagementUploadAnnotateUrl,
     Icon: (props) => (
       <img src={DataManagementPng} alt="" {...props} aria-hidden="true" />
     ),
@@ -32,12 +36,11 @@ export default function Prepare() {
       <div className="card-body gap-5 p-6">
         <h2 className="text-2xl font-semibold leading-tight text-neutral-900">Prepare</h2>
         <div className="grid gap-4 md:grid-cols-2">
-          {PREPARE_ITEMS.map(({ title, href, Icon }) => (
-            <a
-              key={title}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
+          {PREPARE_ITEMS.map(({ title, toolId, externalUrl, Icon }) => (
+            <ExternalLinkButton
+              key={toolId}
+              toolId={toolId}
+              externalUrl={externalUrl}
               className="btn flex h-auto rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white space-between"
             >
               <span className="text-left flex items-center w-full">
@@ -51,7 +54,7 @@ export default function Prepare() {
                   <path d="m8 5 4 5-4 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
-            </a>
+            </ExternalLinkButton>
           ))}
         </div>
       </div>

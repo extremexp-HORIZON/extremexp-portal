@@ -202,3 +202,166 @@ export function getExperimentCardUrl(experimentId: string | number): string {
 // =============================================================================
 
 export type ExternalLinksConfig = typeof externalLinks
+
+// =============================================================================
+// External Tool Route Configuration
+// =============================================================================
+
+/**
+ * Enum of all external tool identifiers.
+ * Used for type-safe routing and tool identification.
+ */
+export type ExternalToolId =
+  | "access-control"
+  | "data-management"
+  | "experiment-graphical-editor"
+  | "experiment-code-editor"
+  | "experiment-schedule"
+  | "workflow-code-editor"
+  | "gamification"
+  | "experiment-card"
+
+/**
+ * Configuration for an external tool route.
+ */
+export interface ExternalToolConfig {
+  /** Unique identifier for the tool */
+  id: ExternalToolId
+  /** Display title shown in navbar */
+  title: string
+  /** Internal route path (e.g., "access-control" or "experiment/:experimentId/graphical-editor") */
+  routePath: string
+  /** Function to build the external URL */
+  buildExternalUrl: (params?: Record<string, string>) => string
+  /** Parameter names required for this tool (e.g., ["experimentId"]) */
+  requiredParams?: string[]
+}
+
+/**
+ * Registry of all external tools with their route configurations.
+ */
+export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
+  // Management Tools (no params)
+  "access-control": {
+    id: "access-control",
+    title: "Access Control Policy Editor",
+    routePath: "access-control",
+    buildExternalUrl: () => externalLinks.accessControlPolicyEditorUrl,
+  },
+  "data-management": {
+    id: "data-management",
+    title: "Data Management",
+    routePath: "data-management",
+    buildExternalUrl: () => externalLinks.dataManagementUploadAnnotateUrl,
+  },
+
+  // Experiment Tools (require experimentId)
+  "experiment-graphical-editor": {
+    id: "experiment-graphical-editor",
+    title: "Graphical Editor",
+    routePath: "experiment/:experimentId/graphical-editor",
+    requiredParams: ["experimentId"],
+    buildExternalUrl: (params) =>
+      buildUrl(externalLinks.experimentGraphicalEditorUrl, { experimentId: params?.experimentId }),
+  },
+  "experiment-code-editor": {
+    id: "experiment-code-editor",
+    title: "Code Editor",
+    routePath: "experiment/:experimentId/code-editor",
+    requiredParams: ["experimentId"],
+    buildExternalUrl: (params) =>
+      buildUrl(externalLinks.experimentCodeEditorUrl, { experimentId: params?.experimentId }),
+  },
+  "experiment-schedule": {
+    id: "experiment-schedule",
+    title: "Schedule Experiment",
+    routePath: "experiment/:experimentId/schedule",
+    requiredParams: ["experimentId"],
+    buildExternalUrl: (params) =>
+      buildUrl(externalLinks.experimentScheduleUrl, { experimentId: params?.experimentId }),
+  },
+
+  // Workflow Tools (require workflowId)
+  "workflow-code-editor": {
+    id: "workflow-code-editor",
+    title: "Workflow Code Editor",
+    routePath: "workflow/:workflowId/code-editor",
+    requiredParams: ["workflowId"],
+    buildExternalUrl: (params) =>
+      buildUrl(externalLinks.workflowCodeEditorUrl, { workflowId: params?.workflowId }),
+  },
+
+  // Observe & Analyze Tools (optional experimentId)
+  gamification: {
+    id: "gamification",
+    title: "Gamification",
+    routePath: "gamification/:experimentId?",
+    buildExternalUrl: (params) =>
+      params?.experimentId
+        ? buildUrl(externalLinks.gamificationUrl, { experimentId: params.experimentId })
+        : externalLinks.gamificationUrl,
+  },
+  "experiment-card": {
+    id: "experiment-card",
+    title: "Experiment Cards",
+    routePath: "experiment-card/:experimentId?",
+    buildExternalUrl: (params) =>
+      params?.experimentId
+        ? buildUrl(externalLinks.experimentCardUrl, { experimentId: params.experimentId })
+        : externalLinks.experimentCardUrl,
+  },
+}
+
+/**
+ * Get the internal route path for an external tool.
+ * @param toolId - The tool identifier
+ * @param params - Route parameters (e.g., { experimentId: "123" })
+ * @returns The internal route path (e.g., "/external/experiment/123/graphical-editor")
+ */
+export function getExternalToolRoute(
+  toolId: ExternalToolId,
+  params?: Record<string, string | number>
+): string {
+  const tool = externalTools[toolId]
+  let path = `/${tool.routePath}`
+
+  // Replace route parameters
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      path = path.replace(`:${key}?`, String(value))
+      path = path.replace(`:${key}`, String(value))
+    }
+  }
+
+  // Remove optional param placeholders that weren't provided
+  path = path.replace(/\/:[^/]+\?/g, "")
+
+  return path
+}
+
+/**
+ * Find tool config by matching the current route path.
+ * @param pathname - The current location pathname
+ * @returns The matching tool config or undefined
+ */
+export function findToolByRoute(pathname: string): ExternalToolConfig | undefined {
+  // Skip the root path
+  if (pathname === "/") return undefined
+
+  const relativePath = pathname.slice(1) // Remove leading slash
+
+  for (const tool of Object.values(externalTools)) {
+    // Convert route pattern to regex
+    // Handle optional params - make the preceding slash optional too
+    const pattern = tool.routePath
+      .replace(/\/:[^/]+\?/g, "(?:/([^/]+))?") // Optional params with optional preceding slash
+      .replace(/:[^/]+/g, "([^/]+)") // Required params
+
+    const regex = new RegExp(`^${pattern}$`)
+    if (regex.test(relativePath)) {
+      return tool
+    }
+  }
+
+  return undefined
+}

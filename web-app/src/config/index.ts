@@ -13,5 +13,10 @@ export {
   getWorkflowCodeEditorUrl,
   getGamificationUrl,
   getExperimentCardUrl,
+  externalTools,
+  getExternalToolRoute,
+  findToolByRoute,
   type ExternalLinksConfig,
+  type ExternalToolId,
+  type ExternalToolConfig,
 } from "./externalLinks"
