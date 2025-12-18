@@ -1,0 +1,51 @@
+name: Checking Filesystem Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "filesystem-sync/**"
+      - ".github/workflows/filesystem-sync.yml"
+  pull_request:
+    paths:
+      - "filesystem-sync/**"
+      - ".github/workflows/filesystem-sync.yml"
+
+jobs:
+  check-filesystem-sync:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: filesystem-sync
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --locked --all-extras
+
+      - name: Run Ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          src: filesystem-sync
+
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v2
+        with:
+          pylance-version: latest-release
+          working-directory: filesystem-sync
+          python-path: .venv/bin/python
+
+      - name: Run tests with coverage
+        run: uv run pytest tests/ --cov=filesystem_sync --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: filesystem-sync/coverage.xml
+          flags: filesystem-sync
+          fail_ci_if_error: false
