@@ -21,6 +21,7 @@ import {
   type ExternalToolId,
 } from "../config"
 import { ExternalLinkButton } from "./ExternalLinkButton"
+import { isActionDisabled } from "./experimentActions"
 
 /** Context key for experiments table sorting */
 const SORT_CONTEXT = "experiments"
@@ -102,6 +103,7 @@ function ActionIconButton({
   toolId,
   params,
   externalUrl,
+  disabled = false,
 }: {
   label: string
   icon: React.ReactNode
@@ -109,10 +111,14 @@ function ActionIconButton({
   toolId?: ExternalToolId
   params?: Record<string, string | number>
   externalUrl?: string
+  disabled?: boolean
 }) {
-  const className = "inline-flex size-8 items-center justify-center rounded-md text-info transition hover:bg-info/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60 cursor-pointer"
+  const baseClassName = "inline-flex size-8 items-center justify-center rounded-md transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info/60"
+  const enabledClassName = `${baseClassName} text-info hover:bg-info/10 cursor-pointer`
+  const disabledClassName = `${baseClassName} text-neutral-400 cursor-not-allowed`
+  const className = disabled ? disabledClassName : enabledClassName
 
-  if (toolId && externalUrl) {
+  if (toolId && externalUrl && !disabled) {
     return (
       <ExternalLinkButton
         toolId={toolId}
@@ -133,7 +139,8 @@ function ActionIconButton({
       type="button"
       className={className}
       aria-label={label}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
     >
       <span className="size-4 [&>svg]:size-full">
         {icon}
@@ -356,6 +363,7 @@ export default function ExperimentsTable() {
                     <div className="flex justify-end gap-1.5">
                       {ACTION_ICONS.map((icon) => {
                         const linkInfo = getExternalLinkInfo(icon.action, experiment)
+                        const disabled = isActionDisabled(icon.action, experiment)
                         return (
                           <ActionIconButton
                             key={icon.label}
@@ -364,6 +372,7 @@ export default function ExperimentsTable() {
                             toolId={linkInfo?.toolId}
                             params={linkInfo?.params}
                             externalUrl={linkInfo?.externalUrl}
+                            disabled={disabled}
                             onClick={() => handleAction(icon.action, experiment)}
                           />
                         )
