@@ -64,6 +64,30 @@ services:
     networks:
       - extremexp_network
 
+  filesystem-sync:
+    build: ./filesystem-sync
+    container_name: filesystem-sync
+    environment:
+      WORKSPACE_PATH: /workspace
+      POSTGRES_HOST: postgresql
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      CONVERSION_SERVICE_URL: http://host.docker.internal:8866/api
+      EMF_SERVICE_URL: http://emf-cloud-service:8081/api/v2
+      SYNC_MODE: warn
+      LOG_LEVEL: INFO
+    volumes:
+      - ./workspace:/workspace
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      emf-cloud-service:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - extremexp_network
+
   emf-cloud-service:
     build: ./server-emf-cloud
     container_name: emf-cloud-service

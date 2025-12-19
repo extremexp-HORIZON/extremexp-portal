@@ -880,6 +880,9 @@ async def events_stream(
                     "document_id": str(document_id),
                     "event_type": event_type,
                 }
+                # Include name if present (useful for DELETE events)
+                if "name" in data:
+                    public_event_data["name"] = data["name"]
                 yield {"data": json.dumps(public_event_data)}
         except asyncio.CancelledError as e:
             logger.info("SSE cancelled", user_id=str(user.id), error=str(e))

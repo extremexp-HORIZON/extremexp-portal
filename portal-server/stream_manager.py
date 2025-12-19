@@ -14,11 +14,12 @@ class DBEventType(str, enum.Enum):
     DELETED = "deleted"
 
 
-class DBEvent(TypedDict):
+class DBEvent(TypedDict, total=False):
     event_type: DBEventType
     document_type: str
     document_id: UUID
     user_id: UUID
+    name: str  # Optional: included when available (for DELETE events)
 
 
 class StreamManager:

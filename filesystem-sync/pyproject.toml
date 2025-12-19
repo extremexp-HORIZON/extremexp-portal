@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "filesystem-sync"
+version = "0.1.0"
+description = "Synchronizes experiments and workflows between filesystem and PostgreSQL. Filesystem is the source of truth."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  # Database
+  "sqlmodel>=0.0.22",
+  "asyncpg>=0.30.0",
+  "sqlalchemy[asyncio]>=2.0.0",
+  # File watching
+  "watchdog>=6.0.0",
+  # HTTP client
+  "httpx>=0.28.0",
+  # HTTP server for health checks
+  "uvicorn>=0.32.0",
+  "starlette>=0.41.0",
+  # Utilities
+  "structlog>=24.0.0",
+  "python-dotenv>=1.0.0",
+  "uuid6>=2024.7.10",
+  "nanoid>=2.0.0",
+  # CLI
+  "click>=8.1.0",
+  # Async PostgreSQL LISTEN/NOTIFY
+  "asyncpg-listen>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.24.0",
+  "pytest-cov>=5.0.0",
+  "ruff>=0.8.0",
+  "pyright>=1.1.390",
+]
+
+[project.scripts]
+filesystem-sync = "filesystem_sync.__main__:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "C4", "PTH"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
+typeCheckingMode = "standard"
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/filesystem_sync"]
