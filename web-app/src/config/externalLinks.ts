@@ -97,6 +97,8 @@ export const externalLinks = {
     import.meta.env.VITE_WORKFLOW_CODE_EDITOR_URL || defaults.workflowCodeEditorUrl,
 
   // Observe & Analyze Links
+  visualizationUrl:
+    import.meta.env.VITE_VISUALIZATION_URL || defaults.visualizationUrl,
   gamificationUrl:
     import.meta.env.VITE_GAMIFICATION_URL || defaults.gamificationUrl,
   experimentCardUrl:
@@ -193,6 +195,14 @@ export function getWorkflowCodeEditorUrl(workflowId: string | number): string {
 }
 
 /**
+ * Builds the URL for the visualization dashboard.
+ * @param experimentId - The experiment identifier
+ */
+export function getVisualizationUrl(experimentId: string | number): string {
+  return buildUrl(externalLinks.workflowCodeEditorUrl, { experimentId })
+}
+
+/**
  * Builds the URL for the gamification dashboard.
  * @param experimentId - The experiment identifier
  */
@@ -230,6 +240,7 @@ export type ExternalToolId =
   | "experiment-code-editor"
   | "experiment-schedule"
   | "workflow-code-editor"
+  | "visualization"
   | "gamification"
   | "experiment-card"
 
@@ -312,6 +323,15 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
   },
 
   // Observe & Analyze Tools (optional experimentId)
+  visualization: {
+    id: "visualization",
+    title: "Visualization",
+    routePath: "visualization/:experimentId?",
+    buildExternalUrl: (params) =>
+      params?.experimentId
+        ? buildUrl(externalLinks.visualizationUrl, { experimentId: params.experimentId })
+        : externalLinks.visualizationUrl,
+  },
   gamification: {
     id: "gamification",
     title: "Gamification",

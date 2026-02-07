@@ -17,7 +17,6 @@ const SORT_CONTEXT = "dalExperiments";
 
 /** Map action names to external tool IDs */
 const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
-  gamification: "gamification",
   experiment_card: "experiment-card",
 };
 
