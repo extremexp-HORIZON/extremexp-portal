@@ -45,21 +45,21 @@
 const PLACEHOLDER_BASE = "https://placeholder.extremexp.eu"
 
 const defaults = {
+  // Management Links
+  accessControlPolicyEditorUrl: `https://ddm.extremexp-icom.intracom-telecom.com/set-policies`,
+  dataManagementUploadAnnotateUrl: `https://ddm.extremexp-icom.intracom-telecom.com`,
+
   // Experiment Editor Links
-  experimentGraphicalEditorUrl: `${PLACEHOLDER_BASE}/experiment/graphical-editor`,
-  experimentCodeEditorUrl: `${PLACEHOLDER_BASE}/experiment/code-editor`,
-  experimentScheduleUrl: `${PLACEHOLDER_BASE}/experiment/schedule`,
+  experimentGraphicalEditorUrl: `${PLACEHOLDER_BASE}/experiment/graphical-editor`, // TBD
+  experimentCodeEditorUrl: `https://ide.extremexp-icom.intracom-telecom.com/?folder=/home/user/workspace/`,
+  experimentScheduleUrl: `https://dal.extremexp-icom.intracom-telecom.com/experiments`, // Documentation: https://app.swaggerhub.com/apis-docs/ExtremeXP/extremexp-dal/1.0.0
 
   // Workflow Editor Links
-  workflowCodeEditorUrl: `${PLACEHOLDER_BASE}/workflow/code-editor`,
+  workflowCodeEditorUrl: `${PLACEHOLDER_BASE}/workflow/code-editor`, // TBD
 
   // Observe & Analyze Links
-  gamificationUrl: `${PLACEHOLDER_BASE}/gamification`,
-  experimentCardUrl: `${PLACEHOLDER_BASE}/experiment-card`,
-
-  // Management Links
-  accessControlPolicyEditorUrl: `${PLACEHOLDER_BASE}/access-control/policy-editor`,
-  dataManagementUploadAnnotateUrl: `${PLACEHOLDER_BASE}/data-management/upload-annotate`,
+  gamificationUrl: `https://i4dxp.eu/game/iframe/`,
+  experimentCardUrl: `https://expcards.extremexp-icom.intracom-telecom.com/query_experiments_page`,
 
   // Footer Links
   projectPageUrl: "https://extremexp.eu/",
