@@ -50,6 +50,7 @@ const defaults = {
   dataManagementUploadAnnotateUrl: `https://ddm.extremexp-icom.intracom-telecom.com`,
 
   // Experiment Editor Links
+  experimentIntentUrl: `https://mlassetselection.essi.upc.edu/intent2Workflow/#/data-products`,
   experimentGraphicalEditorUrl: `${PLACEHOLDER_BASE}/experiment/graphical-editor`, // TBD
   experimentCodeEditorUrl: `https://ide.extremexp-icom.intracom-telecom.com/?folder=/home/user/workspace/`,
   experimentScheduleUrl: `https://dal.extremexp-icom.intracom-telecom.com/experiments`, // Documentation: https://app.swaggerhub.com/apis-docs/ExtremeXP/extremexp-dal/1.0.0
@@ -75,7 +76,15 @@ const defaults = {
  * Values are loaded from environment variables if available, otherwise defaults are used.
  */
 export const externalLinks = {
+  // Management Links
+  accessControlPolicyEditorUrl:
+    import.meta.env.VITE_ACCESS_CONTROL_POLICY_EDITOR_URL || defaults.accessControlPolicyEditorUrl,
+  dataManagementUploadAnnotateUrl:
+    import.meta.env.VITE_DATA_MANAGEMENT_UPLOAD_ANNOTATE_URL || defaults.dataManagementUploadAnnotateUrl,
+
   // Experiment Editor Links
+  experimentIntentUrl:
+    import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || defaults.experimentIntentUrl,
   experimentGraphicalEditorUrl:
     import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || defaults.experimentGraphicalEditorUrl,
   experimentCodeEditorUrl:
@@ -92,12 +101,6 @@ export const externalLinks = {
     import.meta.env.VITE_GAMIFICATION_URL || defaults.gamificationUrl,
   experimentCardUrl:
     import.meta.env.VITE_EXPERIMENT_CARD_URL || defaults.experimentCardUrl,
-
-  // Management Links
-  accessControlPolicyEditorUrl:
-    import.meta.env.VITE_ACCESS_CONTROL_POLICY_EDITOR_URL || defaults.accessControlPolicyEditorUrl,
-  dataManagementUploadAnnotateUrl:
-    import.meta.env.VITE_DATA_MANAGEMENT_UPLOAD_ANNOTATE_URL || defaults.dataManagementUploadAnnotateUrl,
 
   // Footer Links
   projectPageUrl:
@@ -148,6 +151,14 @@ export function buildUrl(baseUrl: string, params: Record<string, string | number
 // =============================================================================
 // Pre-configured URL Builders
 // =============================================================================
+
+/**
+ * Builds the URL for the experiment intent editor.
+ * @param experimentId - The experiment identifier
+ */
+export function getExperimentIntentEditorUrl(experimentId: string | number): string {
+  return buildUrl(externalLinks.experimentIntentEditorUrl, { experimentId })
+}
 
 /**
  * Builds the URL for the experiment graphical editor.
@@ -214,6 +225,7 @@ export type ExternalLinksConfig = typeof externalLinks
 export type ExternalToolId =
   | "access-control"
   | "data-management"
+  | "experiment-intent-editor"
   | "experiment-graphical-editor"
   | "experiment-code-editor"
   | "experiment-schedule"
@@ -256,6 +268,14 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
   },
 
   // Experiment Tools (require experimentId)
+  "experiment-intent-editor": {
+    id: "experiment-intent-editor",
+    title: "Graphical Editor",
+    routePath: "experiment/:experimentId/graphical-editor",
+    requiredParams: ["experimentId"],
+    buildExternalUrl: (params) =>
+      buildUrl(externalLinks.experimentIntentEditorUrl, { experimentId: params?.experimentId }),
+  },
   "experiment-graphical-editor": {
     id: "experiment-graphical-editor",
     title: "Graphical Editor",
