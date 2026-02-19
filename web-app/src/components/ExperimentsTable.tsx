@@ -44,6 +44,16 @@ const ACTION_ICONS = [
     ),
   },
   {
+    label: "Intent editor",
+    action: "intent_editor",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+  },
+  {
     label: "Code editor",
     action: "code_editor",
     icon: (
@@ -241,6 +251,9 @@ export default function ExperimentsTable() {
     let externalUrl: string
 
     switch (action) {
+      case "intent_editor":
+        externalUrl = getExperimentIntentUrl(experiment.id)
+        break
       case "graphical_editor":
         externalUrl = getExperimentGraphicalEditorUrl(experiment.id)
         break

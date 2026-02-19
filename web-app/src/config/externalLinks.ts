@@ -45,21 +45,22 @@
 const PLACEHOLDER_BASE = "https://placeholder.extremexp.eu"
 
 const defaults = {
+  // Management Links
+  accessControlPolicyEditorUrl: `https://ddm.extremexp-icom.intracom-telecom.com/set-policies`,
+  dataManagementUploadAnnotateUrl: `https://ddm.extremexp-icom.intracom-telecom.com`,
+
   // Experiment Editor Links
-  experimentGraphicalEditorUrl: `${PLACEHOLDER_BASE}/experiment/graphical-editor`,
-  experimentCodeEditorUrl: `${PLACEHOLDER_BASE}/experiment/code-editor`,
-  experimentScheduleUrl: `${PLACEHOLDER_BASE}/experiment/schedule`,
+  experimentIntentUrl: `https://mlassetselection.essi.upc.edu/intent2Workflow/#/data-products`,
+  experimentGraphicalEditorUrl: `${PLACEHOLDER_BASE}/experiment/graphical-editor`, // TBD
+  experimentCodeEditorUrl: `https://ide.extremexp-icom.intracom-telecom.com/?folder=/home/user/workspace/`,
+  experimentScheduleUrl: `https://dal.extremexp-icom.intracom-telecom.com/experiments`, // Documentation: https://app.swaggerhub.com/apis-docs/ExtremeXP/extremexp-dal/1.0.0
 
   // Workflow Editor Links
-  workflowCodeEditorUrl: `${PLACEHOLDER_BASE}/workflow/code-editor`,
+  workflowCodeEditorUrl: `${PLACEHOLDER_BASE}/workflow/code-editor`, // TBD
 
   // Observe & Analyze Links
-  gamificationUrl: `${PLACEHOLDER_BASE}/gamification`,
-  experimentCardUrl: `${PLACEHOLDER_BASE}/experiment-card`,
-
-  // Management Links
-  accessControlPolicyEditorUrl: `${PLACEHOLDER_BASE}/access-control/policy-editor`,
-  dataManagementUploadAnnotateUrl: `${PLACEHOLDER_BASE}/data-management/upload-annotate`,
+  gamificationUrl: `https://i4dxp.eu/game/iframe/`,
+  experimentCardUrl: `https://expcards.extremexp-icom.intracom-telecom.com/query_experiments_page`,
 
   // Footer Links
   projectPageUrl: "https://extremexp.eu/",
@@ -75,7 +76,15 @@ const defaults = {
  * Values are loaded from environment variables if available, otherwise defaults are used.
  */
 export const externalLinks = {
+  // Management Links
+  accessControlPolicyEditorUrl:
+    import.meta.env.VITE_ACCESS_CONTROL_POLICY_EDITOR_URL || defaults.accessControlPolicyEditorUrl,
+  dataManagementUploadAnnotateUrl:
+    import.meta.env.VITE_DATA_MANAGEMENT_UPLOAD_ANNOTATE_URL || defaults.dataManagementUploadAnnotateUrl,
+
   // Experiment Editor Links
+  experimentIntentUrl:
+    import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || defaults.experimentIntentUrl,
   experimentGraphicalEditorUrl:
     import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || defaults.experimentGraphicalEditorUrl,
   experimentCodeEditorUrl:
@@ -88,16 +97,12 @@ export const externalLinks = {
     import.meta.env.VITE_WORKFLOW_CODE_EDITOR_URL || defaults.workflowCodeEditorUrl,
 
   // Observe & Analyze Links
+  visualizationUrl:
+    import.meta.env.VITE_VISUALIZATION_URL || defaults.visualizationUrl,
   gamificationUrl:
     import.meta.env.VITE_GAMIFICATION_URL || defaults.gamificationUrl,
   experimentCardUrl:
     import.meta.env.VITE_EXPERIMENT_CARD_URL || defaults.experimentCardUrl,
-
-  // Management Links
-  accessControlPolicyEditorUrl:
-    import.meta.env.VITE_ACCESS_CONTROL_POLICY_EDITOR_URL || defaults.accessControlPolicyEditorUrl,
-  dataManagementUploadAnnotateUrl:
-    import.meta.env.VITE_DATA_MANAGEMENT_UPLOAD_ANNOTATE_URL || defaults.dataManagementUploadAnnotateUrl,
 
   // Footer Links
   projectPageUrl:
@@ -150,6 +155,14 @@ export function buildUrl(baseUrl: string, params: Record<string, string | number
 // =============================================================================
 
 /**
+ * Builds the URL for the experiment intent editor.
+ * @param experimentId - The experiment identifier
+ */
+export function getExperimentIntentEditorUrl(experimentId: string | number): string {
+  return buildUrl(externalLinks.experimentIntentEditorUrl, { experimentId })
+}
+
+/**
  * Builds the URL for the experiment graphical editor.
  * @param experimentId - The experiment identifier
  */
@@ -179,6 +192,14 @@ export function getExperimentScheduleUrl(experimentId: string | number): string 
  */
 export function getWorkflowCodeEditorUrl(workflowId: string | number): string {
   return buildUrl(externalLinks.workflowCodeEditorUrl, { workflowId })
+}
+
+/**
+ * Builds the URL for the visualization dashboard.
+ * @param experimentId - The experiment identifier
+ */
+export function getVisualizationUrl(experimentId: string | number): string {
+  return buildUrl(externalLinks.workflowCodeEditorUrl, { experimentId })
 }
 
 /**
@@ -214,10 +235,12 @@ export type ExternalLinksConfig = typeof externalLinks
 export type ExternalToolId =
   | "access-control"
   | "data-management"
+  | "experiment-intent-editor"
   | "experiment-graphical-editor"
   | "experiment-code-editor"
   | "experiment-schedule"
   | "workflow-code-editor"
+  | "visualization"
   | "gamification"
   | "experiment-card"
 
@@ -256,6 +279,14 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
   },
 
   // Experiment Tools (require experimentId)
+  "experiment-intent-editor": {
+    id: "experiment-intent-editor",
+    title: "Graphical Editor",
+    routePath: "experiment/:experimentId/graphical-editor",
+    requiredParams: ["experimentId"],
+    buildExternalUrl: (params) =>
+      buildUrl(externalLinks.experimentIntentEditorUrl, { experimentId: params?.experimentId }),
+  },
   "experiment-graphical-editor": {
     id: "experiment-graphical-editor",
     title: "Graphical Editor",
@@ -292,6 +323,15 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
   },
 
   // Observe & Analyze Tools (optional experimentId)
+  visualization: {
+    id: "visualization",
+    title: "Visualization",
+    routePath: "visualization/:experimentId?",
+    buildExternalUrl: (params) =>
+      params?.experimentId
+        ? buildUrl(externalLinks.visualizationUrl, { experimentId: params.experimentId })
+        : externalLinks.visualizationUrl,
+  },
   gamification: {
     id: "gamification",
     title: "Gamification",
