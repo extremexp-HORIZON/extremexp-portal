@@ -7,7 +7,7 @@ Filesystem is always the source of truth.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 import structlog
@@ -21,7 +21,7 @@ from .event_registry import EventRegistry, get_event_registry
 logger = structlog.get_logger(__name__)
 
 
-class SyncMode(str, Enum):
+class SyncMode(StrEnum):
     """Initial sync mode."""
 
     WARN = "warn"  # Only log discrepancies

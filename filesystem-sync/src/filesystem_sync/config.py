@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class SyncMode(str, Enum):
+class SyncMode(StrEnum):
     """Initial sync mode on startup."""
 
     WARN = "warn"  # Only log discrepancies
@@ -25,7 +25,7 @@ class SyncMode(str, Enum):
     FULL = "full"  # Full reconciliation (also delete DB records without files)
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """Log level options."""
 
     DEBUG = "DEBUG"

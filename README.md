@@ -38,7 +38,7 @@ export CLIENT_SECRET=""
 docker compose up
 ```
 
-8. Access the app via <http://localhost/>
+Access the app via <http://localhost:8082/>
 
 ## Rebuilding
 

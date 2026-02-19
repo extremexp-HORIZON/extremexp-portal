@@ -15,6 +15,7 @@ import SortableHeader from "./SortableHeader"
 import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
 import {
+  getExperimentIntentEditorUrl,
   getExperimentGraphicalEditorUrl,
   getExperimentCodeEditorUrl,
   getExperimentScheduleUrl,
@@ -35,16 +36,18 @@ const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
 
 const ACTION_ICONS = [
   {
-    label: "Run experiment",
-    action: "schedule",
+    label: "Intent editor",
+    action: "intent_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="5 3 19 12 5 21 5 3" />
+        <circle cx="12" cy="12" r="10"></circle>
+        <circle cx="12" cy="12" r="6"></circle>
+        <circle cx="12" cy="12" r="2"></circle>
       </svg>
     ),
   },
   {
-    label: "Code editor",
+    label: "DSL editor",
     action: "code_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -58,24 +61,22 @@ const ACTION_ICONS = [
     action: "graphical_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <circle cx="12" cy="12" r="6"></circle>
-        <circle cx="12" cy="12" r="2"></circle>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
       </svg>
     ),
   },
   {
-    label: "Rename",
-    action: "edit",
+    label: "Run",
+    action: "schedule",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        <polygon points="5 3 19 12 5 21 5 3" />
       </svg>
     ),
   },
   {
-    label: "Duplicate",
+    label: "Copy",
     action: "duplicate",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,6 +127,7 @@ function ActionIconButton({
         externalUrl={externalUrl}
         className={className}
         aria-label={label}
+        title={label}
       >
         <span className="size-4 [&>svg]:size-full">
           {icon}
@@ -139,6 +141,7 @@ function ActionIconButton({
       type="button"
       className={className}
       aria-label={label}
+      title={label}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
     >
@@ -241,6 +244,9 @@ export default function ExperimentsTable() {
     let externalUrl: string
 
     switch (action) {
+      case "intent_editor":
+        externalUrl = getExperimentIntentEditorUrl(experiment.id)
+        break
       case "graphical_editor":
         externalUrl = getExperimentGraphicalEditorUrl(experiment.id)
         break

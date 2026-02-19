@@ -11,7 +11,7 @@ import asyncio
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 import asyncpg_listen
@@ -22,7 +22,7 @@ from filesystem_sync.config import get_config
 logger = structlog.get_logger(__name__)
 
 
-class DBEventType(str, Enum):
+class DBEventType(StrEnum):
     """Database event types."""
 
     INSERT = "INSERT"
