@@ -59,6 +59,7 @@ const defaults = {
   workflowCodeEditorUrl: `${PLACEHOLDER_BASE}/workflow/code-editor`, // TBD
 
   // Observe & Analyze Links
+  visualizationUrl: `${PLACEHOLDER_BASE}/visualization`, // TBD
   gamificationUrl: `https://i4dxp.eu/game/iframe/`,
   experimentCardUrl: `https://expcards.extremexp-icom.intracom-telecom.com/query_experiments_page`,
 
@@ -159,7 +160,7 @@ export function buildUrl(baseUrl: string, params: Record<string, string | number
  * @param experimentId - The experiment identifier
  */
 export function getExperimentIntentEditorUrl(experimentId: string | number): string {
-  return buildUrl(externalLinks.experimentIntentEditorUrl, { experimentId })
+  return buildUrl(externalLinks.experimentIntentUrl, { experimentId })
 }
 
 /**
@@ -285,7 +286,7 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "experiment/:experimentId/graphical-editor",
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
-      buildUrl(externalLinks.experimentIntentEditorUrl, { experimentId: params?.experimentId }),
+      buildUrl(externalLinks.experimentIntentUrl, { experimentId: params?.experimentId }),
   },
   "experiment-graphical-editor": {
     id: "experiment-graphical-editor",
