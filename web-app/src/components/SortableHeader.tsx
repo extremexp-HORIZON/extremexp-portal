@@ -101,7 +101,7 @@ export default function SortableHeader({
   return (
     <button
       type="button"
-      className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
+      className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group uppercase"
       onClick={() => onSort(sortKey)}
       aria-label={`Sort by ${label}${currentDirection === "asc" ? ", currently ascending" : currentDirection === "desc" ? ", currently descending" : ""}`}
     >

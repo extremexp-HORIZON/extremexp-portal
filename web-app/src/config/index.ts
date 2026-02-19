@@ -7,6 +7,7 @@
 export {
   externalLinks,
   buildUrl,
+  getExperimentIntentEditorUrl,
   getExperimentGraphicalEditorUrl,
   getExperimentCodeEditorUrl,
   getExperimentScheduleUrl,
