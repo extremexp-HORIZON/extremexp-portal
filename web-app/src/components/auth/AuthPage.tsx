@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import logo from "../../assets/extremeXP_logo.png";
-import { externalLinks } from "../../config/externalLinks";
+import { externalLinks } from "../../config";
 
 const SESSION_EXPIRED_KEY = "session-expired";
 
