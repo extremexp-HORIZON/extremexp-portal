@@ -10,6 +10,7 @@
  * The variable name is the uppercase version of the config key with VITE_ prefix.
  *
  * ### Experiment Editor Links (require experiment ID as query parameter)
+ * - VITE_EXPERIMENT_INTENT_EDITOR_URL - Intent experiment editor
  * - VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL - Graphical experiment editor
  * - VITE_EXPERIMENT_CODE_EDITOR_URL - Code-based experiment editor
  * - VITE_EXPERIMENT_SCHEDULE_URL - Experiment scheduling tool
@@ -85,7 +86,7 @@ export const externalLinks = {
 
   // Experiment Editor Links
   experimentIntentUrl:
-    import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || defaults.experimentIntentUrl,
+    import.meta.env.VITE_EXPERIMENT_INTENT_EDITOR_URL || defaults.experimentIntentUrl,
   experimentGraphicalEditorUrl:
     import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || defaults.experimentGraphicalEditorUrl,
   experimentCodeEditorUrl:
@@ -282,8 +283,8 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
   // Experiment Tools (require experimentId)
   "experiment-intent-editor": {
     id: "experiment-intent-editor",
-    title: "Graphical Editor",
-    routePath: "experiment/:experimentId/graphical-editor",
+    title: "Intent Editor",
+    routePath: "experiment/:experimentId/intent-editor",
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
       buildUrl(externalLinks.experimentIntentUrl, { experimentId: params?.experimentId }),

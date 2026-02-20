@@ -29,6 +29,7 @@ const SORT_CONTEXT = "experiments"
 
 /** Map action names to external tool IDs */
 const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
+  intent_editor: "experiment-intent-editor",
   schedule: "experiment-schedule",
   code_editor: "experiment-code-editor",
   graphical_editor: "experiment-graphical-editor",
@@ -284,6 +285,7 @@ export default function ExperimentsTable() {
         break
       }
       // External link actions are handled via href, not onClick
+      case "intent_editor":
       case "graphical_editor":
       case "code_editor":
       case "schedule":

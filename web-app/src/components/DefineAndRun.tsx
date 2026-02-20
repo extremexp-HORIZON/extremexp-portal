@@ -72,7 +72,7 @@ export default function DefineAndRun() {
 
       if (mode === "create_and_edit") {
         navigate(
-          getExternalToolRoute("experiment-graphical-editor", {
+          getExternalToolRoute("experiment-intent-editor", {
             experimentId: createdExperiment.id,
           }),
         )

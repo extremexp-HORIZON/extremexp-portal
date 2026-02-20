@@ -14,6 +14,7 @@ function App() {
         <Route path="access-control" element={<ExternalFrame />} />
         <Route path="data-management" element={<ExternalFrame />} />
         {/* Experiment tools (require experimentId) */}
+        <Route path="experiment/:experimentId/intent-editor" element={<ExternalFrame />} />
         <Route path="experiment/:experimentId/graphical-editor" element={<ExternalFrame />} />
         <Route path="experiment/:experimentId/code-editor" element={<ExternalFrame />} />
         <Route path="experiment/:experimentId/schedule" element={<ExternalFrame />} />
