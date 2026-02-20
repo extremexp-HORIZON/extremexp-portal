@@ -242,20 +242,23 @@ export default function ExperimentsTable() {
     if (!toolId) return undefined
 
     const params = { experimentId: String(experiment.id) }
+    const externalContext = {
+      experimentName: experiment.name,
+    }
     let externalUrl: string
 
     switch (action) {
       case "intent_editor":
-        externalUrl = getExperimentIntentEditorUrl(experiment.id)
+        externalUrl = getExperimentIntentEditorUrl(experiment.id, externalContext)
         break
       case "graphical_editor":
-        externalUrl = getExperimentGraphicalEditorUrl(experiment.id)
+        externalUrl = getExperimentGraphicalEditorUrl(experiment.id, externalContext)
         break
       case "code_editor":
-        externalUrl = getExperimentCodeEditorUrl(experiment.id)
+        externalUrl = getExperimentCodeEditorUrl(experiment.id, externalContext)
         break
       case "schedule":
-        externalUrl = getExperimentScheduleUrl(experiment.id)
+        externalUrl = getExperimentScheduleUrl(experiment.id, externalContext)
         break
       default:
         return undefined

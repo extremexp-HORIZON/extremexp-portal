@@ -9,7 +9,7 @@ import SortableHeader from './SortableHeader';
 import TimeDisplay from './TimeDisplay';
 import DurationDisplay from './DurationDisplay';
 import { useResettablePagination } from '../hooks';
-import { externalLinks, getGamificationUrl, getExperimentCardUrl, type ExternalToolId } from '../config';
+import { getGamificationUrl, getExperimentCardUrl, type ExternalToolId } from '../config';
 import { ExternalLinkButton } from './ExternalLinkButton';
 
 /** Context key for DAL experiments table sorting */
@@ -417,14 +417,17 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
     if (!toolId) return undefined;
 
     const params = { experimentId: String(experiment.id) };
+    const externalContext = {
+      experimentName: experiment.name,
+    };
     let externalUrl: string;
 
     switch (action) {
       case "gamification":
-        externalUrl = getGamificationUrl(experiment.id);
+        externalUrl = getGamificationUrl(experiment.id, externalContext);
         break;
       case "experiment_card":
-        externalUrl = getExperimentCardUrl(experiment.id);
+        externalUrl = getExperimentCardUrl(experiment.id, externalContext);
         break;
       default:
         return undefined;
@@ -639,7 +642,7 @@ export default function ObserveAndAnalyze() {
             <div className="flex gap-2">
               <ExternalLinkButton
                 toolId="gamification"
-                externalUrl={externalLinks.gamificationUrl}
+                externalUrl={getGamificationUrl()}
                 className="btn rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white"
               >
                 <svg
@@ -658,7 +661,7 @@ export default function ObserveAndAnalyze() {
               </ExternalLinkButton>
               <ExternalLinkButton
                 toolId="experiment-card"
-                externalUrl={externalLinks.experimentCardUrl}
+                externalUrl={getExperimentCardUrl()}
                 className="btn rounded-lg border-none bg-[#46A3FF] hover:bg-[#3B8EDB] text-white"
               >
                 <svg

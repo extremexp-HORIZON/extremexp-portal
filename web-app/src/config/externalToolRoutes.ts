@@ -1,6 +1,13 @@
 import { buildUrl } from "./externalLinkBuilders"
 import { externalLinks } from "./externalLinks"
 
+type ExternalRouteParams = {
+  experimentId?: string
+  experimentName?: string
+  workflowId?: string
+  workflowName?: string
+}
+
 export type ExternalToolId =
   | "access-control"
   | "data-management"
@@ -17,7 +24,7 @@ export interface ExternalToolConfig {
   id: ExternalToolId
   title: string
   routePath: string
-  buildExternalUrl: (params?: Record<string, string>) => string
+  buildExternalUrl: (params?: ExternalRouteParams) => string
   requiredParams?: string[]
 }
 
@@ -41,7 +48,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "experiment/:experimentId/intent-editor",
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
-      buildUrl(externalLinks.experimentIntentUrl, { experimentId: params?.experimentId }),
+      buildUrl(externalLinks.experimentIntentUrl, {
+        experimentId: params?.experimentId,
+        experimentName: params?.experimentName,
+      }),
   },
   "experiment-graphical-editor": {
     id: "experiment-graphical-editor",
@@ -49,7 +59,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "experiment/:experimentId/graphical-editor",
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
-      buildUrl(externalLinks.experimentGraphicalEditorUrl, { experimentId: params?.experimentId }),
+      buildUrl(externalLinks.experimentGraphicalEditorUrl, {
+        experimentId: params?.experimentId,
+        experimentName: params?.experimentName,
+      }),
   },
   "experiment-code-editor": {
     id: "experiment-code-editor",
@@ -57,7 +70,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "experiment/:experimentId/code-editor",
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
-      buildUrl(externalLinks.experimentCodeEditorUrl, { experimentId: params?.experimentId }),
+      buildUrl(externalLinks.experimentCodeEditorUrl, {
+        experimentId: params?.experimentId,
+        experimentName: params?.experimentName,
+      }),
   },
   "experiment-schedule": {
     id: "experiment-schedule",
@@ -65,7 +81,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "experiment/:experimentId/schedule",
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
-      buildUrl(externalLinks.experimentScheduleUrl, { experimentId: params?.experimentId }),
+      buildUrl(externalLinks.experimentScheduleUrl, {
+        experimentId: params?.experimentId,
+        experimentName: params?.experimentName,
+      }),
   },
 
   "workflow-code-editor": {
@@ -74,7 +93,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "workflow/:workflowId/code-editor",
     requiredParams: ["workflowId"],
     buildExternalUrl: (params) =>
-      buildUrl(externalLinks.workflowCodeEditorUrl, { workflowId: params?.workflowId }),
+      buildUrl(externalLinks.workflowCodeEditorUrl, {
+        workflowId: params?.workflowId,
+        workflowName: params?.workflowName,
+      }),
   },
 
   visualization: {
@@ -83,7 +105,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "visualization/:experimentId?",
     buildExternalUrl: (params) =>
       params?.experimentId
-        ? buildUrl(externalLinks.visualizationUrl, { experimentId: params.experimentId })
+        ? buildUrl(externalLinks.visualizationUrl, {
+            experimentId: params.experimentId,
+            experimentName: params.experimentName,
+          })
         : externalLinks.visualizationUrl,
   },
   gamification: {
@@ -92,7 +117,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "gamification/:experimentId?",
     buildExternalUrl: (params) =>
       params?.experimentId
-        ? buildUrl(externalLinks.gamificationUrl, { experimentId: params.experimentId })
+        ? buildUrl(externalLinks.gamificationUrl, {
+            experimentId: params.experimentId,
+            experimentName: params.experimentName,
+          })
         : externalLinks.gamificationUrl,
   },
   "experiment-card": {
@@ -101,7 +129,10 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     routePath: "experiment-card/:experimentId?",
     buildExternalUrl: (params) =>
       params?.experimentId
-        ? buildUrl(externalLinks.experimentCardUrl, { experimentId: params.experimentId })
+        ? buildUrl(externalLinks.experimentCardUrl, {
+            experimentId: params.experimentId,
+            experimentName: params.experimentName,
+          })
         : externalLinks.experimentCardUrl,
   },
 }

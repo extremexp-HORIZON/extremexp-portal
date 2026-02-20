@@ -4,10 +4,30 @@
  * Keep this file simple:
  * 1) Set default URLs in DEFAULT_LINKS
  * 2) Override any URL using the VITE_* env var shown next to it
- * 3) Use template variables like {experimentId} or {workflowId} in defaults/env values
+ * 3) Use placeholders in the URL template, like {experimentId} or {workflowId}
  *
  * Example override in .env.local:
- * VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL=https://example.com/editor?experimentId={experimentId}
+ * VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL=https://example.com/editor?experimentId={experimentId}&name={experimentName}
+ *
+ * -----------------------------------------------------------------------------
+ * PLACEHOLDER GUIDE (VERY IMPORTANT FOR URL CUSTOMIZATION)
+ * -----------------------------------------------------------------------------
+ * Use placeholders in curly braces, for example: {experimentId}
+ *
+ * Common placeholders that the app provides today:
+ * - Experiment links: {experimentId}, {experimentName}
+ * - Workflow links: {workflowId}, {workflowName}
+ *
+ * Only these placeholders are supported. Any other placeholder name will not be replaced.
+ *
+ * Missing values behavior:
+ * - If a missing placeholder is in a query param (e.g. ?name={experimentName}),
+ *   that query param is automatically removed.
+ * - If a missing placeholder appears in the path/fragment, it stays unchanged.
+ *
+ * Example templates:
+ * - https://tool.example/app?experimentId={experimentId}&name={experimentName}
+ * - https://tool.example/workflows/{workflowId}?workflowName={workflowName}
  */
 
 // =============================================================================
@@ -25,7 +45,7 @@ export const DEFAULT_LINKS = {
   // VITE_EXPERIMENT_INTENT_EDITOR_URL
   experimentIntentUrl: `https://mlassetselection.essi.upc.edu/intent2Workflow/#/data-products?experimentId={experimentId}`,
   // VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL
-  experimentGraphicalEditorUrl: `https://placeholder.extremexp.eu/experiment/graphical-editor?experimentId={experimentId}`,
+  experimentGraphicalEditorUrl: `https://placeholder.extremexp.eu/experiment/graphical-editor?experimentId={experimentId}`, // ⚠️ missing
   // VITE_EXPERIMENT_CODE_EDITOR_URL
   experimentCodeEditorUrl: `https://ide.extremexp-icom.intracom-telecom.com/?folder=/home/user/workspace/&experimentId={experimentId}`,
   // VITE_EXPERIMENT_SCHEDULE_URL
@@ -33,13 +53,13 @@ export const DEFAULT_LINKS = {
 
   // Workflow Editor Links
   // VITE_WORKFLOW_CODE_EDITOR_URL
-  workflowCodeEditorUrl: `https://placeholder.extremexp.eu/workflow/code-editor?workflowId={workflowId}`,
+  workflowCodeEditorUrl: `https://placeholder.extremexp.eu/workflow/code-editor?workflowId={workflowId}`, // ⚠️ missing
 
   // Observe & Analyze Links
   // VITE_VISUALIZATION_URL
-  visualizationUrl: `https://placeholder.extremexp.eu/visualization?experimentId={experimentId}`,
+  visualizationUrl: `https://placeholder.extremexp.eu/visualization?experimentId={experimentId}`, // ⚠️ missing
   // VITE_GAMIFICATION_URL
-  gamificationUrl: `https://i4dxp.eu/game/iframe/?experimentId={experimentId}`,
+  gamificationUrl: `https://i4dxp.eu/game/iframe/`,
   // VITE_EXPERIMENT_CARD_URL
   experimentCardUrl: `https://expcards.extremexp-icom.intracom-telecom.com/query_experiments_page?experimentId={experimentId}`,
 
@@ -47,7 +67,7 @@ export const DEFAULT_LINKS = {
   // VITE_PROJECT_PAGE_URL
   projectPageUrl: "https://extremexp.eu/",
   // VITE_PRIVACY_POLICY_URL
-  privacyPolicyUrl: `https://placeholder.extremexp.eu/privacy-policy`,
+  privacyPolicyUrl: `https://extremexp.eu/privacy-policy`, // ⚠️ missing
 } as const
 
 // =============================================================================
