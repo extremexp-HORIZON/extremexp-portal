@@ -180,18 +180,6 @@ function calculateDurationMs(start: string | undefined, end: string | undefined)
 }
 
 /**
- * Calculate progress percentage based on status
- */
-function getProgress(experiment: DALExperiment): number {
-  const status = normalizeStatus(experiment.status);
-  if (status === 'Completed') return 100;
-  if (status === 'Error') return 0;
-  if (status === 'Pending') return 0;
-  if (status === 'Running') return 50; // We don't have actual progress info from DAL
-  return 0;
-}
-
-/**
  * Loading skeleton for the experiments table
  */
 function ExperimentsTableSkeleton() {
@@ -205,7 +193,6 @@ function ExperimentsTableSkeleton() {
               <th>Status</th>
               <th>Started Time</th>
               <th>Duration</th>
-              <th>Progress</th>
               <th>Intent</th>
               <th className="text-right">Action</th>
             </tr>
@@ -224,9 +211,6 @@ function ExperimentsTableSkeleton() {
                 </td>
                 <td>
                   <div className="skeleton h-4 w-20" />
-                </td>
-                <td>
-                  <div className="skeleton h-4 w-28" />
                 </td>
                 <td>
                   <div className="skeleton h-4 w-24" />
@@ -403,14 +387,12 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
   );
 
   // Filter experiments by name using the global search filter
-  // Also add computed progress field for sorting
   const filteredExperiments = useMemo(() => {
     const nameFilter = createNameFilter(filterText);
     return experiments
       .filter((exp) => nameFilter(exp.name || exp.id))
       .map((exp) => ({
         ...exp,
-        progress: getProgress(exp),
         durationMs: calculateDurationMs(exp.start, exp.end),
       }));
   }, [experiments, filterText]);
@@ -505,14 +487,6 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
               </th>
               <th>
                 <SortableHeader
-                  label="Progress"
-                  sortKey="progress"
-                  currentDirection={sortConfig?.key === "progress" ? sortConfig.direction : null}
-                  onSort={handleSort}
-                />
-              </th>
-              <th>
-                <SortableHeader
                   label="Intent"
                   sortKey="intent"
                   currentDirection={sortConfig?.key === "intent" ? sortConfig.direction : null}
@@ -525,7 +499,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
           <tbody className="text-sm text-neutral-700">
             {filteredExperiments.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-neutral-500">
+                <td colSpan={6} className="text-center py-8 text-neutral-500">
                   No experiments match your filter. Try adjusting your search.
                 </td>
               </tr>
@@ -548,17 +522,6 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
                   </td>
                   <td>
                     <DurationDisplay start={experiment.start} end={experiment.end} />
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <progress
-                        className="progress progress-info w-24"
-                        value={experiment.progress}
-                        max={100}
-                        aria-label={`${experiment.progress}% progress`}
-                      />
-                      <span className="text-xs font-semibold text-neutral-600">{experiment.progress}%</span>
-                    </div>
                   </td>
                   <td>{experiment.intent || '—'}</td>
                   <td>
