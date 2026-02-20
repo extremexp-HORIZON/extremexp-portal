@@ -45,6 +45,13 @@ class Timestamped(SQLModel, table=False):
 
 
 class User(Timestamped, table=True):
+    __table_args__ = (
+        UniqueConstraint(
+            "username",
+            name="uq_user_username",
+        ),
+    )
+
     id: UUID = Field(
         default_factory=uuid7,
         sa_column=Column(
