@@ -235,7 +235,7 @@ export default function WorkflowsTable() {
 
     switch (action) {
       case "code_editor":
-        externalUrl = getWorkflowCodeEditorUrl(workflow.id)
+        externalUrl = getWorkflowCodeEditorUrl(workflow.id, { workflowName: workflow.name })
         break
       default:
         return undefined

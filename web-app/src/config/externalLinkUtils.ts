@@ -1,4 +1,9 @@
-export type ExternalLinkParams = Record<string, string | number | undefined>
+export interface ExternalLinkParams {
+  experimentId?: string | number
+  experimentName?: string
+  workflowId?: string | number
+  workflowName?: string
+}
 
 const TEMPLATE_VARIABLE_REGEX = /\{([a-zA-Z0-9_]+)\}/g
 
@@ -13,7 +18,7 @@ function replaceTemplateVariables(
   const usedParamKeys = new Set<string>()
 
   const resolvedUrl = urlTemplate.replace(TEMPLATE_VARIABLE_REGEX, (match, variableName: string) => {
-    const value = params[variableName]
+    const value = params[variableName as keyof ExternalLinkParams]
     if (!hasValue(value)) {
       return match
     }
