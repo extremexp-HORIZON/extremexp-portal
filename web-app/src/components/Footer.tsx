@@ -1,4 +1,4 @@
-import { externalLinks } from "../config/externalLinks";
+import { externalLinks } from "../config";
 
 /**
  * Footer component with project and privacy policy links.

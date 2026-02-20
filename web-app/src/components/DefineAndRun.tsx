@@ -1,12 +1,14 @@
 import { useState } from "react"
 import type { ComponentType } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
 import {
   createExperimentExperimentsPostMutation,
   listExperimentsExperimentsGetQueryKey,
   createWorkflowWorkflowsPostMutation,
   listWorkflowsWorkflowsGetQueryKey,
 } from "../client/@tanstack/react-query.gen"
+import { getExternalToolRoute } from "../config"
 import DefineExperimentsTab from "./DefineExperimentsTab"
 import WorkflowDefinitionTab from "./WorkflowDefinitionTab"
 
@@ -32,6 +34,7 @@ const TAB_CONFIG: TabConfig[] = [
 ]
 
 export default function DefineAndRun() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>("experiment-definition")
   const queryClient = useQueryClient()
   const [isCreateExperimentModalOpen, setIsCreateExperimentModalOpen] = useState(false)
@@ -56,6 +59,28 @@ export default function DefineAndRun() {
       setNewWorkflowName("")
     },
   })
+
+  const handleCreateExperiment = async (mode: "create" | "create_and_edit") => {
+    if (!newExperimentName || createExperimentMutation.isPending) {
+      return
+    }
+
+    try {
+      const createdExperiment = await createExperimentMutation.mutateAsync({
+        body: { name: newExperimentName },
+      })
+
+      if (mode === "create_and_edit") {
+        navigate(
+          getExternalToolRoute("experiment-intent-editor", {
+            experimentId: createdExperiment.id,
+          }),
+        )
+      }
+    } catch {
+      // Error state is handled by createExperimentMutation.error
+    }
+  }
 
   return (
     <section className="card rounded-[20px] bg-base-100 shadow-sm" data-tour="define-and-run">
@@ -134,9 +159,7 @@ export default function DefineAndRun() {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                if (newExperimentName) {
-                  createExperimentMutation.mutate({ body: { name: newExperimentName } })
-                }
+                void handleCreateExperiment("create")
               }}
             >
               <fieldset className="fieldset mt-4">
@@ -189,6 +212,16 @@ export default function DefineAndRun() {
                   disabled={!newExperimentName || createExperimentMutation.isPending}
                 >
                   {createExperimentMutation.isPending ? "Creating..." : "Create"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={!newExperimentName || createExperimentMutation.isPending}
+                  onClick={() => {
+                    void handleCreateExperiment("create_and_edit")
+                  }}
+                >
+                  {createExperimentMutation.isPending ? "Creating..." : "Create & Edit"}
                 </button>
               </div>
             </form>
