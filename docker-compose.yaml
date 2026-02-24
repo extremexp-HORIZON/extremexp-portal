@@ -127,8 +127,7 @@ services:
 
   proxy-service:
     image: ghcr.io/yagorezende/extremexp-abacproxy:latest
-    container_name:
-      proxy-service
+    container_name: proxy-service
       # flask requires SIGINT to stop gracefully
       # (default stop signal from Compose is SIGTERM)
     stop_signal: SIGINT
@@ -197,6 +196,7 @@ services:
 networks:
   extremexp_network:
     driver: bridge
+    name: extremexp_network
 
 volumes:
   mongo_data:
