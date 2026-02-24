@@ -44,15 +44,15 @@ export function isScheduleDisabled(experiment: ExperimentRead): boolean {
 }
 
 /**
- * Determines if the "Graphical Editor" action should be disabled.
+ * Determines if the "Intent Editor" action should be disabled.
  *
  * RULE: If an experiment has steps defined (code-based definition),
- * opening the graphical editor would cause confusion or data loss.
- * Users should use the code editor instead.
+ * opening the intent editor would cause confusion or data loss.
+ * Users should use the code/graphical editors instead.
  *
  * @returns true if the action should be DISABLED
  */
-export function isGraphicalEditorDisabled(experiment: ExperimentRead): boolean {
+export function isIntentEditorDisabled(experiment: ExperimentRead): boolean {
   // Disable if steps are present (experiment is code-defined)
   return hasSteps(experiment)
 }
@@ -62,7 +62,7 @@ export function isGraphicalEditorDisabled(experiment: ExperimentRead): boolean {
  *
  * Add new action disable rules here as the project evolves.
  *
- * @param action - The action identifier (e.g., "schedule", "graphical_editor")
+ * @param action - The action identifier (e.g., "schedule", "intent_editor")
  * @param experiment - The experiment to check
  * @returns true if the action should be DISABLED, false otherwise
  */
@@ -70,8 +70,8 @@ export function isActionDisabled(action: string, experiment: ExperimentRead): bo
   switch (action) {
     case "schedule":
       return isScheduleDisabled(experiment)
-    case "graphical_editor":
-      return isGraphicalEditorDisabled(experiment)
+    case "intent_editor":
+      return isIntentEditorDisabled(experiment)
     default:
       // All other actions are always enabled
       return false
