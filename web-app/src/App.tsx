@@ -20,6 +20,7 @@ function App() {
         <Route path="experiment/:experimentId/schedule" element={<ExternalFrame />} />
         {/* Workflow tools (require workflowId) */}
         <Route path="workflow/:workflowId/code-editor" element={<ExternalFrame />} />
+        <Route path="workflow/:workflowId/graphical-editor" element={<ExternalFrame />} />
         {/* Observe & Analyze tools (optional experimentId) */}
         <Route path="gamification/:experimentId?" element={<ExternalFrame />} />
         <Route path="experiment-card/:experimentId?" element={<ExternalFrame />} />

@@ -45,7 +45,7 @@ export const DEFAULT_LINKS = {
   // VITE_EXPERIMENT_INTENT_EDITOR_URL
   experimentIntentUrl: `https://mlassetselection.essi.upc.edu/intent2Workflow/#/data-products?experimentId={experimentId}`,
   // VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL
-  experimentGraphicalEditorUrl: `https://placeholder.extremexp.eu/experiment/graphical-editor?experimentId={experimentId}`, // ⚠️ missing
+  experimentGraphicalEditorUrl: `http://localhost:8001/editor/experiment/undefined/{experimentId}`,
   // VITE_EXPERIMENT_CODE_EDITOR_URL
   experimentCodeEditorUrl: `https://ide.extremexp-icom.intracom-telecom.com/?folder=/home/user/workspace/&experimentId={experimentId}`,
   // VITE_EXPERIMENT_SCHEDULE_URL
@@ -54,6 +54,8 @@ export const DEFAULT_LINKS = {
   // Workflow Editor Links
   // VITE_WORKFLOW_CODE_EDITOR_URL
   workflowCodeEditorUrl: `https://placeholder.extremexp.eu/workflow/code-editor?workflowId={workflowId}`, // ⚠️ missing
+  // VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL
+  workflowGraphicalEditorUrl: `http://localhost:8001/editor/workflow/undefined/{workflowId}`,
 
   // Observe & Analyze Links
   // VITE_VISUALIZATION_URL
@@ -98,6 +100,8 @@ export const externalLinks = {
   // Workflow Editor Links
   workflowCodeEditorUrl:
     import.meta.env.VITE_WORKFLOW_CODE_EDITOR_URL || DEFAULT_LINKS.workflowCodeEditorUrl,
+  workflowGraphicalEditorUrl:
+      import.meta.env.VITE_WORKFLOW_GRAPHICAL_EDITOR_URL || DEFAULT_LINKS.workflowGraphicalEditorUrl,
 
   // Observe & Analyze Links
   visualizationUrl:

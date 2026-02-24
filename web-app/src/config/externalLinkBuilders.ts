@@ -43,6 +43,13 @@ export function getWorkflowCodeEditorUrl(
   return buildUrl(externalLinks.workflowCodeEditorUrl, { workflowId, ...context })
 }
 
+export function getWorkflowGraphicalEditorUrl(
+    workflowId: string | number,
+    context: WorkflowLinkContext = {}
+): string {
+  return buildUrl(externalLinks.workflowGraphicalEditorUrl, { workflowId, ...context })
+}
+
 export function getVisualizationUrl(
   experimentId?: string | number,
   context: ExperimentLinkContext = {}

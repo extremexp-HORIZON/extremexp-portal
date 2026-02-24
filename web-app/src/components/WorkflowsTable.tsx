@@ -14,7 +14,7 @@ import { useSortStore, sortItems } from "../stores/useSortStore"
 import SortableHeader from "./SortableHeader"
 import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
-import { getWorkflowCodeEditorUrl, type ExternalToolId } from "../config"
+import {getWorkflowCodeEditorUrl, type ExternalToolId, getWorkflowGraphicalEditorUrl} from "../config"
 import { ExternalLinkButton } from "./ExternalLinkButton"
 
 /** Context key for workflows table sorting */
@@ -23,6 +23,7 @@ const SORT_CONTEXT = "workflows"
 /** Map action names to external tool IDs */
 const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
   code_editor: "workflow-code-editor",
+  graphical_editor: "workflow-graphical-editor",
 }
 
 const ACTION_ICONS = [
@@ -37,8 +38,8 @@ const ACTION_ICONS = [
     ),
   },
   {
-    label: "Rename",
-    action: "edit",
+    label: "Graphical editor",
+    action: "graphical_editor",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -218,6 +219,8 @@ export default function WorkflowsTable() {
       // External link actions are handled via href, not onClick
       case "code_editor":
         break
+      case "graphical_editor":
+        break
       default:
         console.log(`Action ${action} not implemented yet`)
     }
@@ -236,6 +239,9 @@ export default function WorkflowsTable() {
     switch (action) {
       case "code_editor":
         externalUrl = getWorkflowCodeEditorUrl(workflow.id, { workflowName: workflow.name })
+        break
+      case "graphical_editor":
+        externalUrl = getWorkflowGraphicalEditorUrl(workflow.id, { workflowName: workflow.name })
         break
       default:
         return undefined

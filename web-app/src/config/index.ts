@@ -17,6 +17,7 @@ export {
   getExperimentCodeEditorUrl,
   getExperimentScheduleUrl,
   getWorkflowCodeEditorUrl,
+  getWorkflowGraphicalEditorUrl,
   getVisualizationUrl,
   getGamificationUrl,
   getExperimentCardUrl,

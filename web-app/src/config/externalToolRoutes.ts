@@ -16,6 +16,7 @@ export type ExternalToolId =
   | "experiment-code-editor"
   | "experiment-schedule"
   | "workflow-code-editor"
+  | "workflow-graphical-editor"
   | "visualization"
   | "gamification"
   | "experiment-card"
@@ -97,6 +98,18 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
         workflowId: params?.workflowId,
         workflowName: params?.workflowName,
       }),
+  },
+
+  "workflow-graphical-editor": {
+    id: "workflow-graphical-editor",
+    title: "Workflow Graphical Editor",
+    routePath: "workflow/:workflowId/graphical-editor",
+    requiredParams: ["workflowId"],
+    buildExternalUrl: (params) =>
+        buildUrl(externalLinks.workflowGraphicalEditorUrl, {
+          workflowId: params?.workflowId,
+          workflowName: params?.workflowName,
+        }),
   },
 
   visualization: {
