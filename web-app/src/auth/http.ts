@@ -1,5 +1,6 @@
 import ky, { HTTPError } from "ky";
 import type { ApiError } from "./types";
+import { resolveAuthApiBaseUrl } from "../api/runtimeUrls";
 
 /**
  * Unauthenticated API client for login/register requests.
@@ -10,7 +11,7 @@ import type { ApiError } from "./types";
  * configured in api/clientConfig.ts.
  */
 export const publicApi = ky.create({
-  prefixUrl: import.meta.env.VITE_AUTH_API_URL || "",
+  prefixUrl: resolveAuthApiBaseUrl(),
   retry: { limit: 0 },
   timeout: 30000,
 });
