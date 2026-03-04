@@ -10,6 +10,7 @@
 
 import { client } from "../client/client.gen";
 import { getValidToken, useAuthStore } from "../auth/authStore";
+import { resolvePortalApiBaseUrl } from "./runtimeUrls";
 
 const SESSION_EXPIRED_KEY = 'session-expired';
 
@@ -28,6 +29,10 @@ function handleAuthExpired() {
  * Should be called once at application startup.
  */
 export function configureClient(): void {
+  client.setConfig({
+    baseUrl: resolvePortalApiBaseUrl(),
+  });
+
   // Add request interceptor to attach bearer token
   client.interceptors.request.use((request) => {
     const token = getValidToken();

@@ -48,7 +48,12 @@ docker compose build
 
 ## API not running on localhost?
 
-To deploy the framework on a server with an IP that is not localhost, you need to change the `VITE_API_URL` for the frontend HTTP request in `web-app/.env`, and rebuild the frontend.
+By default, the web app auto-detects runtime hostnames:
+
+- loopback hosts (`localhost`, `127.0.0.1`, `::1`) use `http://localhost:8000` for the portal API
+- non-loopback hosts use the reverse proxy path `/portal-api`
+
+If you need an explicit value, set `VITE_PORTAL_API_URL` in `web-app/.env` and rebuild the frontend.
 
 ## Demo
 

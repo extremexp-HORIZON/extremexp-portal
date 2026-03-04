@@ -1,7 +1,22 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_AUTH_API_URL: string;
+  /**
+   * Portal backend API base URL.
+   *
+   * Behavior when unset:
+   * - loopback hosts: 'http://localhost:8000'
+    * - non-loopback hosts: '/portal-api'
+   */
+  readonly VITE_PORTAL_API_URL?: string;
+  /**
+   * Auth API base URL.
+   *
+   * Behavior when unset:
+    * - loopback hosts: 'http://localhost:5521/extreme_auth'
+   * - non-loopback hosts: '/extreme_auth'
+   */
+  readonly VITE_AUTH_API_URL?: string;
   /**
    * DAL API base URL
    * @default 'https://api.dal.extremexp-icom.intracom-telecom.com/api'

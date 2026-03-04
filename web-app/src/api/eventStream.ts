@@ -59,7 +59,7 @@ export function createEventStream(
   const abortController = new AbortController();
 
   // Get base URL from the generated client config
-  const baseUrl = (client.getConfig().baseUrl as string) || "http://localhost:8000";
+  const baseUrl = (client.getConfig().baseUrl as string) || "";
 
   // Create a ky instance with auth header
   const api: KyInstance = ky.create({
