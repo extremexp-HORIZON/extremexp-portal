@@ -1,6 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback } from 'react';
-import { dalExperimentsListOptions, useDALToken, type DALExperiment } from '../dal-client';
+import {
+  dalExperimentsListProgressiveOptions,
+  useDALToken,
+  type DALExperiment,
+} from '../dal-client';
 import DALTokenPrompt from './DALTokenPrompt';
 import Pagination, { PAGE_SIZE } from './Pagination';
 import { useSearchFilterStore, createNameFilter } from '../stores/useSearchFilterStore';
@@ -565,6 +569,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
  */
 function ExperimentsContent() {
   const [token, setToken, clearToken] = useDALToken();
+  const queryClient = useQueryClient();
 
   // Only fetch when we have a token
   const {
@@ -574,7 +579,7 @@ function ExperimentsContent() {
     error,
     refetch,
   } = useQuery({
-    ...dalExperimentsListOptions(),
+    ...dalExperimentsListProgressiveOptions(queryClient),
     enabled: !!token,
     retry: 1, // Only retry once on failure
     staleTime: 30_000, // Consider data fresh for 30 seconds

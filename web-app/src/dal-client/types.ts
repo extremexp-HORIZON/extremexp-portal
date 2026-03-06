@@ -77,6 +77,15 @@ export interface DALExperimentsListResponse {
 }
 
 /**
+ * Response from paginated GET /experiments/
+ */
+export interface DALExperimentsPaginatedResponse extends DALExperimentsListResponse {
+  prev?: string | null;
+  next?: string | null;
+  page?: number;
+}
+
+/**
  * Response from GET /experiments/:id
  */
 export interface DALExperimentResponse {

@@ -20,6 +20,7 @@ export { fetchExperiments, fetchExperiment } from './api';
 export {
   dalExperimentsKeys,
   dalExperimentsListOptions,
+  dalExperimentsListProgressiveOptions,
   dalExperimentOptions,
 } from './queries';
 
