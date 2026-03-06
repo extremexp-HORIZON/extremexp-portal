@@ -122,7 +122,7 @@ docker run -v ./workspace:/workspace \
 │           │                            │                                 │
 │           ▼                            ▼                                 │
 │  ┌──────────────────┐         ┌──────────────────┐                      │
-│  │ Conversion Svc   │◄───────►│  Repository      │                      │
+│  │ DMS API          │◄───────►│  Repository      │                      │
 │  │ (DSL ↔ JSON)     │         │  (SQLModel)      │                      │
 │  └──────────────────┘         └──────────────────┘                      │
 │                                                                          │
@@ -156,8 +156,10 @@ src/filesystem_sync/
 │   ├── watcher.py      # Watchdog observer
 │   └── handlers.py     # File event handlers
 │
-├── conversion/         # DSL conversion
-│   └── client.py       # HTTP client for conversion service
+├── conversion/         # DMS and EMF integration
+│   ├── client.py       # HTTP client for the DMS API
+│   ├── emf_client.py   # HTTP client for EMF Cloud
+│   └── payloads.py     # DMS payload translation helpers
 │
 ├── sync/               # Synchronization logic
 │   ├── event_registry.py  # Loop prevention

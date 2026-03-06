@@ -1,15 +1,15 @@
 """
-HTTP client for the DSL <-> JSON conversion service.
+HTTP client for the DMS DSL <-> JSON API.
 
-The conversion service translates between:
-- DSL format (.xxp file content) - used in filesystem
-- JSON format - used in database
+The DMS service translates between:
+- DSL format (.xxp file content) - used in the filesystem
+- JSON format - used by the portal database model
 
-Endpoints:
-- POST /experiment2dsl?name=<name> - JSON to DSL (for experiment)
-- POST /dsl2experiment?name=<name> - DSL to JSON (for experiment)
-- POST /workflow2dsl?name=<name> - JSON to DSL (for workflow)
-- POST /dsl2workflow?name=<name> - DSL to JSON (for workflow)
+Endpoints currently used by filesystem-sync:
+- POST /experiment2dsl?scope=root - Experiment JSON to DSL
+- POST /experiment/dsl2json - Experiment DSL to JSON (currently not implemented by DMS)
+- POST /workflow2dsl?name=<name> - Workflow JSON to DSL
+- POST /workflow2json - Workflow DSL to JSON
 """
 
 from __future__ import annotations
@@ -112,6 +112,35 @@ class ConversionClient:
             error_message=message,
         )
 
+    def _create_unsupported_error(self, endpoint: str, message: str) -> ConversionResult:
+        """Return a standardized unsupported-operation error result."""
+        return ConversionResult(
+            success=False,
+            error=self._create_error(
+                endpoint=endpoint,
+                status_code=None,
+                message=message,
+            ),
+        )
+
+    def _parse_json_response(self, endpoint: str, response: httpx.Response) -> ConversionResult:
+        """Parse a successful JSON response with consistent error handling."""
+        try:
+            return ConversionResult(success=True, data=response.json())
+        except ValueError as e:
+            error = self._create_error(
+                endpoint=endpoint,
+                status_code=response.status_code,
+                message=f"Invalid JSON response: {e}",
+            )
+            logger.error(
+                "Conversion returned invalid JSON",
+                endpoint=endpoint,
+                status_code=response.status_code,
+                response=response.text[:500],
+            )
+            return ConversionResult(success=False, error=error)
+
     async def dsl_to_experiment(self, name: str, dsl_content: str) -> ConversionResult:
         """
         Convert DSL content to experiment JSON.
@@ -123,7 +152,7 @@ class ConversionClient:
         Returns:
             ConversionResult with JSON data on success, error details on failure
         """
-        endpoint = f"/dsl2experiment?name={name}"
+        endpoint = "/experiment/dsl2json"
 
         try:
             client = await self._get_client()
@@ -134,9 +163,21 @@ class ConversionClient:
             )
 
             if response.status_code == 200:
-                json_data = response.json()
+                if response.text.strip() == "NOT IMPLEMENTED YET":
+                    logger.warning(
+                        "DMS experiment DSL to JSON endpoint is not implemented",
+                        name=name,
+                    )
+                    return self._create_unsupported_error(
+                        endpoint=endpoint,
+                        message=(
+                            "DMS endpoint /experiment/dsl2json is not implemented yet. "
+                            "Experiment .xxp imports cannot be synced to the database until the DMS service supports this conversion."
+                        ),
+                    )
+
                 logger.info("Converted DSL to experiment JSON", name=name)
-                return ConversionResult(success=True, data=json_data)
+                return self._parse_json_response(endpoint, response)
             else:
                 error = self._create_error(
                     endpoint=endpoint,
@@ -180,7 +221,7 @@ class ConversionClient:
         Returns:
             ConversionResult with JSON data on success, error details on failure
         """
-        endpoint = f"/dsl2workflow?name={name}"
+        endpoint = "/workflow2json"
 
         try:
             client = await self._get_client()
@@ -191,9 +232,8 @@ class ConversionClient:
             )
 
             if response.status_code == 200:
-                json_data = response.json()
                 logger.info("Converted DSL to workflow JSON", name=name)
-                return ConversionResult(success=True, data=json_data)
+                return self._parse_json_response(endpoint, response)
             else:
                 error = self._create_error(
                     endpoint=endpoint,
@@ -237,11 +277,11 @@ class ConversionClient:
         Returns:
             ConversionResult with DSL string on success, error details on failure
         """
-        endpoint = f"/experiment2dsl?name={name}"
+        endpoint = "/experiment2dsl"
 
         try:
             client = await self._get_client()
-            response = await client.post(endpoint, json=json_content)
+            response = await client.post(endpoint, params={"scope": "root"}, json=json_content)
 
             if response.status_code == 200:
                 dsl_content = response.text
@@ -290,11 +330,11 @@ class ConversionClient:
         Returns:
             ConversionResult with DSL string on success, error details on failure
         """
-        endpoint = f"/workflow2dsl?name={name}"
+        endpoint = "/workflow2dsl"
 
         try:
             client = await self._get_client()
-            response = await client.post(endpoint, json=json_content)
+            response = await client.post(endpoint, params={"name": name}, json=json_content)
 
             if response.status_code == 200:
                 dsl_content = response.text
