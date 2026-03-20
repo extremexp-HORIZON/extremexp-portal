@@ -8,11 +8,12 @@ Filesystem is always the source of truth.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Literal
 
 import structlog
 
 from filesystem_sync.conversion import ConversionClient, get_conversion_client
+from filesystem_sync.conversion.payloads import extract_experiment_fields
 from filesystem_sync.db import Repository, get_async_session
 from filesystem_sync.filesystem import FileOperations, get_file_operations
 
@@ -281,13 +282,7 @@ class InitialSync:
         # Upsert to database
         try:
             if file_type == "experiments":
-                steps: list[dict[str, Any]] = []
-                graphical_model: dict[str, Any] | None = None
-                if isinstance(json_data, list):
-                    steps = json_data
-                elif isinstance(json_data, dict):
-                    steps = json_data.get("steps", [])
-                    graphical_model = json_data.get("graphical_model")
+                steps, graphical_model = extract_experiment_fields(json_data)
                 await Repository.upsert_experiment(
                     session,
                     user_id,

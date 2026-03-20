@@ -111,7 +111,7 @@ class TestConfig:
             "POSTGRES_PASSWORD": "secret",
             "POSTGRES_DB": "production",
             "WORKSPACE_PATH": str(temp_workspace),
-            "CONVERSION_SERVICE_URL": "http://converter:8080",
+            "DMS_SERVICE_URL": "http://dms:8866/api",
             "SYNC_MODE": "full",
             "LOG_LEVEL": "DEBUG",
         }
@@ -120,9 +120,26 @@ class TestConfig:
 
             assert config.postgres.host == "db.local"
             assert config.postgres.port == 5433
-            assert config.conversion_service_url == "http://converter:8080"
+            assert config.conversion_service_url == "http://dms:8866/api"
             assert config.sync_mode == SyncMode.FULL
             assert config.log_level == LogLevel.DEBUG
+
+    def test_config_supports_legacy_conversion_env_var(self, temp_workspace: Path):
+        """Test the legacy conversion env var still works as a fallback."""
+        env = {
+            "POSTGRES_HOST": "localhost",
+            "POSTGRES_PORT": "5432",
+            "POSTGRES_USER": "user",
+            "POSTGRES_PASSWORD": "pass",
+            "POSTGRES_DB": "db",
+            "WORKSPACE_PATH": str(temp_workspace),
+            "CONVERSION_SERVICE_URL": "http://legacy-converter:8080",
+        }
+
+        with patch.dict(os.environ, env, clear=True):
+            config = Config()
+
+            assert config.conversion_service_url == "http://legacy-converter:8080"
 
     def test_get_config_singleton(self, temp_workspace: Path):
         """Test that get_config returns the same instance."""

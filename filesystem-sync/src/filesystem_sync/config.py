@@ -73,7 +73,8 @@ class Config:
     # External service URLs
     conversion_service_url: str = field(
         default_factory=lambda: os.getenv(
-            "CONVERSION_SERVICE_URL", "http://host.docker.internal:8866/api"
+            "DMS_SERVICE_URL",
+            os.getenv("CONVERSION_SERVICE_URL", "http://host.docker.internal:8866/api"),
         )
     )
     emf_service_url: str = field(

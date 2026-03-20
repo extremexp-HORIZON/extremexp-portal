@@ -1,4 +1,8 @@
-import { queryOptions, type DefaultError } from '@tanstack/react-query';
+import {
+  queryOptions,
+  type DefaultError,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { fetchExperiment, fetchExperiments } from './api';
 import type { DALExperiment } from './types';
 
@@ -17,7 +21,25 @@ export const dalExperimentsKeys = {
 export const dalExperimentsListOptions = () =>
   queryOptions<DALExperiment[], DefaultError>({
     queryKey: dalExperimentsKeys.list(),
-    queryFn: fetchExperiments,
+    queryFn: (context) => fetchExperiments({ signal: context.signal }),
+  });
+
+/**
+ * Query options for fetching all DAL experiments with progressive cache updates
+ */
+export const dalExperimentsListProgressiveOptions = (queryClient: QueryClient) =>
+  queryOptions<DALExperiment[], DefaultError>({
+    queryKey: dalExperimentsKeys.list(),
+    queryFn: async (context) => {
+      const queryKey = dalExperimentsKeys.list();
+
+      return fetchExperiments({
+        signal: context.signal,
+        onPage: (experiments) => {
+          queryClient.setQueryData(queryKey, experiments);
+        },
+      });
+    },
   });
 
 /**

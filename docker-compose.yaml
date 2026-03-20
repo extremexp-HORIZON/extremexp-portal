@@ -64,6 +64,16 @@ services:
     networks:
       - extremexp_network
 
+  dms:
+    build: ./extremexp-dms
+    container_name: dms
+    environment:
+      SERVER_PORT: 8866
+      JAVA_OPTS: -Xms256m -Xmx1g
+    restart: unless-stopped
+    networks:
+      - extremexp_network
+
   filesystem-sync:
     build: ./filesystem-sync
     container_name: filesystem-sync
@@ -73,7 +83,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      CONVERSION_SERVICE_URL: http://host.docker.internal:8866/api
+      DMS_SERVICE_URL: http://dms:8866/api
       EMF_SERVICE_URL: http://emf-cloud-service:8081/api/v2
       SYNC_MODE: warn
       LOG_LEVEL: INFO
@@ -82,6 +92,8 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+      dms:
+        condition: service_started
       emf-cloud-service:
         condition: service_healthy
     restart: unless-stopped

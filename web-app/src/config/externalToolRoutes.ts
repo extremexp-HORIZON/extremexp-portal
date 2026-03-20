@@ -102,7 +102,7 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
 
   visualization: {
     id: "visualization",
-    title: "Visualization",
+    title: "Visualization Dashboard",
     routePath: "visualization/:experimentId?",
     buildExternalUrl: (params) =>
       params?.experimentId
