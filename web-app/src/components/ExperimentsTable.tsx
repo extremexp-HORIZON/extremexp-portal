@@ -15,14 +15,15 @@ import SortableHeader from "./SortableHeader"
 import TimeDisplay from "./TimeDisplay"
 import { useResettablePagination } from "../hooks"
 import {
+  getExperimentRunUrl,
   getExperimentIntentEditorUrl,
   getExperimentGraphicalEditorUrl,
   getExperimentCodeEditorUrl,
-  getExperimentScheduleUrl,
   type ExternalToolId,
 } from "../config"
 import { ExternalLinkButton } from "./ExternalLinkButton"
 import { isActionDisabled } from "./experimentActions"
+import { useAuth } from "../auth"
 
 /** Context key for experiments table sorting */
 const SORT_CONTEXT = "experiments"
@@ -30,7 +31,6 @@ const SORT_CONTEXT = "experiments"
 /** Map action names to external tool IDs */
 const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
   intent_editor: "experiment-intent-editor",
-  schedule: "experiment-schedule",
   code_editor: "experiment-code-editor",
   graphical_editor: "experiment-graphical-editor",
 }
@@ -170,9 +170,12 @@ function generateUniqueCopyName(baseName: string, existingNames: string[]): stri
 }
 
 export default function ExperimentsTable() {
+  const { username } = useAuth()
   const queryClient = useQueryClient()
   const [editingExperiment, setEditingExperiment] = useState<ExperimentRead | null>(null)
   const [deletingExperiment, setDeletingExperiment] = useState<ExperimentRead | null>(null)
+  const [scheduledExperimentName, setScheduledExperimentName] = useState<string | null>(null)
+  const [failedExperimentName, setFailedExperimentName] = useState<string | null>(null)
   const filterText = useSearchFilterStore((state) => state.filterText)
   const sortConfig = useSortStore((state) => state.sorts[SORT_CONTEXT])
   const resetKey = useMemo(
@@ -257,9 +260,6 @@ export default function ExperimentsTable() {
       case "code_editor":
         externalUrl = getExperimentCodeEditorUrl(experiment.id, externalContext)
         break
-      case "schedule":
-        externalUrl = getExperimentScheduleUrl(experiment.id, externalContext)
-        break
       default:
         return undefined
     }
@@ -287,12 +287,30 @@ export default function ExperimentsTable() {
         })
         break
       }
+      case "schedule":
+        void fetch(getExperimentRunUrl(), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: username,
+            exp_name: experiment.name,
+          }),
+        }).then((response) => {
+          if (!response.ok) {
+            throw new Error(`Schedule request failed with status ${response.status}`)
+          }
+          setScheduledExperimentName(experiment.name)
+        }).catch((err) => {
+          setFailedExperimentName(experiment.name)
+          console.error("Failed to schedule experiment:", err)
+        })
+        break
       // External link actions are handled via href, not onClick
       case "intent_editor":
       case "graphical_editor":
       case "code_editor":
-      case "schedule":
-        break
       default:
         console.log(`Action ${action} not implemented yet`)
     }
@@ -507,6 +525,47 @@ export default function ExperimentsTable() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Schedule Confirmation Modal */}
+      {scheduledExperimentName && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Experiment Scheduled</h3>
+            <p className="py-4">
+              The experiment <span className="font-semibold">{scheduledExperimentName}</span> has been scheduled.
+            </p>
+            <div className="modal-action">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setScheduledExperimentName(null)}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Schedule Failure Modal */}
+      {failedExperimentName && (
+          <div className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Experiment Scheduling Failed</h3>
+              <p className="py-4">
+                The experiment <span className="font-semibold">{failedExperimentName}</span> could not be scheduled.
+              </p>
+              <div className="modal-action">
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setFailedExperimentName(null)}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
       )}
     </div>
   )

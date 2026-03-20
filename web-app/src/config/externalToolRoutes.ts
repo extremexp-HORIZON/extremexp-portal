@@ -14,7 +14,6 @@ export type ExternalToolId =
   | "experiment-intent-editor"
   | "experiment-graphical-editor"
   | "experiment-code-editor"
-  | "experiment-schedule"
   | "workflow-code-editor"
   | "workflow-graphical-editor"
   | "visualization"
@@ -72,17 +71,6 @@ export const externalTools: Record<ExternalToolId, ExternalToolConfig> = {
     requiredParams: ["experimentId"],
     buildExternalUrl: (params) =>
       buildUrl(externalLinks.experimentCodeEditorUrl, {
-        experimentId: params?.experimentId,
-        experimentName: params?.experimentName,
-      }),
-  },
-  "experiment-schedule": {
-    id: "experiment-schedule",
-    title: "Schedule Experiment",
-    routePath: "experiment/:experimentId/schedule",
-    requiredParams: ["experimentId"],
-    buildExternalUrl: (params) =>
-      buildUrl(externalLinks.experimentScheduleUrl, {
         experimentId: params?.experimentId,
         experimentName: params?.experimentName,
       }),

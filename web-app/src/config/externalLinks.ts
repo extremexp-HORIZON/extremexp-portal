@@ -41,6 +41,10 @@ export const DEFAULT_LINKS = {
   // VITE_DATA_MANAGEMENT_UPLOAD_ANNOTATE_URL
   dataManagementUploadAnnotateUrl: `https://ddm.extremexp-icom.intracom-telecom.com`,
 
+  // Experimentation Engine Links
+  // VITE_EXPERIMENT_RUN_URL
+  experimentRunUrl: `https://engine.extremexp-icom.intracom-telecom.com/exp/run`,
+
   // Experiment Editor Links
   // VITE_EXPERIMENT_INTENT_EDITOR_URL
   experimentIntentUrl: `https://mlassetselection.essi.upc.edu/intent2Workflow/#/data-products?experimentId={experimentId}`,
@@ -48,8 +52,6 @@ export const DEFAULT_LINKS = {
   experimentGraphicalEditorUrl: `http://localhost:8001/editor/experiment/undefined/{experimentId}`,
   // VITE_EXPERIMENT_CODE_EDITOR_URL
   experimentCodeEditorUrl: `https://ide.extremexp-icom.intracom-telecom.com/?folder=/home/user/workspace/&experimentId={experimentId}`,
-  // VITE_EXPERIMENT_SCHEDULE_URL
-  experimentScheduleUrl: `https://dal.extremexp-icom.intracom-telecom.com/experiments?experimentId={experimentId}`,
 
   // Workflow Editor Links
   // VITE_WORKFLOW_CODE_EDITOR_URL
@@ -87,6 +89,10 @@ export const externalLinks = {
   dataManagementUploadAnnotateUrl:
     import.meta.env.VITE_DATA_MANAGEMENT_UPLOAD_ANNOTATE_URL || DEFAULT_LINKS.dataManagementUploadAnnotateUrl,
 
+  // Experimentation Engine Links
+  experimentRunUrl:
+      import.meta.env.VITE_EXPERIMENT_RUN_URL || DEFAULT_LINKS.experimentRunUrl,
+
   // Experiment Editor Links
   experimentIntentUrl:
     import.meta.env.VITE_EXPERIMENT_INTENT_EDITOR_URL || DEFAULT_LINKS.experimentIntentUrl,
@@ -94,8 +100,6 @@ export const externalLinks = {
     import.meta.env.VITE_EXPERIMENT_GRAPHICAL_EDITOR_URL || DEFAULT_LINKS.experimentGraphicalEditorUrl,
   experimentCodeEditorUrl:
     import.meta.env.VITE_EXPERIMENT_CODE_EDITOR_URL || DEFAULT_LINKS.experimentCodeEditorUrl,
-  experimentScheduleUrl:
-    import.meta.env.VITE_EXPERIMENT_SCHEDULE_URL || DEFAULT_LINKS.experimentScheduleUrl,
 
   // Workflow Editor Links
   workflowCodeEditorUrl:

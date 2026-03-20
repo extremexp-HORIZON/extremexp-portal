@@ -8,6 +8,10 @@ export function buildUrl(baseUrl: string, params: ExternalLinkParams = {}): stri
   return resolveExternalLink(baseUrl, params)
 }
 
+export function getExperimentRunUrl(): string {
+  return externalLinks.experimentRunUrl
+}
+
 export function getExperimentIntentEditorUrl(
   experimentId: string | number,
   context: ExperimentLinkContext = {}
@@ -27,13 +31,6 @@ export function getExperimentCodeEditorUrl(
   context: ExperimentLinkContext = {}
 ): string {
   return buildUrl(externalLinks.experimentCodeEditorUrl, { experimentId, ...context })
-}
-
-export function getExperimentScheduleUrl(
-  experimentId: string | number,
-  context: ExperimentLinkContext = {}
-): string {
-  return buildUrl(externalLinks.experimentScheduleUrl, { experimentId, ...context })
 }
 
 export function getWorkflowCodeEditorUrl(

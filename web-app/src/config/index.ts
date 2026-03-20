@@ -12,10 +12,10 @@ export {
 
 export {
   buildUrl,
+  getExperimentRunUrl,
   getExperimentIntentEditorUrl,
   getExperimentGraphicalEditorUrl,
   getExperimentCodeEditorUrl,
-  getExperimentScheduleUrl,
   getWorkflowCodeEditorUrl,
   getWorkflowGraphicalEditorUrl,
   getVisualizationUrl,
