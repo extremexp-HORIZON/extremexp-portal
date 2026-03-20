@@ -14,7 +14,7 @@ def _coerce_steps(raw_steps: Any) -> list[dict[str, Any]]:
 
 
 def extract_experiment_fields(
-    json_data: dict[str, Any] | list[dict[str, Any]] | None,
+    json_data: object | None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
     """
     Normalize experiment JSON returned by legacy converters or DMS.

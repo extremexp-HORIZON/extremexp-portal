@@ -33,6 +33,12 @@ class TestDmsPayloads:
         assert steps == [{"id": "step-1"}]
         assert graphical_model is None
 
+    def test_extract_experiment_fields_ignores_unexpected_json_shapes(self):
+        steps, graphical_model = extract_experiment_fields("invalid")
+
+        assert steps == []
+        assert graphical_model is None
+
     def test_build_experiment_dms_payload_filters_to_referenced_workflows(self):
         workflow_id = str(uuid4())
         other_id = str(uuid4())
