@@ -59,7 +59,7 @@ export const DEFAULT_LINKS = {
 
   // Observe & Analyze Links
   // VITE_VISUALIZATION_URL
-  visualizationUrl: `https://placeholder.extremexp.eu/visualization?experimentId={experimentId}`, // ⚠️ missing
+  visualizationUrl: `https://vis.extremexp-icom.intracom-telecom.com/{experimentId}`,
   // VITE_GAMIFICATION_URL
   gamificationUrl: `https://i4dxp.eu/game/iframe/`,
   // VITE_EXPERIMENT_CARD_URL

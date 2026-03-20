@@ -12,6 +12,7 @@ from uuid import UUID
 import structlog
 
 from filesystem_sync.conversion import ConversionClient, get_conversion_client
+from filesystem_sync.conversion.payloads import build_experiment_dms_payload
 from filesystem_sync.db import DBEvent, DBEventType, Repository, get_async_session
 from filesystem_sync.filesystem import FileOperations, get_file_operations
 
@@ -78,37 +79,43 @@ class DatabaseToFileSync:
         file_type: Literal["experiments", "workflows"],
         entity_id: UUID,
         user_id: UUID,
-    ) -> tuple[str | None, str | None, dict | None]:
+    ) -> tuple[str | None, str | None, dict | None, str | None]:
         """
         Fetch entity data and username from database.
 
         Returns:
-            Tuple of (username, entity_name, json_data) or (None, None, None) if not found
+            Tuple of (username, entity_name, json_data, error_message).
         """
         async with get_async_session() as session:
             # Get user
             user = await Repository.get_user_by_id(session, user_id)
             if user is None:
                 logger.warning("User not found for DB event", user_id=str(user_id))
-                return None, None, None
+                return None, None, None, None
 
             # Get entity
             if file_type == "experiments":
                 entity = await Repository.get_experiment_by_id(session, entity_id)
                 if entity is None:
-                    return user.username, None, None
-                # For experiments, we need to prepare the JSON for conversion
-                json_data = {
-                    "steps": entity.steps,
-                    "graphical_model": entity.graphical_model,
-                }
-                return user.username, entity.name, json_data
+                    return user.username, None, None, None
+
+                workflows = await Repository.list_workflows_for_user(session, user.id)
+                try:
+                    json_data = build_experiment_dms_payload(
+                        name=entity.name,
+                        steps=entity.steps,
+                        workflows=workflows,
+                    )
+                except ValueError as e:
+                    return user.username, entity.name, None, str(e)
+
+                return user.username, entity.name, json_data, None
             else:
                 entity = await Repository.get_workflow_by_id(session, entity_id)
                 if entity is None:
-                    return user.username, None, None
+                    return user.username, None, None, None
                 # For workflows, graphical_model is the content
-                return user.username, entity.name, entity.graphical_model
+                return user.username, entity.name, entity.graphical_model, None
 
     async def _handle_insert(
         self,
@@ -123,11 +130,22 @@ class DatabaseToFileSync:
             entity_id=str(entity_id),
         )
 
-        username, name, json_data = await self._get_entity_and_user(
+        username, name, json_data, payload_error = await self._get_entity_and_user(
             file_type, entity_id, user_id
         )
 
-        if username is None or name is None:
+        if payload_error is not None and username is not None and name is not None:
+            self._file_ops.write_error(username, file_type, name, payload_error)
+            logger.error(
+                "Failed to build DMS payload for DB insert",
+                username=username,
+                file_type=file_type,
+                name=name,
+                error=payload_error,
+            )
+            return
+
+        if username is None or name is None or json_data is None:
             logger.warning(
                 "Could not find entity for DB insert",
                 entity_id=str(entity_id),
@@ -222,11 +240,22 @@ class DatabaseToFileSync:
             entity_id=str(entity_id),
         )
 
-        username, name, json_data = await self._get_entity_and_user(
+        username, name, json_data, payload_error = await self._get_entity_and_user(
             file_type, entity_id, user_id
         )
 
-        if username is None or name is None:
+        if payload_error is not None and username is not None and name is not None:
+            self._file_ops.write_error(username, file_type, name, payload_error)
+            logger.error(
+                "Failed to build DMS payload for DB update",
+                username=username,
+                file_type=file_type,
+                name=name,
+                error=payload_error,
+            )
+            return
+
+        if username is None or name is None or json_data is None:
             logger.warning(
                 "Could not find entity for DB update",
                 entity_id=str(entity_id),

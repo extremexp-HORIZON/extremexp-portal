@@ -1,6 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback } from 'react';
-import { dalExperimentsListOptions, useDALToken, type DALExperiment } from '../dal-client';
+import {
+  dalExperimentsListProgressiveOptions,
+  useDALToken,
+  type DALExperiment,
+} from '../dal-client';
 import DALTokenPrompt from './DALTokenPrompt';
 import Pagination, { PAGE_SIZE } from './Pagination';
 import { useSearchFilterStore, createNameFilter } from '../stores/useSearchFilterStore';
@@ -9,7 +13,7 @@ import SortableHeader from './SortableHeader';
 import TimeDisplay from './TimeDisplay';
 import DurationDisplay from './DurationDisplay';
 import { useResettablePagination } from '../hooks';
-import { getGamificationUrl, getExperimentCardUrl, type ExternalToolId } from '../config';
+import { getVisualizationUrl, getGamificationUrl, getExperimentCardUrl, type ExternalToolId } from '../config';
 import { ExternalLinkButton } from './ExternalLinkButton';
 
 /** Context key for DAL experiments table sorting */
@@ -17,6 +21,7 @@ const SORT_CONTEXT = "dalExperiments";
 
 /** Map action names to external tool IDs */
 const ACTION_TO_TOOL_ID: Record<string, ExternalToolId> = {
+  visualization: 'visualization',
   experiment_card: "experiment-card",
 };
 
@@ -49,6 +54,17 @@ const STATUS_STYLES: Record<
 };
 
 const ACTION_ICONS = [
+  {
+    label: 'Visualization dashboard',
+    action: 'visualization',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="9" y1="21" x2="9" y2="9" />
+      </svg>
+    ),
+  },
   {
     label: 'Experiment card',
     action: 'experiment_card',
@@ -423,8 +439,8 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
     let externalUrl: string;
 
     switch (action) {
-      case "gamification":
-        externalUrl = getGamificationUrl(experiment.id, externalContext);
+      case 'visualization':
+        externalUrl = getVisualizationUrl(experiment.id, externalContext);
         break;
       case "experiment_card":
         externalUrl = getExperimentCardUrl(experiment.id, externalContext);
@@ -441,7 +457,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
    */
   const handleAction = (action: string) => {
     switch (action) {
-      case "gamification":
+      case 'visualization':
       case "experiment_card":
         // Handled via href
         break;
@@ -510,12 +526,16 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
               paginatedExperiments.map((experiment) => (
                 <tr key={experiment.id} className="hover:bg-base-200/60">
                   <td>
-                    <button
-                      type="button"
-                      className="btn btn-link text-sm text-neutral"
+                    <ExternalLinkButton
+                      toolId="visualization"
+                      params={{ experimentId: String(experiment.id) }}
+                      externalUrl={getVisualizationUrl(experiment.id, {
+                        experimentName: experiment.name,
+                      })}
+                      className="btn btn-link px-0 text-sm font-semibold text-neutral"
                     >
                       {experiment.name || experiment.id}
-                    </button>
+                    </ExternalLinkButton>
                   </td>
                   <td>
                     <StatusBadge status={experiment.status} />
@@ -565,6 +585,7 @@ function ExperimentsTable({ experiments }: { experiments: DALExperiment[] }) {
  */
 function ExperimentsContent() {
   const [token, setToken, clearToken] = useDALToken();
+  const queryClient = useQueryClient();
 
   // Only fetch when we have a token
   const {
@@ -574,7 +595,7 @@ function ExperimentsContent() {
     error,
     refetch,
   } = useQuery({
-    ...dalExperimentsListOptions(),
+    ...dalExperimentsListProgressiveOptions(queryClient),
     enabled: !!token,
     retry: 1, // Only retry once on failure
     staleTime: 30_000, // Consider data fresh for 30 seconds
